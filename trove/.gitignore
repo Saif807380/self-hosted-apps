@@ -1,0 +1,6 @@
+uploads/
+ui/node_modules/
+ui/dist/
+backend/server
+*.env
+.env
