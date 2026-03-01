@@ -1,0 +1,17 @@
+{
+  "enabledPlugins": {},
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "cc-notify \"Claude\" \"Needs input\"" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "cc-notify \"Claude\" \"Task complete\"" }]
+      }
+    ]
+  }
+}
