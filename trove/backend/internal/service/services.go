@@ -6,10 +6,17 @@ import (
 )
 
 type Services struct {
-	Stores *dao.Stores
-	Redis  *redis.Client
+	Books    *BookService
+	Games    *GameService
+	Travel   *TravelService
+	Workouts *WorkoutService
 }
 
-func NewServices(stores *dao.Stores, redis *redis.Client) *Services {
-	return &Services{Stores: stores, Redis: redis}
+func NewServices(stores *dao.Stores, redisClient *redis.Client) *Services {
+	return &Services{
+		Books:    &BookService{store: stores.Books, redis: redisClient},
+		Games:    &GameService{store: stores.Games, redis: redisClient},
+		Travel:   &TravelService{store: stores.Travel},
+		Workouts: &WorkoutService{store: stores.Workouts},
+	}
 }

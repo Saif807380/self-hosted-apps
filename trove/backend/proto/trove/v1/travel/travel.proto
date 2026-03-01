@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package trove.v1.travel;
+
+option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1/travel;travelv1";
+
+message TouristSpot {
+  string          id          = 1;
+  string          location_id = 2;
+  string          name        = 3;
+  optional string description = 4;
+}
+
+message TravelLocation {
+  string               id                   = 1;
+  string               city                 = 2;
+  string               country              = 3;
+  optional string      visited_from         = 4;
+  optional string      visited_to           = 5;
+  optional string      photo_collection_url = 6;
+  repeated TouristSpot tourist_spots        = 7;
+  string               created_at           = 8;
+  string               updated_at           = 9;
+}
+
+message ListLocationsRequest {
+  optional string search = 1;
+}
+
+message ListLocationsResponse {
+  repeated TravelLocation locations = 1;
+}
+
+message GetLocationRequest {
+  string id = 1;
+}
+
+message GetLocationResponse {
+  TravelLocation location = 1;
+}
+
+message CreateLocationRequest {
+  string          city                 = 1;
+  string          country              = 2;
+  optional string visited_from         = 3;
+  optional string visited_to           = 4;
+  optional string photo_collection_url = 5;
+}
+
+message CreateLocationResponse {
+  TravelLocation location = 1;
+}
+
+message UpdateLocationRequest {
+  string          id                   = 1;
+  string          city                 = 2;
+  string          country              = 3;
+  optional string visited_from         = 4;
+  optional string visited_to           = 5;
+  optional string photo_collection_url = 6;
+}
+
+message UpdateLocationResponse {
+  TravelLocation location = 1;
+}
+
+message DeleteLocationRequest {
+  string id = 1;
+}
+
+message DeleteLocationResponse {}
+
+message CreateSpotRequest {
+  string          location_id = 1;
+  string          name        = 2;
+  optional string description = 3;
+}
+
+message CreateSpotResponse {
+  TouristSpot spot = 1;
+}
+
+message UpdateSpotRequest {
+  string          id          = 1;
+  string          name        = 2;
+  optional string description = 3;
+}
+
+message UpdateSpotResponse {
+  TouristSpot spot = 1;
+}
+
+message DeleteSpotRequest {
+  string id = 1;
+}
+
+message DeleteSpotResponse {}
+
+service TravelService {
+  rpc ListLocations  (ListLocationsRequest)  returns (ListLocationsResponse);
+  rpc GetLocation    (GetLocationRequest)    returns (GetLocationResponse);
+  rpc CreateLocation (CreateLocationRequest) returns (CreateLocationResponse);
+  rpc UpdateLocation (UpdateLocationRequest) returns (UpdateLocationResponse);
+  rpc DeleteLocation (DeleteLocationRequest) returns (DeleteLocationResponse);
+  rpc CreateSpot     (CreateSpotRequest)     returns (CreateSpotResponse);
+  rpc UpdateSpot     (UpdateSpotRequest)     returns (UpdateSpotResponse);
+  rpc DeleteSpot     (DeleteSpotRequest)     returns (DeleteSpotResponse);
+}
