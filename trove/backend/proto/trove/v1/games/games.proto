@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package trove.v1.games;
+
+option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1/games;gamesv1";
+
+message VideoGame {
+  string          id           = 1;
+  string          title        = 2;
+  optional string studio       = 3;
+  optional int32  rating       = 4;
+  optional string review       = 5;
+  optional string cover_image  = 6;
+  repeated int32  years_played = 7;
+  string          created_at   = 8;
+  string          updated_at   = 9;
+}
+
+message ListGamesRequest {
+  optional string search      = 1;
+  optional int32  year_played = 2;
+}
+
+message ListGamesResponse {
+  repeated VideoGame games = 1;
+}
+
+message GetGameRequest {
+  string id = 1;
+}
+
+message GetGameResponse {
+  VideoGame game = 1;
+}
+
+message CreateGameRequest {
+  string          title        = 1;
+  optional string studio       = 2;
+  optional int32  rating       = 3;
+  optional string review       = 4;
+  optional string cover_image  = 5;
+  repeated int32  years_played = 6;
+}
+
+message CreateGameResponse {
+  VideoGame game = 1;
+}
+
+message UpdateGameRequest {
+  string          id           = 1;
+  string          title        = 2;
+  optional string studio       = 3;
+  optional int32  rating       = 4;
+  optional string review       = 5;
+  optional string cover_image  = 6;
+  repeated int32  years_played = 7;
+}
+
+message UpdateGameResponse {
+  VideoGame game = 1;
+}
+
+message DeleteGameRequest {
+  string id = 1;
+}
+
+message DeleteGameResponse {}
+
+service GameService {
+  rpc ListGames  (ListGamesRequest)  returns (ListGamesResponse);
+  rpc GetGame    (GetGameRequest)    returns (GetGameResponse);
+  rpc CreateGame (CreateGameRequest) returns (CreateGameResponse);
+  rpc UpdateGame (UpdateGameRequest) returns (UpdateGameResponse);
+  rpc DeleteGame (DeleteGameRequest) returns (DeleteGameResponse);
+}

@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package trove.v1.books;
+
+option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1/books;booksv1";
+
+import "trove/v1/common.proto";
+
+message Book {
+  string          id          = 1;
+  string          title       = 2;
+  string          author      = 3;
+  optional int32  rating      = 4;
+  optional string review      = 5;
+  optional string cover_image = 6;
+  repeated int32  years_read  = 7;
+  repeated trove.v1.Tag tags  = 8;
+  string          created_at  = 9;
+  string          updated_at  = 10;
+}
+
+message Collection {
+  string id   = 1;
+  string name = 2;
+}
+
+message ListBooksRequest {
+  optional string search    = 1;
+  optional string tag_id    = 2;
+  optional int32  year_read = 3;
+}
+
+message ListBooksResponse {
+  repeated Book books = 1;
+}
+
+message GetBookRequest {
+  string id = 1;
+}
+
+message GetBookResponse {
+  Book book = 1;
+}
+
+message CreateBookRequest {
+  string          title       = 1;
+  string          author      = 2;
+  optional int32  rating      = 3;
+  optional string review      = 4;
+  optional string cover_image = 5;
+  repeated int32  years_read  = 6;
+  repeated string tag_ids     = 7;
+}
+
+message CreateBookResponse {
+  Book book = 1;
+}
+
+message UpdateBookRequest {
+  string          id          = 1;
+  string          title       = 2;
+  string          author      = 3;
+  optional int32  rating      = 4;
+  optional string review      = 5;
+  optional string cover_image = 6;
+  repeated int32  years_read  = 7;
+  repeated string tag_ids     = 8;
+}
+
+message UpdateBookResponse {
+  Book book = 1;
+}
+
+message DeleteBookRequest {
+  string id = 1;
+}
+
+message DeleteBookResponse {}
+
+message ListTagsRequest {}
+
+message ListTagsResponse {
+  repeated trove.v1.Tag tags = 1;
+}
+
+message CreateTagRequest {
+  string name = 1;
+}
+
+message CreateTagResponse {
+  trove.v1.Tag tag = 1;
+}
+
+message ListCollectionsRequest {}
+
+message ListCollectionsResponse {
+  repeated Collection collections = 1;
+}
+
+message CreateCollectionRequest {
+  string name = 1;
+}
+
+message CreateCollectionResponse {
+  Collection collection = 1;
+}
+
+message AddBookToCollectionRequest {
+  string collection_id = 1;
+  string book_id       = 2;
+}
+
+message AddBookToCollectionResponse {}
+
+message RemoveBookFromCollectionRequest {
+  string collection_id = 1;
+  string book_id       = 2;
+}
+
+message RemoveBookFromCollectionResponse {}
+
+service BookService {
+  rpc ListBooks                  (ListBooksRequest)                  returns (ListBooksResponse);
+  rpc GetBook                    (GetBookRequest)                    returns (GetBookResponse);
+  rpc CreateBook                 (CreateBookRequest)                 returns (CreateBookResponse);
+  rpc UpdateBook                 (UpdateBookRequest)                 returns (UpdateBookResponse);
+  rpc DeleteBook                 (DeleteBookRequest)                 returns (DeleteBookResponse);
+  rpc ListTags                   (ListTagsRequest)                   returns (ListTagsResponse);
+  rpc CreateTag                  (CreateTagRequest)                  returns (CreateTagResponse);
+  rpc ListCollections            (ListCollectionsRequest)            returns (ListCollectionsResponse);
+  rpc CreateCollection           (CreateCollectionRequest)           returns (CreateCollectionResponse);
+  rpc AddBookToCollection        (AddBookToCollectionRequest)        returns (AddBookToCollectionResponse);
+  rpc RemoveBookFromCollection   (RemoveBookFromCollectionRequest)   returns (RemoveBookFromCollectionResponse);
+}

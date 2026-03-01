@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package trove.v1.workouts;
+
+option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1/workouts;workoutsv1";
+
+message Exercise {
+  string id              = 1;
+  string workout_type_id = 2;
+  string name            = 3;
+  int32  sort_order      = 4;
+}
+
+message WorkoutType {
+  string            id         = 1;
+  string            name       = 2;
+  int32             sort_order = 3;
+  repeated Exercise exercises  = 4;
+  string            created_at = 5;
+}
+
+message WorkoutLog {
+  string          id          = 1;
+  string          exercise_id = 2;
+  int32           week_number = 3;
+  optional int32  sets        = 4;
+  optional string reps        = 5;
+  optional double weight_kg   = 6;
+  string          logged_at   = 7;
+}
+
+message ListWorkoutTypesRequest {}
+
+message ListWorkoutTypesResponse {
+  repeated WorkoutType workout_types = 1;
+}
+
+message CreateWorkoutTypeRequest {
+  string name       = 1;
+  int32  sort_order = 2;
+}
+
+message CreateWorkoutTypeResponse {
+  WorkoutType workout_type = 1;
+}
+
+message DeleteWorkoutTypeRequest {
+  string id = 1;
+}
+
+message DeleteWorkoutTypeResponse {}
+
+message CreateExerciseRequest {
+  string workout_type_id = 1;
+  string name            = 2;
+  int32  sort_order      = 3;
+}
+
+message CreateExerciseResponse {
+  Exercise exercise = 1;
+}
+
+message UpdateExerciseRequest {
+  string id         = 1;
+  string name       = 2;
+  int32  sort_order = 3;
+}
+
+message UpdateExerciseResponse {
+  Exercise exercise = 1;
+}
+
+message DeleteExerciseRequest {
+  string id = 1;
+}
+
+message DeleteExerciseResponse {}
+
+message ListLogsRequest {
+  string          exercise_id = 1;
+  optional int32  week_number = 2;
+}
+
+message ListLogsResponse {
+  repeated WorkoutLog logs = 1;
+}
+
+message UpsertLogRequest {
+  string          exercise_id = 1;
+  int32           week_number = 2;
+  optional int32  sets        = 3;
+  optional string reps        = 4;
+  optional double weight_kg   = 5;
+}
+
+message UpsertLogResponse {
+  WorkoutLog log = 1;
+}
+
+message DeleteLogRequest {
+  string id = 1;
+}
+
+message DeleteLogResponse {}
+
+service WorkoutService {
+  rpc ListWorkoutTypes  (ListWorkoutTypesRequest)  returns (ListWorkoutTypesResponse);
+  rpc CreateWorkoutType (CreateWorkoutTypeRequest) returns (CreateWorkoutTypeResponse);
+  rpc DeleteWorkoutType (DeleteWorkoutTypeRequest) returns (DeleteWorkoutTypeResponse);
+  rpc CreateExercise    (CreateExerciseRequest)    returns (CreateExerciseResponse);
+  rpc UpdateExercise    (UpdateExerciseRequest)    returns (UpdateExerciseResponse);
+  rpc DeleteExercise    (DeleteExerciseRequest)    returns (DeleteExerciseResponse);
+  rpc ListLogs          (ListLogsRequest)          returns (ListLogsResponse);
+  rpc UpsertLog         (UpsertLogRequest)         returns (UpsertLogResponse);
+  rpc DeleteLog         (DeleteLogRequest)         returns (DeleteLogResponse);
+}
