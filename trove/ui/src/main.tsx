@@ -4,12 +4,14 @@ import { ChakraProvider } from '@chakra-ui/react'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { system } from './theme/theme'
+import { AppToaster } from './components/AppToaster'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ChakraProvider value={system}>
-        <App />
+          <App />
+          <AppToaster />
       </ChakraProvider>
     </BrowserRouter>
   </StrictMode>,
