@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "bunx --bun vite",
     "build": "node_modules/typescript/bin/tsc --noEmit && bunx --bun vite build",
     "preview": "vite preview"
   },

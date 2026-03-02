@@ -1,23 +1,19 @@
+import { useState } from 'react'
 import { IconButton } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(() =>
-    document.documentElement.getAttribute('data-theme') === 'dark',
-  )
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
-  }, [isDark])
+  function handleToggle() {
+    const isDark = !dark
+    document.documentElement.classList.toggle('dark', isDark)
+    localStorage.setItem('color-mode', isDark ? 'dark' : 'light')
+    setDark(isDark)
+  }
 
   return (
-    <IconButton
-      aria-label="Toggle color mode"
-      onClick={() => setIsDark((d) => !d)}
-      variant="ghost"
-      size="sm"
-    >
-      {isDark ? '☀️' : '🌙'}
+    <IconButton aria-label="Toggle color mode" onClick={handleToggle} variant="ghost" size="sm">
+      {dark ? '☀️' : '🌙'}
     </IconButton>
   )
 }

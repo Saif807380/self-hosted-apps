@@ -1,8 +1,17 @@
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react'
 
 const config = defineConfig({
+  globalCss: {
+    'html, body': {
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+    },
+  },
   theme: {
     tokens: {
+      fonts: {
+        heading: { value: "'Lora', Georgia, serif" },
+        body:    { value: "'DM Sans', system-ui, sans-serif" },
+      },
       colors: {
         brand: {
           50:  { value: '#eff6ff' },
@@ -21,25 +30,31 @@ const config = defineConfig({
     semanticTokens: {
       colors: {
         'bg.canvas': {
-          value: { base: '{colors.gray.50}', _dark: '{colors.gray.950}' },
+          value: { base: '#f7f6f3', _dark: '#0e0f12' },
         },
         'bg.surface': {
-          value: { base: 'white', _dark: '{colors.gray.900}' },
+          value: { base: 'white', _dark: '#1a1b1f' },
         },
         'bg.subtle': {
-          value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
+          value: { base: '#eeecea', _dark: '#25262b' },
         },
         'border.default': {
-          value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' },
+          value: { base: '#e5e2dc', _dark: '#2e2f35' },
         },
         'text.primary': {
-          value: { base: '{colors.gray.900}', _dark: 'white' },
+          value: { base: '#1c1c1e', _dark: '#f2f2f7' },
         },
         'text.secondary': {
-          value: { base: '{colors.gray.600}', _dark: '{colors.gray.400}' },
+          value: { base: '#6b6b6b', _dark: '#8e8e93' },
+        },
+        'text.muted': {
+          value: { base: '#a3a3a3', _dark: '#636366' },
         },
         'accent': {
-          value: { base: '{colors.brand.500}', _dark: '{colors.brand.400}' },
+          value: { base: '{colors.brand.600}', _dark: '{colors.brand.400}' },
+        },
+        'accent.subtle': {
+          value: { base: '{colors.brand.50}', _dark: '#172554' },
         },
       },
     },

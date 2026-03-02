@@ -1,0 +1,26 @@
+version: "3.9"
+
+# Development compose: only infrastructure services (postgres + redis).
+# Run the UI and backend locally for hot reload:
+#   UI:      cd trove/ui && bun run dev         (Vite HMR on port 3000)
+#   Backend: cd trove/backend && air             (Go hot reload, requires air)
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    network_mode: host
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    network_mode: host
+
+volumes:
+  postgres_data:
