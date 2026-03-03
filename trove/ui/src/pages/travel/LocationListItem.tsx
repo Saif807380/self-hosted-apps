@@ -42,8 +42,7 @@ export default function LocationListItem({ location, onClick }: LocationListItem
       border="1px solid"
       borderColor="border.default"
       cursor="pointer"
-      px={3}
-      py={2.5}
+      overflow="hidden"
       onClick={() => onClick(location)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -54,60 +53,57 @@ export default function LocationListItem({ location, onClick }: LocationListItem
         transition: 'box-shadow 0.2s ease',
       }}
     >
-      <Flex align="center" gap={3}>
-        {/* Color swatch */}
+      <Flex align="stretch">
+        {/* Gradient swatch — fixed width, fills item height */}
         <Box
-          w="42px" h="42px"
-          borderRadius="8px"
-          overflow="hidden"
+          w="90px"
           flexShrink={0}
+          minH="90px"
           display="flex" alignItems="center" justifyContent="center"
           style={{ background: `linear-gradient(150deg, ${gradFrom} 0%, ${gradTo} 100%)` }}
         >
           <Text
-            fontFamily="heading" fontWeight="700" fontSize="md"
+            fontFamily="heading" fontWeight="700" fontSize="3xl"
             style={{ color: 'rgba(0,0,0,0.2)', userSelect: 'none' }}
           >
             {initial}
           </Text>
         </Box>
 
-        {/* City + country */}
-        <Box flex={1} minW={0}>
+        {/* Content — all stacked vertically */}
+        <Box px={3} py={2.5} minW={0}>
           <Text
             fontFamily="heading" fontWeight="600" fontSize="sm" color="text.primary"
+            mb={0.5}
             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
             {location.city}
           </Text>
+
           <Text
-            fontSize="xs" color="text.secondary"
+            fontSize="xs" color="text.secondary" mb={1.5}
             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
             {location.country}
           </Text>
+
+          <Flex gap={2} align="center" wrap="wrap">
+            {dateRange && (
+              <Box
+                px={1.5} py="1px" borderRadius="4px"
+                fontSize="10px" fontWeight="600"
+                bg="bg.subtle" color="text.muted" letterSpacing="0.03em"
+              >
+                {dateRange}
+              </Box>
+            )}
+            {location.touristSpots?.length > 0 && (
+              <Text fontSize="xs" color="text.muted">
+                {location.touristSpots.length} spot{location.touristSpots.length !== 1 ? 's' : ''}
+              </Text>
+            )}
+          </Flex>
         </Box>
-
-        {/* Date range */}
-        {dateRange && (
-          <Box
-            px={1.5} py="1px"
-            borderRadius="4px"
-            fontSize="10px" fontWeight="600"
-            bg="bg.subtle" color="text.muted"
-            letterSpacing="0.03em"
-            flexShrink={0}
-          >
-            {dateRange}
-          </Box>
-        )}
-
-        {/* Spot count */}
-        {location.touristSpots?.length > 0 && (
-          <Text fontSize="xs" color="text.muted" flexShrink={0}>
-            {location.touristSpots.length} spot{location.touristSpots.length !== 1 ? 's' : ''}
-          </Text>
-        )}
       </Flex>
     </Box>
   )
