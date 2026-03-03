@@ -1,4 +1,4 @@
-import { Box, Stack, Input, Button, NativeSelect, Text } from '@chakra-ui/react'
+import { Box, Stack, Input, Button, NativeSelect, Text, Flex } from '@chakra-ui/react'
 import type { Tag } from '@/types/api'
 
 interface BookFiltersProps {
@@ -6,8 +6,8 @@ interface BookFiltersProps {
   onSearch: (v: string) => void
   yearRead: number | undefined
   onYearRead: (v: number | undefined) => void
-  tagId: string
-  onTagId: (v: string) => void
+  tagIds: string[]
+  onTagIds: (v: string[]) => void
   sort: string
   onSort: (v: string) => void
   tags: Tag[]
@@ -17,18 +17,22 @@ interface BookFiltersProps {
 }
 
 const CURRENT_YEAR = new Date().getFullYear()
-const YEAR_OPTIONS = Array.from({ length: 30 }, (_, i) => CURRENT_YEAR - i)
+const MIN_YEAR = 2022
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - MIN_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
 
 export default function BookFilters({
   search, onSearch,
   yearRead, onYearRead,
-  tagId, onTagId,
+  tagIds, onTagIds,
   sort, onSort,
   tags,
   onAdd,
   onClear,
   hasFilters,
 }: BookFiltersProps) {
+  const toggleTag = (id: string) =>
+    onTagIds(tagIds.includes(id) ? tagIds.filter(t => t !== id) : [...tagIds, id])
+
   return (
     <Stack gap={5} h="full">
       {/* Add Book — primary action */}
@@ -81,27 +85,48 @@ export default function BookFilters({
         </NativeSelect.Root>
       </Box>
 
-      {/* Tag filter */}
-      <Box>
-        <Text fontSize="xs" fontWeight="600" color="text.secondary" mb={1.5} letterSpacing="0.04em" textTransform="uppercase">
-          Tag
-        </Text>
-        <NativeSelect.Root size="sm" w="full">
-          <NativeSelect.Field
-            value={tagId}
-            onChange={e => onTagId(e.target.value)}
-            bg="bg.surface"
-            borderColor="border.default"
-            borderRadius="7px"
-          >
-            <option value="">All tags</option>
-            {tags.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
-      </Box>
+      {/* Tag filter — multi-select pills */}
+      {tags.length > 0 && (
+        <Box>
+          <Text fontSize="xs" fontWeight="600" color="text.secondary" mb={1.5} letterSpacing="0.04em" textTransform="uppercase">
+            Tags
+          </Text>
+          <Flex gap={1.5} wrap="wrap">
+            {tags.map(tag => {
+              const selected = tagIds.includes(tag.id)
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => toggleTag(tag.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    border: '1.5px solid',
+                    transition: 'all 0.12s ease',
+                    background: selected
+                      ? 'var(--chakra-colors-accent-subtle)'
+                      : 'transparent',
+                    borderColor: selected
+                      ? 'var(--chakra-colors-accent)'
+                      : 'var(--chakra-colors-border-default)',
+                    color: selected
+                      ? 'var(--chakra-colors-accent)'
+                      : 'var(--chakra-colors-text-secondary)',
+                  }}
+                >
+                  {tag.name}
+                </button>
+              )
+            })}
+          </Flex>
+        </Box>
+      )}
 
       {/* Sort */}
       <Box>

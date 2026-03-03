@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Diamond gem — 3 faces for depth -->
+  <!-- Base: full kite shape (bottom-left face) -->
+  <path d="M16 2 L30 13 L16 30 L2 13 Z" fill="#3b82f6"/>
+  <!-- Top crown (lighter highlight) -->
+  <path d="M16 2 L30 13 L16 15 L2 13 Z" fill="#93c5fd"/>
+  <!-- Bottom-right pavilion (darker shadow) -->
+  <path d="M30 13 L16 15 L16 30 Z" fill="#1d4ed8"/>
+</svg>
