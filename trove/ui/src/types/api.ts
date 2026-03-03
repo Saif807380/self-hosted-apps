@@ -31,6 +31,23 @@ export interface BookFormData {
   tagIds: string[]
 }
 
+export interface VideoGameFormData {
+  title: string
+  studio?: string
+  rating?: number
+  review?: string
+  coverImage?: string
+  yearsPlayed: number[]
+}
+
+export interface TravelLocationFormData {
+  city: string
+  country: string
+  visitedFrom?: string
+  visitedTo?: string
+  photoCollectionUrl?: string
+}
+
 export interface VideoGame {
   id: string
   title: string

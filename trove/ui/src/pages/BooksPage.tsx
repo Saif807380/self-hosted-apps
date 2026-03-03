@@ -6,37 +6,42 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { toaster } from '@/lib/toaster'
 import type { Book, BookFormData } from '@/types/api'
 import BookCard from './books/BookCard'
+import BookListItem from './books/BookListItem'
 import BookFilters from './books/BookFilters'
 import BookForm from './books/BookForm'
 import BookDetailModal from './books/BookDetailModal'
 import EmptyState from '@/components/EmptyState'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import ViewToggle from '@/components/ViewToggle'
 
 const SIDEBAR_WIDTH = 240
 
 export default function BooksPage() {
   const [search, setSearch] = useState('')
   const [yearRead, setYearRead] = useState<number | undefined>()
-  const [tagId, setTagId] = useState('')
+  const [tagIds, setTagIds] = useState<string[]>([])
   const [sort, setSort] = useState('title_asc')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [editBook, setEditBook] = useState<Book | null>(null)
   const [viewBook, setViewBook] = useState<Book | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null)
+  const [view, setView] = useState<'grid' | 'list'>('grid')
 
   const debouncedSearch = useDebounce(search, 300)
   const { books, loading, error, createBook, updateBook, deleteBook } = useBooks({
     search: debouncedSearch,
-    tagId,
     yearRead,
   })
   const { tags, createTag } = useTags()
 
-  const hasFilters = !!search || !!tagId || !!yearRead
+  const hasFilters = !!search || tagIds.length > 0 || !!yearRead
 
   const sortedBooks = useMemo(() => {
-    return [...books].sort((a, b) => {
+    const filtered = tagIds.length > 0
+      ? books.filter(b => tagIds.some(id => b.tags.some(t => t.id === id)))
+      : books
+    return [...filtered].sort((a, b) => {
       switch (sort) {
         case 'title_desc': return b.title.localeCompare(a.title)
         case 'year_desc': {
@@ -52,7 +57,7 @@ export default function BooksPage() {
         default: return a.title.localeCompare(b.title) // title_asc
       }
     })
-  }, [books, sort])
+  }, [books, sort, tagIds])
 
   const handleOpenAdd = () => {
     setEditBook(null)
@@ -90,13 +95,14 @@ export default function BooksPage() {
   const handleClearFilters = () => {
     setSearch('')
     setYearRead(undefined)
-    setTagId('')
+    setTagIds([])
+    setSort('title_asc')
   }
 
   return (
     <Box>
       {/* Page header */}
-      <Flex align="center" mb={5}>
+      <Flex align="center" justify="space-between" mb={5}>
         <Box>
           <Heading
             fontFamily="heading"
@@ -105,7 +111,7 @@ export default function BooksPage() {
             color="text.primary"
             letterSpacing="-0.02em"
           >
-            Books
+            📚 Books
           </Heading>
           {!loading && (
             <Text fontSize="sm" color="text.muted" mt={0.5}>
@@ -113,6 +119,7 @@ export default function BooksPage() {
             </Text>
           )}
         </Box>
+        <ViewToggle view={view} onChange={setView} />
       </Flex>
 
       {/* Main layout: sidebar column + grid */}
@@ -169,8 +176,8 @@ export default function BooksPage() {
                 onSearch={setSearch}
                 yearRead={yearRead}
                 onYearRead={setYearRead}
-                tagId={tagId}
-                onTagId={setTagId}
+                tagIds={tagIds}
+                onTagIds={setTagIds}
                 sort={sort}
                 onSort={setSort}
                 tags={tags}
@@ -198,16 +205,18 @@ export default function BooksPage() {
               onAdd={handleOpenAdd}
               onClear={handleClearFilters}
             />
-          ) : (
+          ) : view === 'grid' ? (
             <SimpleGrid columns={{ base: 3, sm: 4, md: sidebarOpen ? 4 : 5, lg: sidebarOpen ? 5 : 6, xl: sidebarOpen ? 6 : 7 }} gap={6}>
               {sortedBooks.map(book => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  onClick={setViewBook}
-                />
+                <BookCard key={book.id} book={book} onClick={setViewBook} />
               ))}
             </SimpleGrid>
+          ) : (
+            <Flex direction="column" gap={2}>
+              {sortedBooks.map(book => (
+                <BookListItem key={book.id} book={book} onClick={setViewBook} />
+              ))}
+            </Flex>
           )}
         </Box>
       </Flex>

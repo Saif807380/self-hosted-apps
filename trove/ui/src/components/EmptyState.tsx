@@ -2,11 +2,19 @@ import { Box, Flex, Heading, Text, Button } from '@chakra-ui/react'
 
 interface EmptyStateProps {
   hasFilters: boolean
+  noun?: string
+  icon?: string
   onAdd?: () => void
   onClear?: () => void
 }
 
-export default function EmptyState({ hasFilters, onAdd, onClear }: EmptyStateProps) {
+export default function EmptyState({
+  hasFilters,
+  noun = 'book',
+  icon = '📚',
+  onAdd,
+  onClear,
+}: EmptyStateProps) {
   return (
     <Flex
       direction="column"
@@ -16,21 +24,21 @@ export default function EmptyState({ hasFilters, onAdd, onClear }: EmptyStatePro
       px={6}
       textAlign="center"
     >
-      {/* Decorative stack of book spines */}
+      {/* Decorative stacked cards */}
       <Box mb={6} position="relative" w="80px" h="80px">
         {[
           { bg: '#d1fae5', rotate: '-12deg', z: 1 },
           { bg: '#dbeafe', rotate: '6deg', z: 2 },
           { bg: '#f3e8ff', rotate: '-3deg', z: 3 },
-        ].map((book, i) => (
+        ].map((card, i) => (
           <Box
             key={i}
             position="absolute"
             inset={0}
             borderRadius="sm"
-            bg={book.bg}
-            transform={`rotate(${book.rotate})`}
-            zIndex={book.z}
+            bg={card.bg}
+            transform={`rotate(${card.rotate})`}
+            zIndex={card.z}
             boxShadow="sm"
           />
         ))}
@@ -48,14 +56,14 @@ export default function EmptyState({ hasFilters, onAdd, onClear }: EmptyStatePro
           border="1px solid"
           borderColor="border.default"
         >
-          📚
+          {icon}
         </Box>
       </Box>
 
       {hasFilters ? (
         <>
           <Heading size="md" fontFamily="heading" fontWeight="600" color="text.primary" mb={2}>
-            No books found
+            No {noun}s found
           </Heading>
           <Text color="text.secondary" fontSize="sm" maxW="280px" mb={6}>
             Try adjusting your search or filter criteria.
@@ -69,14 +77,14 @@ export default function EmptyState({ hasFilters, onAdd, onClear }: EmptyStatePro
       ) : (
         <>
           <Heading size="md" fontFamily="heading" fontWeight="600" color="text.primary" mb={2}>
-            Your bookshelf is empty
+            Nothing here yet
           </Heading>
           <Text color="text.secondary" fontSize="sm" maxW="300px" mb={6}>
-            Start tracking your reading journey by adding the first book to your collection.
+            Start by adding your first {noun} to the collection.
           </Text>
           {onAdd && (
             <Button onClick={onAdd} size="sm">
-              Add your first book
+              Add your first {noun}
             </Button>
           )}
         </>

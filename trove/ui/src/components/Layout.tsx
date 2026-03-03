@@ -3,10 +3,10 @@ import { NavLink } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle'
 
 const NAV_ITEMS = [
-  { label: 'Books', path: '/books' },
-  { label: 'Games', path: '/games' },
-  { label: 'Travel', path: '/travel' },
-  { label: 'Workouts', path: '/workouts' },
+  { label: '📚 Books', path: '/books' },
+  { label: '🎮 Gaming', path: '/games' },
+  { label: '✈️ Travel', path: '/travel' },
+  { label: '🏋️ Workouts', path: '/workouts' },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -22,15 +22,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         zIndex={100}
       >
         <Flex align="center" justify="space-between" maxW="2000px" mx="auto" px={6} py={3}>
-          <Text
-            fontFamily="heading"
-            fontWeight="700"
-            fontSize="xl"
-            color="text.primary"
-            letterSpacing="-0.02em"
-          >
-            Trove
-          </Text>
+          <Flex align="center" gap={2}>
+            <img src="/favicon.svg" alt="" width={22} height={22} />
+            <Text
+              fontFamily="heading"
+              fontWeight="700"
+              fontSize="xl"
+              color="text.primary"
+              letterSpacing="-0.02em"
+            >
+              Trove
+            </Text>
+          </Flex>
 
           <Flex as="nav" gap={1} align="center">
             {NAV_ITEMS.map(({ label, path }) => (

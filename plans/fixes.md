@@ -2,9 +2,8 @@
 
 ### UI
 
-1. The font of all the text on the book card looks small and harder to read as compared to the cover image being very large
-2. The hide filters button should be with the filters and not on the opposite side
-3. Add/update form should have validations - mandatory fields title, author, years read in
-4. Add sorting in the side panel along with filtering, sorting can be done alphabetically asc/desc on title, and on years read in
-5. Dark Mode toggle doesn't change the website theme
-6. Right now everytime there is any edit to the codebase, I have to hit compose down and compose up build again to see the changes. Can you add hot reload for both UI and backend changes?
+1. Filtering by year is missing on travel page
+2. Sort By year on all books, gaming and travel
+3. On clicking an item, the modal that opens doesn't look good. Remove the modal title and display the cover photo large with details written below it and buttons below that
+4. List view of items is not looking good. The image seems to be too small and the list item covers full width leaving a lot of blank space in between the left side image and text and the right side content
+5. On travel add functionality to search by tourist sport in the same search bar that is already there
