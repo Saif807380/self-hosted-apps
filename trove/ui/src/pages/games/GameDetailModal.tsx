@@ -22,8 +22,7 @@ const COVER_GRADIENTS: [string, string][] = [
 ]
 
 function getCoverGradient(title: string): [string, string] {
-  const code = title.charCodeAt(0) || 65
-  return COVER_GRADIENTS[code % COVER_GRADIENTS.length]
+  return COVER_GRADIENTS[(title.charCodeAt(0) || 65) % COVER_GRADIENTS.length]
 }
 
 export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelete }: GameDetailModalProps) {
@@ -44,98 +43,132 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content maxW="560px" mx={4}>
-            <Dialog.Header borderBottomWidth="1px" borderColor="border.default" pb={3}>
-              <Dialog.Title fontFamily="heading" fontWeight="600" fontSize="lg">
-                Game Details
-              </Dialog.Title>
-              <CloseButton size="sm" onClick={onClose} position="absolute" top={3} right={3} />
-            </Dialog.Header>
-
-            <Dialog.Body py={5}>
-              <Flex gap={5} align="flex-start" direction={{ base: 'column', sm: 'row' }}>
+          {/* Cover: 120px wide, 3:4 ratio → 160px tall. 90% (144px) in blurred area, 10% (16px) below */}
+          <Dialog.Content maxW="380px" mx={4} position="relative">
+            {/* Blurred background section (200px). Cover top = 200 - 144 = 56px */}
+            <Box h="300px" overflow="hidden" position="relative" flexShrink={0}>
+              {game.coverImage ? (
+                <img
+                  src={game.coverImage}
+                  alt=""
+                  aria-hidden
+                  style={{
+                    position: 'absolute', inset: 0,
+                    width: '100%', height: '100%',
+                    objectFit: 'cover',
+                    filter: 'blur(8px)',
+                    transform: 'scale(1.08)',
+                    opacity: 0.75,
+                  }}
+                />
+              ) : (
                 <Box
-                  w={{ base: '120px', sm: '140px' }}
-                  flexShrink={0}
-                  borderRadius="8px"
-                  overflow="hidden"
-                  border="1px solid"
-                  borderColor="border.default"
-                >
-                  <Box position="relative" pb="150%">
-                    <Box position="absolute" inset={0}>
-                      {game.coverImage ? (
-                        <img
-                          src={game.coverImage}
-                          alt={game.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        />
-                      ) : (
-                        <Box
-                          w="full" h="full"
-                          style={{ background: `linear-gradient(150deg, ${gradFrom} 0%, ${gradTo} 100%)` }}
-                          display="flex" alignItems="center" justifyContent="center"
-                        >
-                          <Text
-                            fontFamily="heading" fontWeight="700" fontSize="3xl"
-                            style={{ color: 'rgba(0,0,0,0.25)', userSelect: 'none' }}
-                          >
-                            {initial}
-                          </Text>
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
-
-                <Stack gap={3} flex={1} minW={0}>
-                  <Text
-                    fontFamily="heading" fontWeight="700" fontSize="xl"
-                    color="text.primary" lineHeight="1.3" letterSpacing="-0.01em"
-                  >
-                    {game.title}
-                  </Text>
-
-                  {game.studio && (
-                    <Text fontSize="sm" color="text.secondary">{game.studio}</Text>
-                  )}
-
-                  {game.rating != null && game.rating > 0 && (
-                    <StarRating value={game.rating} readOnly size="md" />
-                  )}
-
-                  {game.yearsPlayed?.length > 0 && (
-                    <Box>
-                      <Text fontSize="xs" color="text.muted" mb={1} fontWeight="500">
-                        Played in
-                      </Text>
-                      <Flex gap={1.5} wrap="wrap">
-                        {game.yearsPlayed.map(year => (
-                          <Box
-                            key={year}
-                            px={2} py="2px" borderRadius="5px"
-                            fontSize="xs" fontWeight="600"
-                            bg="bg.subtle" color="text.secondary" letterSpacing="0.02em"
-                          >
-                            {year}
-                          </Box>
-                        ))}
-                      </Flex>
-                    </Box>
-                  )}
-                </Stack>
-              </Flex>
-
-              {game.review && (
-                <Box mt={5} pt={4} borderTopWidth="1px" borderColor="border.default">
-                  <Text fontSize="xs" color="text.muted" mb={2} fontWeight="500" textTransform="uppercase" letterSpacing="0.04em">
-                    Review
-                  </Text>
-                  <Text fontSize="sm" color="text.primary" lineHeight="1.7" style={{ whiteSpace: 'pre-wrap' }}>
-                    {game.review}
-                  </Text>
-                </Box>
+                  position="absolute" inset={0}
+                  style={{ background: `linear-gradient(150deg, ${gradFrom} 0%, ${gradTo} 100%)` }}
+                />
               )}
+              <Box position="absolute" inset={0} bg="rgba(0,0,0,0.3)" />
+              <CloseButton
+                size="sm"
+                onClick={onClose}
+                position="absolute"
+                top={2}
+                right={2}
+                style={{ background: 'rgba(0,0,0,0.45)', color: 'white', borderRadius: '50%' }}
+              />
+            </Box>
+
+            {/* Cover card: absolutely positioned, straddling blurred area and body */}
+            <Box
+              position="absolute"
+              top="50px"
+              left="50%"
+              w="220px"
+              borderRadius="8px"
+              overflow="hidden"
+              zIndex={2}
+              style={{
+                transform: 'translateX(-50%)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+              }}
+            >
+              <Box position="relative" pb="133%">
+                <Box position="absolute" inset={0}>
+                  {game.coverImage ? (
+                    <img
+                      src={game.coverImage}
+                      alt={game.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }}
+                    />
+                  ) : (
+                    <Box
+                      w="full" h="full"
+                      style={{ background: `linear-gradient(150deg, ${gradFrom} 0%, ${gradTo} 100%)` }}
+                      display="flex" alignItems="center" justifyContent="center"
+                    >
+                      <Text
+                        fontFamily="heading" fontWeight="700" fontSize="5xl"
+                        style={{ color: 'rgba(0,0,0,0.25)', userSelect: 'none' }}
+                      >
+                        {initial}
+                      </Text>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* pt="24px" = 16px cover overlap + 8px breathing room */}
+            <Dialog.Body pt="72px" pb={4}>
+              <Stack gap={3} align="center">
+                <Text
+                  fontFamily="heading" fontWeight="700" fontSize="xl"
+                  color="text.primary" lineHeight="1.3" letterSpacing="-0.01em"
+                  textAlign="center"
+                >
+                  {game.title}
+                </Text>
+
+                {game.studio && (
+                  <Text fontSize="sm" color="text.secondary">{game.studio}</Text>
+                )}
+
+                {game.rating != null && game.rating > 0 && (
+                  <StarRating value={game.rating} readOnly size="md" />
+                )}
+
+                {game.yearsPlayed?.length > 0 && (
+                  <Box>
+                    <Text fontSize="xs" color="text.muted" mb={1} fontWeight="500">Played in</Text>
+                    <Flex gap={1.5} wrap="wrap">
+                      {game.yearsPlayed.map(year => (
+                        <Box
+                          key={year}
+                          px={2} py="2px" borderRadius="5px"
+                          fontSize="xs" fontWeight="600"
+                          bg="bg.subtle" color="text.secondary" letterSpacing="0.02em"
+                        >
+                          {year}
+                        </Box>
+                      ))}
+                    </Flex>
+                  </Box>
+                )}
+
+                {game.review && (
+                  <Box pt={3} borderTopWidth="1px" borderColor="border.default">
+                    <Text
+                      fontSize="xs" color="text.muted" mb={2} fontWeight="500"
+                      textTransform="uppercase" letterSpacing="0.04em"
+                    >
+                      Review
+                    </Text>
+                    <Text fontSize="sm" color="text.primary" lineHeight="1.7" style={{ whiteSpace: 'pre-wrap' }}>
+                      {game.review}
+                    </Text>
+                  </Box>
+                )}
+              </Stack>
             </Dialog.Body>
 
             <Dialog.Footer borderTopWidth="1px" borderColor="border.default" pt={3} gap={2}>
