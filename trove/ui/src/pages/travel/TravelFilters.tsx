@@ -1,10 +1,16 @@
 import { Box, Stack, Input, Button, NativeSelect, Text } from '@chakra-ui/react'
 
+const CURRENT_YEAR = new Date().getFullYear()
+const MIN_YEAR = 2022
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - MIN_YEAR + 1 }, (_, i) => CURRENT_YEAR - i)
+
 interface TravelFiltersProps {
   search: string
   onSearch: (v: string) => void
   sort: string
   onSort: (v: string) => void
+  yearVisited: string
+  onYearVisited: (v: string) => void
   onAdd: () => void
   onClear: () => void
   hasFilters: boolean
@@ -13,6 +19,7 @@ interface TravelFiltersProps {
 export default function TravelFilters({
   search, onSearch,
   sort, onSort,
+  yearVisited, onYearVisited,
   onAdd, onClear, hasFilters,
 }: TravelFiltersProps) {
   return (
@@ -35,6 +42,27 @@ export default function TravelFilters({
           _placeholder={{ color: 'text.muted' }}
           borderRadius="7px"
         />
+      </Box>
+
+      <Box>
+        <Text fontSize="xs" fontWeight="600" color="text.secondary" mb={1.5} letterSpacing="0.04em" textTransform="uppercase">
+          Year visited
+        </Text>
+        <NativeSelect.Root size="sm" w="full">
+          <NativeSelect.Field
+            value={yearVisited}
+            onChange={e => onYearVisited(e.target.value)}
+            bg="bg.surface"
+            borderColor="border.default"
+            borderRadius="7px"
+          >
+            <option value="">Any year</option>
+            {YEAR_OPTIONS.map(y => (
+              <option key={y} value={String(y)}>{y}</option>
+            ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
       </Box>
 
       <Box>

@@ -18,6 +18,7 @@ const SIDEBAR_WIDTH = 240
 export default function TravelPage() {
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('city_asc')
+  const [yearVisited, setYearVisited] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [editLocation, setEditLocation] = useState<TravelLocation | null>(null)
@@ -37,10 +38,13 @@ export default function TravelPage() {
     ? locations.find(l => l.id === viewLocationId) ?? null
     : null
 
-  const hasFilters = !!search
+  const hasFilters = !!search || !!yearVisited
 
   const sortedLocations = useMemo(() => {
-    return [...locations].sort((a, b) => {
+    const filtered = yearVisited
+      ? locations.filter(l => l.visitedFrom?.startsWith(yearVisited))
+      : locations
+    return [...filtered].sort((a, b) => {
       switch (sort) {
         case 'city_desc': return b.city.localeCompare(a.city)
         case 'date_desc': {
@@ -56,7 +60,7 @@ export default function TravelPage() {
         default: return a.city.localeCompare(b.city)
       }
     })
-  }, [locations, sort])
+  }, [locations, sort, yearVisited])
 
   const handleOpenAdd = () => { setEditLocation(null); setFormOpen(true) }
   const handleEdit = (location: TravelLocation) => { setEditLocation(location); setFormOpen(true) }
@@ -84,6 +88,7 @@ export default function TravelPage() {
   const handleClearFilters = () => {
     setSearch('')
     setSort('city_asc')
+    setYearVisited('')
   }
 
   return (
@@ -149,6 +154,8 @@ export default function TravelPage() {
                 onSearch={setSearch}
                 sort={sort}
                 onSort={setSort}
+                yearVisited={yearVisited}
+                onYearVisited={setYearVisited}
                 onAdd={handleOpenAdd}
                 onClear={handleClearFilters}
                 hasFilters={hasFilters}
