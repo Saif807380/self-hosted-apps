@@ -21,3 +21,7 @@
 * Functional Code: Use functional and stateless approaches where they improve clarity
 * Clean logic: Keep core logic clean and push implementation details to the edges
 * File Organsiation: Balance file organization with simplicity - use an appropriate number of files for the project scale
+
+## Instructions for implementing tasks
+
+Always implement tasks one by one. When one task is finished, wait for my approval to start the next
