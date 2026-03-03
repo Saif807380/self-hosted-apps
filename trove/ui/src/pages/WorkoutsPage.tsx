@@ -46,6 +46,7 @@ function AddItemRow({ placeholder, onAdd }: { placeholder: string; onAdd: (name:
         onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
         style={{
           flex: 1,
+          minWidth: 0,
           padding: '4px 8px',
           borderRadius: '6px',
           fontSize: '0.8rem',
@@ -65,8 +66,8 @@ function AddItemRow({ placeholder, onAdd }: { placeholder: string; onAdd: (name:
           fontSize: '0.8rem',
           fontWeight: 600,
           cursor: saving || !value.trim() ? 'not-allowed' : 'pointer',
-          border: '1px solid var(--chakra-colors-accent-default)',
-          background: 'var(--chakra-colors-accent-default)',
+          border: '1px solid var(--chakra-colors-accent)',
+          background: 'var(--chakra-colors-accent)',
           color: 'white',
           opacity: saving || !value.trim() ? 0.5 : 1,
           transition: 'opacity 0.15s ease',
