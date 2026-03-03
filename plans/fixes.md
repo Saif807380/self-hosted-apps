@@ -1,8 +1,8 @@
 ## Fixes to be made
 
-### UI
+### Workout UI
 
-1. Filtering by year is missing on travel page
-2. On clicking an item, the modal that opens doesn't look good. Remove the modal title and display the cover photo large with details written below it and buttons below that
-3. List view of items is not looking good. The image seems to be too small and the list item covers full width leaving a lot of blank space in between the left side image and text and the right side content
-4. On travel add functionality to search by tourist sport in the same search bar that is already there
+1. In Light mode, the currently selected week in log entry tab and selected exersize in progress tab are shown as white text on white background, in dark mode selection doesn't change the font color or background indicating which is selected
+2. When I click on the next week, it cloned all the values but only saved the ones I had updated so in history for week two i only see the ones I have updated the values for
+3. Dark mode chart the items on x and y axis are rendered in black color which makes them unreadable
+4. No way to delete a week and its data
