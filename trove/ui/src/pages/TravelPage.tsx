@@ -31,7 +31,7 @@ export default function TravelPage() {
     locations, loading, error,
     createLocation, updateLocation, deleteLocation,
     createSpot, deleteSpot,
-  } = useTravel({ search: debouncedSearch })
+  } = useTravel()
 
   // Always look up the live location so the detail modal reflects spot changes
   const viewLocation = viewLocationId
@@ -41,9 +41,16 @@ export default function TravelPage() {
   const hasFilters = !!search || !!yearVisited
 
   const sortedLocations = useMemo(() => {
-    const filtered = yearVisited
-      ? locations.filter(l => l.visitedFrom?.startsWith(yearVisited))
-      : locations
+    const q = debouncedSearch.toLowerCase()
+    const filtered = locations.filter(l => {
+      if (yearVisited && !l.visitedFrom?.startsWith(yearVisited)) return false
+      if (!q) return true
+      return (
+        l.city.toLowerCase().includes(q) ||
+        l.country.toLowerCase().includes(q) ||
+        l.touristSpots?.some(s => s.name.toLowerCase().includes(q))
+      )
+    })
     return [...filtered].sort((a, b) => {
       switch (sort) {
         case 'city_desc': return b.city.localeCompare(a.city)
@@ -60,7 +67,7 @@ export default function TravelPage() {
         default: return a.city.localeCompare(b.city)
       }
     })
-  }, [locations, sort, yearVisited])
+  }, [locations, sort, yearVisited, debouncedSearch])
 
   const handleOpenAdd = () => { setEditLocation(null); setFormOpen(true) }
   const handleEdit = (location: TravelLocation) => { setEditLocation(location); setFormOpen(true) }

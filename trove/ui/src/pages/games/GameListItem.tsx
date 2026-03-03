@@ -35,8 +35,7 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
       border="1px solid"
       borderColor="border.default"
       cursor="pointer"
-      px={3}
-      py={2.5}
+      overflow="hidden"
       onClick={() => onClick(game)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -47,9 +46,9 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
         transition: 'box-shadow 0.2s ease',
       }}
     >
-      <Flex align="center" gap={3}>
-        {/* Thumbnail */}
-        <Box w="108px" h="150px" borderRadius="5px" overflow="hidden" flexShrink={0}>
+      <Flex align="stretch">
+        {/* Thumbnail — fixed width, fills item height */}
+        <Box w="90px" flexShrink={0}>
           {game.coverImage ? (
             <img
               src={game.coverImage}
@@ -58,12 +57,12 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
             />
           ) : (
             <Box
-              w="full" h="full"
+              w="full" h="full" minH="120px"
               display="flex" alignItems="center" justifyContent="center"
               style={{ background: `linear-gradient(150deg, ${gradFrom} 0%, ${gradTo} 100%)` }}
             >
               <Text
-                fontFamily="heading" fontWeight="700" fontSize="sm"
+                fontFamily="heading" fontWeight="700" fontSize="2xl"
                 style={{ color: 'rgba(0,0,0,0.25)', userSelect: 'none' }}
               >
                 {initial}
@@ -72,47 +71,45 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
           )}
         </Box>
 
-        {/* Title + studio */}
-        <Box flex={1} minW={0}>
+        {/* Content — all stacked vertically */}
+        <Box px={3} py={2.5} minW={0}>
           <Text
             fontFamily="heading" fontWeight="600" fontSize="sm" color="text.primary"
+            mb={0.5}
             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
             {game.title}
           </Text>
+
           {game.studio && (
             <Text
-              fontSize="xs" color="text.secondary"
+              fontSize="xs" color="text.secondary" mb={1.5}
               style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
             >
               {game.studio}
             </Text>
           )}
-        </Box>
 
-        {/* Years played */}
-        {game.yearsPlayed?.length > 0 && (
-          <Flex gap={1} flexShrink={0}>
-            {game.yearsPlayed.map(year => (
-              <Box
-                key={year}
-                px={1.5} py="1px"
-                borderRadius="4px"
-                fontSize="10px" fontWeight="600"
-                bg="bg.subtle" color="text.muted" letterSpacing="0.03em"
-              >
-                {year}
-              </Box>
-            ))}
+          <Flex gap={2} align="center" wrap="wrap">
+            {game.yearsPlayed?.length > 0 && (
+              <Flex gap={1}>
+                {game.yearsPlayed.map(year => (
+                  <Box
+                    key={year}
+                    px={1.5} py="1px" borderRadius="4px"
+                    fontSize="10px" fontWeight="600"
+                    bg="bg.subtle" color="text.muted" letterSpacing="0.03em"
+                  >
+                    {year}
+                  </Box>
+                ))}
+              </Flex>
+            )}
+            {game.rating != null && game.rating > 0 && (
+              <StarRating value={game.rating} readOnly size="sm" />
+            )}
           </Flex>
-        )}
-
-        {/* Rating */}
-        {game.rating != null && game.rating > 0 && (
-          <Box flexShrink={0}>
-            <StarRating value={game.rating} readOnly size="sm" />
-          </Box>
-        )}
+        </Box>
       </Flex>
     </Box>
   )

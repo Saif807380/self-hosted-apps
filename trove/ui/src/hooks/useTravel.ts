@@ -6,7 +6,7 @@ import type {
   TouristSpot,
 } from "@/types/api";
 
-export function useTravel({ search = "" }: { search?: string } = {}) {
+export function useTravel() {
   const [locations, setLocations] = useState<TravelLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,14 +15,14 @@ export function useTravel({ search = "" }: { search?: string } = {}) {
     setLoading(true);
     setError(null);
     try {
-      const data = await travelApi.list({ search: search || undefined });
+      const data = await travelApi.list();
       setLocations(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load locations");
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, []);
 
   useEffect(() => {
     refetch();
