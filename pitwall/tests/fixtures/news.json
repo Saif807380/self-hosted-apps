@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Leclerc takes new engine component, grid penalty likely for Australian GP",
+    "summary": "Charles Leclerc has taken a new ICE ahead of the Australian Grand Prix weekend, putting him at risk of a grid penalty if he exceeds his allocation.",
+    "source": "Formula 1 Official",
+    "published": "2026-03-05T14:30:00+00:00",
+    "link": "https://example.com/leclerc-engine"
+  },
+  {
+    "title": "McLaren bring major floor upgrade to Melbourne",
+    "summary": "McLaren have confirmed a significant floor upgrade package for the Australian GP, expected to be worth 2-3 tenths per lap.",
+    "source": "Motorsport.com",
+    "published": "2026-03-05T10:00:00+00:00",
+    "link": "https://example.com/mclaren-upgrade"
+  },
+  {
+    "title": "Albon feeling confident after strong pre-season test",
+    "summary": "Alexander Albon says Williams have made a step forward and he is targeting regular points finishes in the opening rounds.",
+    "source": "Formula 1 Official",
+    "published": "2026-03-04T16:00:00+00:00",
+    "link": "https://example.com/albon-confident"
+  },
+  {
+    "title": "Rain expected to stay away from Melbourne race weekend",
+    "summary": "Weather forecasts suggest a dry weekend for the Australian Grand Prix, with temperatures around 25 degrees.",
+    "source": "Google News F1",
+    "published": "2026-03-04T08:00:00+00:00",
+    "link": "https://example.com/melbourne-weather"
+  },
+  {
+    "title": "Tsunoda under investigation for impeding during practice",
+    "summary": "Yuki Tsunoda is under investigation by the stewards for allegedly impeding another driver during FP2 at Albert Park.",
+    "source": "Motorsport.com",
+    "published": "2026-03-03T18:00:00+00:00",
+    "link": "https://example.com/tsunoda-investigation"
+  }
+]

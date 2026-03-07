@@ -1,0 +1,16 @@
+{
+  "qualifying_day": {
+    "date": "2026-03-14",
+    "temp_celsius": 24.5,
+    "conditions": "partly cloudy",
+    "rain_probability": 0.15,
+    "wind_speed_ms": 4.2
+  },
+  "race_day": {
+    "date": "2026-03-15",
+    "temp_celsius": 26.0,
+    "conditions": "clear sky",
+    "rain_probability": 0.05,
+    "wind_speed_ms": 3.8
+  }
+}

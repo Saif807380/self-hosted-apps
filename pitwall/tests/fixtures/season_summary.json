@@ -1,0 +1,38 @@
+{
+  "year": 2026,
+  "rounds_completed": 4,
+  "driver_stats": [
+    {"driver": "VER", "team": "Red Bull Racing", "total_points": 156, "avg_quali_position": 1.5, "avg_finish_position": 1.8, "dnf_count": 0, "points_trend": [44, 38, 40]},
+    {"driver": "NOR", "team": "McLaren", "total_points": 143, "avg_quali_position": 2.8, "avg_finish_position": 2.5, "dnf_count": 0, "points_trend": [38, 40, 36]},
+    {"driver": "LEC", "team": "Ferrari", "total_points": 130, "avg_quali_position": 3.0, "avg_finish_position": 3.2, "dnf_count": 1, "points_trend": [30, 0, 44]},
+    {"driver": "PIA", "team": "McLaren", "total_points": 118, "avg_quali_position": 4.2, "avg_finish_position": 4.0, "dnf_count": 0, "points_trend": [28, 32, 30]},
+    {"driver": "HAM", "team": "Mercedes", "total_points": 112, "avg_quali_position": 4.8, "avg_finish_position": 4.5, "dnf_count": 0, "points_trend": [26, 28, 30]},
+    {"driver": "RUS", "team": "Mercedes", "total_points": 108, "avg_quali_position": 5.0, "avg_finish_position": 5.2, "dnf_count": 0, "points_trend": [24, 26, 28]},
+    {"driver": "SAI", "team": "Ferrari", "total_points": 105, "avg_quali_position": 3.5, "avg_finish_position": 5.5, "dnf_count": 1, "points_trend": [22, 35, 25]},
+    {"driver": "ALO", "team": "Aston Martin", "total_points": 62, "avg_quali_position": 7.5, "avg_finish_position": 7.8, "dnf_count": 0, "points_trend": [14, 16, 18]},
+    {"driver": "GAS", "team": "Alpine", "total_points": 55, "avg_quali_position": 8.0, "avg_finish_position": 8.5, "dnf_count": 0, "points_trend": [12, 14, 16]},
+    {"driver": "TSU", "team": "RB", "total_points": 48, "avg_quali_position": 9.0, "avg_finish_position": 9.2, "dnf_count": 1, "points_trend": [10, 0, 20]},
+    {"driver": "OCO", "team": "Alpine", "total_points": 42, "avg_quali_position": 10.0, "avg_finish_position": 10.5, "dnf_count": 0, "points_trend": [10, 12, 10]},
+    {"driver": "ALB", "team": "Williams", "total_points": 40, "avg_quali_position": 9.5, "avg_finish_position": 10.0, "dnf_count": 1, "points_trend": [8, 0, 18]},
+    {"driver": "STR", "team": "Aston Martin", "total_points": 34, "avg_quali_position": 11.0, "avg_finish_position": 11.5, "dnf_count": 0, "points_trend": [8, 10, 8]},
+    {"driver": "HUL", "team": "Haas", "total_points": 32, "avg_quali_position": 10.5, "avg_finish_position": 11.0, "dnf_count": 0, "points_trend": [8, 10, 8]},
+    {"driver": "RIC", "team": "RB", "total_points": 28, "avg_quali_position": 12.0, "avg_finish_position": 12.5, "dnf_count": 1, "points_trend": [6, 8, 0]},
+    {"driver": "LAW", "team": "RB", "total_points": 22, "avg_quali_position": 13.0, "avg_finish_position": 13.0, "dnf_count": 0, "points_trend": [6, 6, 6]},
+    {"driver": "MAG", "team": "Haas", "total_points": 18, "avg_quali_position": 14.0, "avg_finish_position": 14.5, "dnf_count": 0, "points_trend": [4, 6, 4]},
+    {"driver": "BOT", "team": "Sauber", "total_points": 10, "avg_quali_position": 16.0, "avg_finish_position": 16.5, "dnf_count": 1, "points_trend": [2, 0, 4]},
+    {"driver": "ZHO", "team": "Sauber", "total_points": 8, "avg_quali_position": 17.0, "avg_finish_position": 17.0, "dnf_count": 0, "points_trend": [2, 2, 2]},
+    {"driver": "SAR", "team": "Williams", "total_points": 5, "avg_quali_position": 18.5, "avg_finish_position": 18.0, "dnf_count": 0, "points_trend": [1, 2, 1]}
+  ],
+  "constructor_stats": [
+    {"constructor": "McLaren", "total_points": 261, "avg_finish_positions": [3.25], "reliability_dnfs": 0},
+    {"constructor": "Ferrari", "total_points": 235, "avg_finish_positions": [4.35], "reliability_dnfs": 2},
+    {"constructor": "Mercedes", "total_points": 220, "avg_finish_positions": [4.85], "reliability_dnfs": 0},
+    {"constructor": "Red Bull Racing", "total_points": 210, "avg_finish_positions": [3.5], "reliability_dnfs": 0},
+    {"constructor": "Aston Martin", "total_points": 96, "avg_finish_positions": [9.65], "reliability_dnfs": 0},
+    {"constructor": "Alpine", "total_points": 65, "avg_finish_positions": [9.5], "reliability_dnfs": 0},
+    {"constructor": "RB", "total_points": 52, "avg_finish_positions": [11.5], "reliability_dnfs": 2},
+    {"constructor": "Williams", "total_points": 35, "avg_finish_positions": [14.0], "reliability_dnfs": 1},
+    {"constructor": "Haas", "total_points": 30, "avg_finish_positions": [12.75], "reliability_dnfs": 0},
+    {"constructor": "Sauber", "total_points": 12, "avg_finish_positions": [16.75], "reliability_dnfs": 1}
+  ]
+}

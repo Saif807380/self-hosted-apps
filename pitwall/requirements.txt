@@ -1,0 +1,10 @@
+playwright~=1.49
+beautifulsoup4~=4.12
+fastf1~=3.4
+langchain~=0.3
+langchain-google-genai~=2.0
+langgraph~=0.2
+python-dotenv~=1.0
+requests~=2.32
+rich~=13.9
+feedparser~=6.0

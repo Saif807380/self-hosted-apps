@@ -126,3 +126,7 @@ volumes/
 *.swp
 *.swo
 .DS_Store
+
+# Project Specific Files
+
+pitwall/config/*.json
