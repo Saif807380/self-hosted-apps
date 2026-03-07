@@ -1,0 +1,46 @@
+I am currently on the F1 Fantasy “My Team” page in my browser:
+
+https://fantasy.formula1.com/en/my-team
+
+Please do the following:
+
+Read this page and extract my current team data:
+
+All 5 drivers with their names and current points.
+
+Both constructors with their names and current points.
+
+The total team points shown on the page.
+
+Identify which driver is my Turbo Driver (the one with the 2x / DRS Boost icon) and use that name.
+
+Put the extracted data into this exact JSON structure:
+
+{
+"drivers": [
+{"name": "", "points": 0},
+{"name": "", "points": 0},
+{"name": "", "points": 0},
+{"name": "", "points": 0},
+{"name": "", "points": 0}
+],
+"constructors": [
+{"name": "", "points": 0},
+{"name": "", "points": 0}
+],
+"total_points": 0,
+"turbo_driver": ""
+}
+
+Fill all fields with the correct values from my current team:
+
+Use the exact driver and constructor names as shown on the page.
+
+Use the points values shown for this gameweek.
+
+Set "turbo_driver" to the driver who has the 2x / DRS Boost icon.
+
+Show me the completed JSON in a code block.
+
+Then create a downloadable JSON file with that content named:
+current_team.json

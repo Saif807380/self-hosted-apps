@@ -6,6 +6,7 @@
 * Testability: Ensure code is testable
 * Reusability: Create reusable components and functions
 * Less Code = Less Debt: Minimize code footprint
+* Security: Put creds in an environment or properties file depending on the application and never commit them
 
 ## Coding Best Practices
 
@@ -25,3 +26,23 @@
 ## Instructions for implementing tasks
 
 Always implement tasks one by one. When one task is finished, wait for my approval to start the next
+
+## Pitwall — F1 Fantasy Optimizer
+
+### Stack
+- Python 3.14, venv, pip
+- LangChain + LangGraph (ReAct agent), Gemini LLM (langchain-google-genai)
+- fastf1 (telemetry), feedparser (RSS news), OpenWeatherMap (weather)
+- rich (CLI output)
+
+### Key Gotchas
+- **Empty `__init__.py` files**: `telemetry/__init__.py` and `agent/__init__.py` MUST be empty — eager imports cause deadlocks when LangChain agent tools do lazy imports
+- **fastf1 logging**: Set `logging.getLogger("fastf1").setLevel(logging.ERROR)` — extremely verbose by default
+- **fastf1 NaT values**: Use `pd.isna()` not `is not None` — fastf1 uses pandas NaT, not Python None
+- **fastf1 lap filtering**: Use `IsAccurate` flag, not manual pit/track-status checks
+- **fastf1 lightweight loading**: For results-only queries use `session.load(laps=False, telemetry=False, weather=False, messages=False)`
+- **fastf1 event search**: Search `Location` and `Country` columns, not just `EventName` (e.g., "Melbourne" is in Location, not EventName)
+- **Gemini model names**: Use `gemini-2.5-flash` or `gemini-2.5-pro` — `3.x-preview` models require thought signatures unsupported by LangChain
+- **Season data fallback**: When current year data unavailable in fastf1, fall back to previous year with a note
+- **Scraper abandoned**: Fantasy state comes from manually maintained JSON files in `config/` (current_team.json, market.json), not from web scraping
+- **OWM_API_KEY is optional**: Weather is nice-to-have, not critical — don't `sys.exit` if missing

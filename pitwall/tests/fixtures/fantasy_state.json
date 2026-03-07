@@ -1,0 +1,49 @@
+{
+  "current_team": {
+    "drivers": [
+      {"name": "M. Verstappen", "points": 0},
+      {"name": "I. Hadjar", "points": 8},
+      {"name": "N. Hulkenberg", "points": 0},
+      {"name": "O. Bearman", "points": 0},
+      {"name": "E. Ocon", "points": 0}
+    ],
+    "constructors": [
+      {"name": "Ferrari", "points": 21},
+      {"name": "Haas F1 Team", "points": 3}
+    ],
+    "total_points": 32,
+    "turbo_driver": "M. Verstappen"
+  },
+  "market": [
+    {"name": "M. Verstappen", "type": "driver", "price": 30.5, "points_scored": 0},
+    {"name": "I. Hadjar", "type": "driver", "price": 8.5, "points_scored": 8},
+    {"name": "L. Norris", "type": "driver", "price": 27.0, "points_scored": 12},
+    {"name": "O. Piastri", "type": "driver", "price": 23.5, "points_scored": 15},
+    {"name": "C. Leclerc", "type": "driver", "price": 25.0, "points_scored": 10},
+    {"name": "L. Hamilton", "type": "driver", "price": 28.0, "points_scored": 11},
+    {"name": "G. Russell", "type": "driver", "price": 22.5, "points_scored": 8},
+    {"name": "F. Alonso", "type": "driver", "price": 15.0, "points_scored": 6},
+    {"name": "L. Stroll", "type": "driver", "price": 10.5, "points_scored": 3},
+    {"name": "P. Gasly", "type": "driver", "price": 13.0, "points_scored": 5},
+    {"name": "N. Hulkenberg", "type": "driver", "price": 11.5, "points_scored": 0},
+    {"name": "O. Bearman", "type": "driver", "price": 8.0, "points_scored": 0},
+    {"name": "E. Ocon", "type": "driver", "price": 9.5, "points_scored": 0},
+    {"name": "Y. Tsunoda", "type": "driver", "price": 12.0, "points_scored": 4},
+    {"name": "A. Albon", "type": "driver", "price": 11.0, "points_scored": 2},
+    {"name": "C. Sainz", "type": "driver", "price": 18.0, "points_scored": 7},
+    {"name": "J. Doohan", "type": "driver", "price": 7.0, "points_scored": 1},
+    {"name": "K. Antonelli", "type": "driver", "price": 14.0, "points_scored": 6},
+    {"name": "G. Bortoleto", "type": "driver", "price": 7.5, "points_scored": 0},
+    {"name": "L. Lawson", "type": "driver", "price": 8.5, "points_scored": 3},
+    {"name": "Red Bull Racing", "type": "constructor", "price": 28.0, "points_scored": 8},
+    {"name": "McLaren", "type": "constructor", "price": 26.5, "points_scored": 27},
+    {"name": "Ferrari", "type": "constructor", "price": 25.0, "points_scored": 21},
+    {"name": "Mercedes", "type": "constructor", "price": 23.0, "points_scored": 19},
+    {"name": "Aston Martin", "type": "constructor", "price": 14.0, "points_scored": 9},
+    {"name": "Alpine", "type": "constructor", "price": 11.0, "points_scored": 6},
+    {"name": "RB", "type": "constructor", "price": 10.5, "points_scored": 7},
+    {"name": "Haas F1 Team", "type": "constructor", "price": 8.0, "points_scored": 3},
+    {"name": "Williams", "type": "constructor", "price": 8.5, "points_scored": 2},
+    {"name": "Audi", "type": "constructor", "price": 6.0, "points_scored": 0}
+  ]
+}
