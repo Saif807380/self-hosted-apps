@@ -1,7 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
-import pitwall.config.config as config
+import config.config as config
 from agent.tools import ALL_TOOLS
 from agent.prompts import build_system_prompt
 
@@ -41,16 +41,31 @@ def run_agent(verbose: bool = False, tools: list | None = None) -> str:
     messages = result.get("messages", [])
 
     if verbose:
-        return "\n\n---\n\n".join(
-            getattr(m, "content", str(m))
-            for m in messages
-            if getattr(m, "content", None)
-        )
+        parts = []
+        for m in messages:
+            content = getattr(m, "content", None)
+            if not content:
+                continue
+            if isinstance(content, list):
+                text = " ".join(
+                    c.get("text", "") if isinstance(c, dict) else str(c)
+                    for c in content
+                )
+            else:
+                text = str(content)
+            if text.strip():
+                parts.append(text)
+        return "\n\n---\n\n".join(parts)
 
     # Return only the final AI message
     for m in reversed(messages):
         content = getattr(m, "content", None)
         if content and hasattr(m, "type") and m.type == "ai":
+            if isinstance(content, list):
+                return " ".join(
+                    c.get("text", "") if isinstance(c, dict) else str(c)
+                    for c in content
+                )
             return content
 
     return "No recommendation generated. Check agent logs."

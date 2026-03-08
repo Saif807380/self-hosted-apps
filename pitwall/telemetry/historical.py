@@ -6,7 +6,7 @@ logging.getLogger("fastf1").setLevel(logging.ERROR)
 
 
 def get_circuit_history(circuit_name: str, years: int = 3) -> list[dict]:
-    import pitwall.config.config as config
+    import config.config as config
     current_year = config.RACE_YEAR
     results = []
 

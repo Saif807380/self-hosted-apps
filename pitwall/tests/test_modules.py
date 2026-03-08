@@ -3,6 +3,10 @@
 import argparse
 import json
 import sys
+from pathlib import Path
+
+# Allow running from either the pitwall/ dir or its parent
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from dotenv import load_dotenv
 from rich.console import Console
@@ -15,7 +19,7 @@ console = Console()
 def test_telemetry_practice(year: int, round_num: int):
     console.print("\n[bold cyan]--- Practice Pace (fastf1) ---[/bold cyan]\n")
     try:
-        from telemetry.session_data import get_practice_pace
+        from pitwall.telemetry.session_data import get_practice_pace
         with console.status(f"Loading FP1/FP2 data for {year} R{round_num}..."):
             paces = get_practice_pace(year, round_num)
 
@@ -30,7 +34,7 @@ def test_telemetry_practice(year: int, round_num: int):
 def test_telemetry_quali(year: int, round_num: int):
     console.print("\n[bold cyan]--- Qualifying Results (fastf1) ---[/bold cyan]\n")
     try:
-        from telemetry.session_data import get_qualifying_results
+        from pitwall.telemetry.session_data import get_qualifying_results
         with console.status(f"Loading qualifying for {year} R{round_num}..."):
             results = get_qualifying_results(year, round_num)
 
@@ -48,7 +52,7 @@ def test_telemetry_quali(year: int, round_num: int):
 def test_telemetry_race(year: int, round_num: int):
     console.print("\n[bold cyan]--- Race Results (fastf1) ---[/bold cyan]\n")
     try:
-        from telemetry.session_data import get_race_results
+        from pitwall.telemetry.session_data import get_race_results
         with console.status(f"Loading race for {year} R{round_num}..."):
             results = get_race_results(year, round_num)
 
@@ -64,7 +68,7 @@ def test_telemetry_race(year: int, round_num: int):
 def test_telemetry_season(year: int, up_to_round: int):
     console.print("\n[bold cyan]--- Season Summary (fastf1) ---[/bold cyan]\n")
     try:
-        from telemetry.session_data import get_season_summary
+        from pitwall.telemetry.session_data import get_season_summary
         with console.status(f"Loading season {year} up to R{up_to_round}..."):
             summary = get_season_summary(year, up_to_round)
 
@@ -79,7 +83,7 @@ def test_telemetry_season(year: int, up_to_round: int):
 def test_historical(circuit: str):
     console.print("\n[bold cyan]--- Circuit History (fastf1) ---[/bold cyan]\n")
     try:
-        from telemetry.historical import get_circuit_history
+        from pitwall.telemetry.historical import get_circuit_history
         with console.status(f"Loading history for {circuit}..."):
             history = get_circuit_history(circuit, years=3)
 
@@ -95,7 +99,7 @@ def test_historical(circuit: str):
 def test_weather(city: str, country_code: str):
     console.print("\n[bold cyan]--- Weather Forecast ---[/bold cyan]\n")
     try:
-        from telemetry.weather import get_race_weekend_weather
+        from pitwall.telemetry.weather import get_race_weekend_weather
         with console.status(f"Fetching weather for {city}, {country_code}..."):
             forecast = get_race_weekend_weather(city, country_code)
 
@@ -119,7 +123,7 @@ def test_weather(city: str, country_code: str):
 def test_news():
     console.print("\n[bold cyan]--- F1 News (RSS) ---[/bold cyan]\n")
     try:
-        from telemetry.news import get_f1_news
+        from pitwall.telemetry.news import get_f1_news
         with console.status("Fetching RSS feeds..."):
             news = get_f1_news(days_back=5)
 

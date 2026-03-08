@@ -226,7 +226,7 @@ def get_race_results(year: int, round_num: int) -> list[RaceResult]:
             team=str(row["TeamName"]),
             position=int(row["Position"]) if str(row["Position"]) != "nan" else 0,
             grid_position=int(row["GridPosition"]) if str(row["GridPosition"]) != "nan" else 0,
-            points=float(row["Points"]),
+            points=float(row["Points"]) if not pd.isna(row["Points"]) else 0.0,
             status=str(row.get("Status", "")),
             fastest_lap=bool(row.get("FastestLap", False)),
         ))
@@ -249,11 +249,16 @@ def get_season_summary(year: int, up_to_round: int) -> SeasonSummary:
 
     rounds_completed = 0
 
-    for rnd in range(1, up_to_round):
+    for rnd in range(1, up_to_round+1):
         # Race results
         try:
             race_results = get_race_results(year, rnd)
         except Exception:
+            continue
+
+        # Skip rounds where the race hasn't happened yet (fastf1 returns the
+        # session from the schedule but all positions/points are zero)
+        if not race_results or all(r.position == 0 for r in race_results):
             continue
 
         rounds_completed += 1
