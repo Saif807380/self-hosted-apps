@@ -4,19 +4,23 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
-import pitwall.config.config as config
+import config.config as config
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
 
 
 @tool
 def get_fantasy_state() -> str:
-    """Get the user's current F1 Fantasy roster (drivers, constructors, points, turbo driver) and the full market with pricing for all available drivers and constructors."""
+    """Get the user's current F1 Fantasy roster (drivers, constructors, points, turbo driver, free transfers remaining) and the full market with pricing. Also returns available boosts — only one unused boost can be activated per race week and each boost can never be reused once spent."""
     try:
         current_team = json.loads((CONFIG_DIR / "current_team.json").read_text())
         market = json.loads((CONFIG_DIR / "market.json").read_text())
+        boosts = json.loads((CONFIG_DIR / "boosts.json").read_text())
         return json.dumps({
+            "budget_total": config.TOTAL_BUDGET,
             "current_team": current_team,
+            "available_boosts": [b for b in boosts if not b["used"]],
+            "used_boosts": [b["name"] for b in boosts if b["used"]],
             "market": market["market"],
         }, indent=2)
     except Exception as e:

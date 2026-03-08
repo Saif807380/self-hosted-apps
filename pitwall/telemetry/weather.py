@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import requests
 
-import pitwall.config.config as config
+import config.config as config
 
 OWM_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
 

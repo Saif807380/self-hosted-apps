@@ -1,6 +1,9 @@
 import argparse
 import os
 import sys
+import warnings
+
+warnings.filterwarnings("ignore", message="Core Pydantic V1 functionality", category=UserWarning)
 
 from dotenv import load_dotenv
 from rich.console import Console

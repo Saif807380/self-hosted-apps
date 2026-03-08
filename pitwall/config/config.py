@@ -26,6 +26,7 @@ CIRCUIT_COUNTRY_CODE = os.getenv("CIRCUIT_COUNTRY_CODE", "AU")
 MAX_DRIVERS = 5
 MAX_CONSTRUCTORS = 2
 SWAP_PENALTY_POINTS = -10  # per transfer beyond free allowance
+TOTAL_BUDGET = 100.0  # $100M always
 
 # Rules file path (fed to the LLM alongside data)
 RULES_FILE = os.path.join(os.path.dirname(__file__), "config", "Rules.md")
