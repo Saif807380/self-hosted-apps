@@ -15,7 +15,7 @@ type WorkoutStore struct {
 }
 
 func (s *WorkoutStore) ListTypes(ctx context.Context) ([]model.WorkoutType, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, name, sort_order, created_at FROM workout_types ORDER BY sort_order, name")
+	rows, err := s.db.Query(ctx, "SELECT id, name, sort_order, deleted, created_at, updated_at FROM workout_types WHERE deleted = false ORDER BY sort_order, name")
 	if err != nil {
 		return nil, fmt.Errorf("list workout types: %w", err)
 	}
@@ -39,7 +39,7 @@ func (s *WorkoutStore) ListTypes(ctx context.Context) ([]model.WorkoutType, erro
 
 func (s *WorkoutStore) CreateType(ctx context.Context, name string, sortOrder int16) (*model.WorkoutType, error) {
 	rows, err := s.db.Query(ctx,
-		"INSERT INTO workout_types (name, sort_order) VALUES ($1, $2) RETURNING id, name, sort_order, created_at",
+		"INSERT INTO workout_types (name, sort_order) VALUES ($1, $2) RETURNING id, name, sort_order, deleted, created_at, updated_at",
 		name, sortOrder,
 	)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *WorkoutStore) CreateType(ctx context.Context, name string, sortOrder in
 }
 
 func (s *WorkoutStore) DeleteType(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM workout_types WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE workout_types SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
@@ -66,7 +66,7 @@ type CreateExerciseParams struct {
 
 func (s *WorkoutStore) CreateExercise(ctx context.Context, p CreateExerciseParams) (*model.Exercise, error) {
 	rows, err := s.db.Query(ctx,
-		"INSERT INTO exercises (workout_type_id, name, sort_order) VALUES ($1, $2, $3) RETURNING id, workout_type_id, name, sort_order",
+		"INSERT INTO exercises (workout_type_id, name, sort_order) VALUES ($1, $2, $3) RETURNING id, workout_type_id, name, sort_order, deleted, updated_at",
 		p.WorkoutTypeID, p.Name, p.SortOrder,
 	)
 	if err != nil {
@@ -87,7 +87,7 @@ type UpdateExerciseParams struct {
 
 func (s *WorkoutStore) UpdateExercise(ctx context.Context, p UpdateExerciseParams) (*model.Exercise, error) {
 	rows, err := s.db.Query(ctx,
-		"UPDATE exercises SET name=$2, sort_order=$3 WHERE id=$1 RETURNING id, workout_type_id, name, sort_order",
+		"UPDATE exercises SET name=$2, sort_order=$3, updated_at=now() WHERE id=$1 RETURNING id, workout_type_id, name, sort_order, deleted, updated_at",
 		p.ID, p.Name, p.SortOrder,
 	)
 	if err != nil {
@@ -101,7 +101,7 @@ func (s *WorkoutStore) UpdateExercise(ctx context.Context, p UpdateExerciseParam
 }
 
 func (s *WorkoutStore) DeleteExercise(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM exercises WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE exercises SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
@@ -112,12 +112,12 @@ func (s *WorkoutStore) ListLogs(ctx context.Context, exerciseID uuid.UUID, weekN
 	)
 	if weekNumber != nil {
 		rows, err = s.db.Query(ctx,
-			"SELECT id, exercise_id, week_number, sets, reps, weight_kg, logged_at FROM workout_logs WHERE exercise_id = $1 AND week_number = $2 ORDER BY logged_at DESC",
+			"SELECT id, exercise_id, week_number, sets, reps, weight_kg, deleted, logged_at, updated_at FROM workout_logs WHERE exercise_id = $1 AND week_number = $2 AND deleted = false ORDER BY logged_at DESC",
 			exerciseID, *weekNumber,
 		)
 	} else {
 		rows, err = s.db.Query(ctx,
-			"SELECT id, exercise_id, week_number, sets, reps, weight_kg, logged_at FROM workout_logs WHERE exercise_id = $1 ORDER BY week_number DESC, logged_at DESC",
+			"SELECT id, exercise_id, week_number, sets, reps, weight_kg, deleted, logged_at, updated_at FROM workout_logs WHERE exercise_id = $1 AND deleted = false ORDER BY week_number DESC, logged_at DESC",
 			exerciseID,
 		)
 	}
@@ -147,8 +147,8 @@ func (s *WorkoutStore) UpsertLog(ctx context.Context, p UpsertLogParams) (*model
 		`INSERT INTO workout_logs (exercise_id, week_number, sets, reps, weight_kg)
 		 VALUES ($1, $2, $3, $4, $5)
 		 ON CONFLICT (exercise_id, week_number)
-		 DO UPDATE SET sets = EXCLUDED.sets, reps = EXCLUDED.reps, weight_kg = EXCLUDED.weight_kg, logged_at = now()
-		 RETURNING id, exercise_id, week_number, sets, reps, weight_kg, logged_at`,
+		 DO UPDATE SET sets = EXCLUDED.sets, reps = EXCLUDED.reps, weight_kg = EXCLUDED.weight_kg, logged_at = now(), updated_at = now()
+		 RETURNING id, exercise_id, week_number, sets, reps, weight_kg, deleted, logged_at, updated_at`,
 		p.ExerciseID, p.WeekNumber, p.Sets, p.Reps, p.WeightKg,
 	)
 	if err != nil {
@@ -162,13 +162,13 @@ func (s *WorkoutStore) UpsertLog(ctx context.Context, p UpsertLogParams) (*model
 }
 
 func (s *WorkoutStore) DeleteLog(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM workout_logs WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE workout_logs SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
 func (s *WorkoutStore) listExercises(ctx context.Context, workoutTypeID uuid.UUID) ([]model.Exercise, error) {
 	rows, err := s.db.Query(ctx,
-		"SELECT id, workout_type_id, name, sort_order FROM exercises WHERE workout_type_id = $1 ORDER BY sort_order, name",
+		"SELECT id, workout_type_id, name, sort_order, deleted, updated_at FROM exercises WHERE workout_type_id = $1 AND deleted = false ORDER BY sort_order, name",
 		workoutTypeID,
 	)
 	if err != nil {

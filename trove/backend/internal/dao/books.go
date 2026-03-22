@@ -22,33 +22,25 @@ type BookFilter struct {
 
 func (s *BookStore) List(ctx context.Context, f BookFilter) ([]model.Book, error) {
 	args := []any{}
-	where := ""
 	idx := 1
 
+	where := " WHERE b.deleted = false"
 	if f.Search != "" {
-		where = fmt.Sprintf(" WHERE (b.title ILIKE $%d OR b.author ILIKE $%d)", idx, idx+1)
+		where += fmt.Sprintf(" AND (b.title ILIKE $%d OR b.author ILIKE $%d)", idx, idx+1)
 		args = append(args, "%"+f.Search+"%", "%"+f.Search+"%")
 		idx += 2
 	}
 	if f.YearRead != 0 {
-		if where == "" {
-			where = fmt.Sprintf(" WHERE EXISTS (SELECT 1 FROM book_years_read byr WHERE byr.book_id = b.id AND byr.year = $%d)", idx)
-		} else {
-			where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM book_years_read byr WHERE byr.book_id = b.id AND byr.year = $%d)", idx)
-		}
+		where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM book_years_read byr WHERE byr.book_id = b.id AND byr.year = $%d)", idx)
 		args = append(args, f.YearRead)
 		idx++
 	}
 	if f.TagID != "" {
-		if where == "" {
-			where = fmt.Sprintf(" WHERE EXISTS (SELECT 1 FROM book_tags bt WHERE bt.book_id = b.id AND bt.tag_id = $%d)", idx)
-		} else {
-			where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM book_tags bt WHERE bt.book_id = b.id AND bt.tag_id = $%d)", idx)
-		}
+		where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM book_tags bt WHERE bt.book_id = b.id AND bt.tag_id = $%d)", idx)
 		args = append(args, f.TagID)
 	}
 
-	sql := "SELECT b.id, b.title, b.author, b.rating, b.review, b.cover_image, b.created_at, b.updated_at FROM books b" + where + " ORDER BY b.title"
+	sql := "SELECT b.id, b.title, b.author, b.rating, b.review, b.cover_image, b.deleted, b.created_at, b.updated_at FROM books b" + where + " ORDER BY b.title"
 	rows, err := s.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list books: %w", err)
@@ -76,7 +68,7 @@ func (s *BookStore) List(ctx context.Context, f BookFilter) ([]model.Book, error
 }
 
 func (s *BookStore) Get(ctx context.Context, id uuid.UUID) (*model.Book, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, title, author, rating, review, cover_image, created_at, updated_at FROM books WHERE id = $1", id)
+	rows, err := s.db.Query(ctx, "SELECT id, title, author, rating, review, cover_image, deleted, created_at, updated_at FROM books WHERE id = $1 AND deleted = false", id)
 	if err != nil {
 		return nil, fmt.Errorf("get book: %w", err)
 	}
@@ -114,7 +106,7 @@ func (s *BookStore) Create(ctx context.Context, p CreateBookParams) (*model.Book
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	rows, err := tx.Query(ctx,
-		"INSERT INTO books (title, author, rating, review, cover_image) VALUES ($1, $2, $3, $4, $5) RETURNING id, title, author, rating, review, cover_image, created_at, updated_at",
+		"INSERT INTO books (title, author, rating, review, cover_image) VALUES ($1, $2, $3, $4, $5) RETURNING id, title, author, rating, review, cover_image, deleted, created_at, updated_at",
 		p.Title, p.Author, p.Rating, p.Review, p.CoverImage,
 	)
 	if err != nil {
@@ -163,7 +155,7 @@ func (s *BookStore) Update(ctx context.Context, p UpdateBookParams) (*model.Book
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	rows, err := tx.Query(ctx,
-		"UPDATE books SET title=$2, author=$3, rating=$4, review=$5, cover_image=$6, updated_at=now() WHERE id=$1 RETURNING id, title, author, rating, review, cover_image, created_at, updated_at",
+		"UPDATE books SET title=$2, author=$3, rating=$4, review=$5, cover_image=$6, updated_at=now() WHERE id=$1 RETURNING id, title, author, rating, review, cover_image, deleted, created_at, updated_at",
 		p.ID, p.Title, p.Author, p.Rating, p.Review, p.CoverImage,
 	)
 	if err != nil {
@@ -194,12 +186,12 @@ func (s *BookStore) Update(ctx context.Context, p UpdateBookParams) (*model.Book
 }
 
 func (s *BookStore) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM books WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE books SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
 func (s *BookStore) ListTags(ctx context.Context) ([]model.Tag, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, name FROM tags ORDER BY name")
+	rows, err := s.db.Query(ctx, "SELECT id, name, deleted, updated_at FROM tags WHERE deleted = false ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +207,7 @@ func (s *BookStore) ListTags(ctx context.Context) ([]model.Tag, error) {
 
 func (s *BookStore) UpsertTag(ctx context.Context, name string) (*model.Tag, error) {
 	rows, err := s.db.Query(ctx,
-		"INSERT INTO tags (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id, name",
+		"INSERT INTO tags (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name, deleted = false, updated_at = now() RETURNING id, name, deleted, updated_at",
 		name,
 	)
 	if err != nil {
@@ -229,7 +221,7 @@ func (s *BookStore) UpsertTag(ctx context.Context, name string) (*model.Tag, err
 }
 
 func (s *BookStore) ListCollections(ctx context.Context) ([]model.Collection, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, name FROM collections ORDER BY name")
+	rows, err := s.db.Query(ctx, "SELECT id, name, deleted, updated_at FROM collections WHERE deleted = false ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +237,7 @@ func (s *BookStore) ListCollections(ctx context.Context) ([]model.Collection, er
 
 func (s *BookStore) CreateCollection(ctx context.Context, name string) (*model.Collection, error) {
 	rows, err := s.db.Query(ctx,
-		"INSERT INTO collections (name) VALUES ($1) RETURNING id, name",
+		"INSERT INTO collections (name) VALUES ($1) RETURNING id, name, deleted, updated_at",
 		name,
 	)
 	if err != nil {
@@ -296,7 +288,7 @@ func (s *BookStore) getYears(ctx context.Context, id uuid.UUID) ([]int16, error)
 
 func (s *BookStore) getTags(ctx context.Context, id uuid.UUID) ([]model.Tag, error) {
 	rows, err := s.db.Query(ctx,
-		"SELECT t.id, t.name FROM tags t JOIN book_tags bt ON bt.tag_id = t.id WHERE bt.book_id = $1 ORDER BY t.name",
+		"SELECT t.id, t.name, t.deleted, t.updated_at FROM tags t JOIN book_tags bt ON bt.tag_id = t.id WHERE bt.book_id = $1 AND t.deleted = false ORDER BY t.name",
 		id,
 	)
 	if err != nil {

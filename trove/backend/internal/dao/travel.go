@@ -17,13 +17,13 @@ type TravelStore struct {
 
 func (s *TravelStore) List(ctx context.Context, search string) ([]model.TravelLocation, error) {
 	args := []any{}
-	where := ""
+	where := " WHERE l.deleted = false"
 	if search != "" {
-		where = " WHERE (l.city ILIKE $1 OR l.country ILIKE $1)"
+		where += " AND (l.city ILIKE $1 OR l.country ILIKE $1)"
 		args = append(args, "%"+search+"%")
 	}
 
-	sql := "SELECT l.id, l.city, l.country, l.visited_from, l.visited_to, l.photo_collection_url, l.created_at, l.updated_at FROM travel_locations l" + where + " ORDER BY l.country, l.city"
+	sql := "SELECT l.id, l.city, l.country, l.visited_from, l.visited_to, l.photo_collection_url, l.deleted, l.created_at, l.updated_at FROM travel_locations l" + where + " ORDER BY l.country, l.city"
 	rows, err := s.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list locations: %w", err)
@@ -48,7 +48,7 @@ func (s *TravelStore) List(ctx context.Context, search string) ([]model.TravelLo
 
 func (s *TravelStore) Get(ctx context.Context, id uuid.UUID) (*model.TravelLocation, error) {
 	rows, err := s.db.Query(ctx,
-		"SELECT id, city, country, visited_from, visited_to, photo_collection_url, created_at, updated_at FROM travel_locations WHERE id = $1",
+		"SELECT id, city, country, visited_from, visited_to, photo_collection_url, deleted, created_at, updated_at FROM travel_locations WHERE id = $1 AND deleted = false",
 		id,
 	)
 	if err != nil {
@@ -76,7 +76,7 @@ type CreateLocationParams struct {
 
 func (s *TravelStore) Create(ctx context.Context, p CreateLocationParams) (*model.TravelLocation, error) {
 	rows, err := s.db.Query(ctx,
-		"INSERT INTO travel_locations (city, country, visited_from, visited_to, photo_collection_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, city, country, visited_from, visited_to, photo_collection_url, created_at, updated_at",
+		"INSERT INTO travel_locations (city, country, visited_from, visited_to, photo_collection_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, city, country, visited_from, visited_to, photo_collection_url, deleted, created_at, updated_at",
 		p.City, p.Country, p.VisitedFrom, p.VisitedTo, p.PhotoCollectionURL,
 	)
 	if err != nil {
@@ -101,7 +101,7 @@ type UpdateLocationParams struct {
 
 func (s *TravelStore) Update(ctx context.Context, p UpdateLocationParams) (*model.TravelLocation, error) {
 	rows, err := s.db.Query(ctx,
-		"UPDATE travel_locations SET city=$2, country=$3, visited_from=$4, visited_to=$5, photo_collection_url=$6, updated_at=now() WHERE id=$1 RETURNING id, city, country, visited_from, visited_to, photo_collection_url, created_at, updated_at",
+		"UPDATE travel_locations SET city=$2, country=$3, visited_from=$4, visited_to=$5, photo_collection_url=$6, updated_at=now() WHERE id=$1 RETURNING id, city, country, visited_from, visited_to, photo_collection_url, deleted, created_at, updated_at",
 		p.ID, p.City, p.Country, p.VisitedFrom, p.VisitedTo, p.PhotoCollectionURL,
 	)
 	if err != nil {
@@ -120,7 +120,7 @@ func (s *TravelStore) Update(ctx context.Context, p UpdateLocationParams) (*mode
 }
 
 func (s *TravelStore) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM travel_locations WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE travel_locations SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
@@ -132,7 +132,7 @@ type CreateSpotParams struct {
 
 func (s *TravelStore) CreateSpot(ctx context.Context, p CreateSpotParams) (*model.TouristSpot, error) {
 	rows, err := s.db.Query(ctx,
-		"INSERT INTO tourist_spots (location_id, name, description) VALUES ($1, $2, $3) RETURNING id, location_id, name, description",
+		"INSERT INTO tourist_spots (location_id, name, description) VALUES ($1, $2, $3) RETURNING id, location_id, name, description, deleted, updated_at",
 		p.LocationID, p.Name, p.Description,
 	)
 	if err != nil {
@@ -153,7 +153,7 @@ type UpdateSpotParams struct {
 
 func (s *TravelStore) UpdateSpot(ctx context.Context, p UpdateSpotParams) (*model.TouristSpot, error) {
 	rows, err := s.db.Query(ctx,
-		"UPDATE tourist_spots SET name=$2, description=$3 WHERE id=$1 RETURNING id, location_id, name, description",
+		"UPDATE tourist_spots SET name=$2, description=$3, updated_at=now() WHERE id=$1 RETURNING id, location_id, name, description, deleted, updated_at",
 		p.ID, p.Name, p.Description,
 	)
 	if err != nil {
@@ -167,13 +167,13 @@ func (s *TravelStore) UpdateSpot(ctx context.Context, p UpdateSpotParams) (*mode
 }
 
 func (s *TravelStore) DeleteSpot(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM tourist_spots WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE tourist_spots SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
 func (s *TravelStore) listSpots(ctx context.Context, locationID uuid.UUID) ([]model.TouristSpot, error) {
 	rows, err := s.db.Query(ctx,
-		"SELECT id, location_id, name, description FROM tourist_spots WHERE location_id = $1 ORDER BY name",
+		"SELECT id, location_id, name, description, deleted, updated_at FROM tourist_spots WHERE location_id = $1 AND deleted = false ORDER BY name",
 		locationID,
 	)
 	if err != nil {

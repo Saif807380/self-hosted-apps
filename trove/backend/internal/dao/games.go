@@ -21,24 +21,20 @@ type GameFilter struct {
 
 func (s *GameStore) List(ctx context.Context, f GameFilter) ([]model.VideoGame, error) {
 	args := []any{}
-	where := ""
 	idx := 1
 
+	where := " WHERE g.deleted = false"
 	if f.Search != "" {
-		where = fmt.Sprintf(" WHERE (g.title ILIKE $%d OR g.studio ILIKE $%d)", idx, idx+1)
+		where += fmt.Sprintf(" AND (g.title ILIKE $%d OR g.studio ILIKE $%d)", idx, idx+1)
 		args = append(args, "%"+f.Search+"%", "%"+f.Search+"%")
 		idx += 2
 	}
 	if f.YearPlayed != 0 {
-		if where == "" {
-			where = fmt.Sprintf(" WHERE EXISTS (SELECT 1 FROM game_years_played gyp WHERE gyp.game_id = g.id AND gyp.year = $%d)", idx)
-		} else {
-			where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM game_years_played gyp WHERE gyp.game_id = g.id AND gyp.year = $%d)", idx)
-		}
+		where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM game_years_played gyp WHERE gyp.game_id = g.id AND gyp.year = $%d)", idx)
 		args = append(args, f.YearPlayed)
 	}
 
-	sql := "SELECT g.id, g.title, g.studio, g.rating, g.review, g.cover_image, g.created_at, g.updated_at FROM video_games g" + where + " ORDER BY g.title"
+	sql := "SELECT g.id, g.title, g.studio, g.rating, g.review, g.cover_image, g.deleted, g.created_at, g.updated_at FROM video_games g" + where + " ORDER BY g.title"
 	rows, err := s.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list games: %w", err)
@@ -62,7 +58,7 @@ func (s *GameStore) List(ctx context.Context, f GameFilter) ([]model.VideoGame, 
 }
 
 func (s *GameStore) Get(ctx context.Context, id uuid.UUID) (*model.VideoGame, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, title, studio, rating, review, cover_image, created_at, updated_at FROM video_games WHERE id = $1", id)
+	rows, err := s.db.Query(ctx, "SELECT id, title, studio, rating, review, cover_image, deleted, created_at, updated_at FROM video_games WHERE id = $1 AND deleted = false", id)
 	if err != nil {
 		return nil, fmt.Errorf("get game: %w", err)
 	}
@@ -95,7 +91,7 @@ func (s *GameStore) Create(ctx context.Context, p CreateGameParams) (*model.Vide
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	rows, err := tx.Query(ctx,
-		"INSERT INTO video_games (title, studio, rating, review, cover_image) VALUES ($1, $2, $3, $4, $5) RETURNING id, title, studio, rating, review, cover_image, created_at, updated_at",
+		"INSERT INTO video_games (title, studio, rating, review, cover_image) VALUES ($1, $2, $3, $4, $5) RETURNING id, title, studio, rating, review, cover_image, deleted, created_at, updated_at",
 		p.Title, p.Studio, p.Rating, p.Review, p.CoverImage,
 	)
 	if err != nil {
@@ -136,7 +132,7 @@ func (s *GameStore) Update(ctx context.Context, p UpdateGameParams) (*model.Vide
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	rows, err := tx.Query(ctx,
-		"UPDATE video_games SET title=$2, studio=$3, rating=$4, review=$5, cover_image=$6, updated_at=now() WHERE id=$1 RETURNING id, title, studio, rating, review, cover_image, created_at, updated_at",
+		"UPDATE video_games SET title=$2, studio=$3, rating=$4, review=$5, cover_image=$6, updated_at=now() WHERE id=$1 RETURNING id, title, studio, rating, review, cover_image, deleted, created_at, updated_at",
 		p.ID, p.Title, p.Studio, p.Rating, p.Review, p.CoverImage,
 	)
 	if err != nil {
@@ -160,7 +156,7 @@ func (s *GameStore) Update(ctx context.Context, p UpdateGameParams) (*model.Vide
 }
 
 func (s *GameStore) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM video_games WHERE id = $1", id)
+	_, err := s.db.Exec(ctx, "UPDATE video_games SET deleted = true, updated_at = now() WHERE id = $1", id)
 	return err
 }
 
