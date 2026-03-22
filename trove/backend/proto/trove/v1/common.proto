@@ -5,6 +5,8 @@ package trove.v1;
 option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1;trovev1";
 
 message Tag {
-  string id   = 1;
-  string name = 2;
+  string id         = 1;
+  string name       = 2;
+  string updated_at = 3;
+  bool   deleted    = 4;
 }

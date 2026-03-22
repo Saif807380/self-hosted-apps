@@ -32,6 +32,7 @@ type VideoGame struct {
 	YearsPlayed   []int32                `protobuf:"varint,7,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     string                 `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,10,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -127,6 +128,13 @@ func (x *VideoGame) GetUpdatedAt() string {
 		return x.UpdatedAt
 	}
 	return ""
+}
+
+func (x *VideoGame) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
 }
 
 type ListGamesRequest struct {
@@ -661,7 +669,7 @@ var File_trove_v1_games_games_proto protoreflect.FileDescriptor
 
 const file_trove_v1_games_games_proto_rawDesc = "" +
 	"\n" +
-	"\x1atrove/v1/games/games.proto\x12\x0etrove.v1.games\"\xc0\x02\n" +
+	"\x1atrove/v1/games/games.proto\x12\x0etrove.v1.games\"\xda\x02\n" +
 	"\tVideoGame\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1b\n" +
@@ -674,7 +682,9 @@ const file_trove_v1_games_games_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\tR\tupdatedAtB\t\n" +
+	"updated_at\x18\t \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\n" +
+	" \x01(\bR\adeletedB\t\n" +
 	"\a_studioB\t\n" +
 	"\a_ratingB\t\n" +
 	"\a_reviewB\x0e\n" +

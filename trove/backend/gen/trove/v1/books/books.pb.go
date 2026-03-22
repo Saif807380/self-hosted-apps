@@ -34,6 +34,7 @@ type Book struct {
 	Tags          []*v1.Tag              `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     string                 `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,11,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -138,10 +139,19 @@ func (x *Book) GetUpdatedAt() string {
 	return ""
 }
 
+func (x *Book) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
 type Collection struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,4,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -188,6 +198,20 @@ func (x *Collection) GetName() string {
 		return x.Name
 	}
 	return ""
+}
+
+func (x *Collection) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *Collection) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
 }
 
 type ListBooksRequest struct {
@@ -1258,7 +1282,7 @@ var File_trove_v1_books_books_proto protoreflect.FileDescriptor
 
 const file_trove_v1_books_books_proto_rawDesc = "" +
 	"\n" +
-	"\x1atrove/v1/books/books.proto\x12\x0etrove.v1.books\x1a\x15trove/v1/common.proto\"\xca\x02\n" +
+	"\x1atrove/v1/books/books.proto\x12\x0etrove.v1.books\x1a\x15trove/v1/common.proto\"\xe4\x02\n" +
 	"\x04Book\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -1274,14 +1298,18 @@ const file_trove_v1_books_books_proto_rawDesc = "" +
 	"created_at\x18\t \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"updated_at\x18\n" +
-	" \x01(\tR\tupdatedAtB\t\n" +
+	" \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\v \x01(\bR\adeletedB\t\n" +
 	"\a_ratingB\t\n" +
 	"\a_reviewB\x0e\n" +
-	"\f_cover_image\"0\n" +
+	"\f_cover_image\"i\n" +
 	"\n" +
 	"Collection\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\x91\x01\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\x04 \x01(\bR\adeleted\"\x91\x01\n" +
 	"\x10ListBooksRequest\x12\x1b\n" +
 	"\x06search\x18\x01 \x01(\tH\x00R\x06search\x88\x01\x01\x12\x1a\n" +
 	"\x06tag_id\x18\x02 \x01(\tH\x01R\x05tagId\x88\x01\x01\x12 \n" +

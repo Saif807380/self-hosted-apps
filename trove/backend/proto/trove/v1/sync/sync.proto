@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package trove.v1.sync;
+
+option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1/sync;syncv1";
+
+import "trove/v1/common.proto";
+import "trove/v1/books/books.proto";
+import "trove/v1/games/games.proto";
+import "trove/v1/travel/travel.proto";
+import "trove/v1/workouts/workouts.proto";
+
+// Junction table entries for sync
+message BookYearRead {
+  string book_id = 1;
+  int32  year    = 2;
+}
+
+message BookTagEntry {
+  string book_id = 1;
+  string tag_id  = 2;
+}
+
+message CollectionBookEntry {
+  string collection_id = 1;
+  string book_id       = 2;
+}
+
+message GameYearPlayed {
+  string game_id = 1;
+  int32  year    = 2;
+}
+
+message ChangeSet {
+  // Entity tables
+  repeated trove.v1.books.Book              books            = 1;
+  repeated trove.v1.Tag                     tags             = 2;
+  repeated trove.v1.books.Collection        collections      = 3;
+  repeated trove.v1.games.VideoGame         video_games      = 4;
+  repeated trove.v1.travel.TravelLocation   travel_locations = 5;
+  repeated trove.v1.travel.TouristSpot      tourist_spots    = 6;
+  repeated trove.v1.workouts.WorkoutType    workout_types    = 7;
+  repeated trove.v1.workouts.Exercise       exercises        = 8;
+  repeated trove.v1.workouts.WorkoutLog     workout_logs     = 9;
+
+  // Junction tables
+  repeated BookYearRead      book_years_read   = 10;
+  repeated BookTagEntry      book_tags         = 11;
+  repeated CollectionBookEntry collection_books = 12;
+  repeated GameYearPlayed    game_years_played  = 13;
+}
+
+message PushChangesRequest {
+  ChangeSet changes = 1;
+}
+
+message PushChangesResponse {
+  string server_time = 1;
+}
+
+message PullChangesRequest {
+  string since = 1;
+}
+
+message PullChangesResponse {
+  ChangeSet changes     = 1;
+  string    server_time = 2;
+}
+
+service SyncService {
+  rpc PushChanges (PushChangesRequest) returns (PushChangesResponse);
+  rpc PullChanges (PullChangesRequest) returns (PullChangesResponse);
+}

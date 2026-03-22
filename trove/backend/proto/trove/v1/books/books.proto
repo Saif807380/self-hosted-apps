@@ -17,11 +17,14 @@ message Book {
   repeated trove.v1.Tag tags  = 8;
   string          created_at  = 9;
   string          updated_at  = 10;
+  bool            deleted     = 11;
 }
 
 message Collection {
-  string id   = 1;
-  string name = 2;
+  string id         = 1;
+  string name       = 2;
+  string updated_at = 3;
+  bool   deleted    = 4;
 }
 
 message ListBooksRequest {

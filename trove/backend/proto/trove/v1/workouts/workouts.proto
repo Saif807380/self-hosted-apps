@@ -9,6 +9,8 @@ message Exercise {
   string workout_type_id = 2;
   string name            = 3;
   int32  sort_order      = 4;
+  string updated_at      = 5;
+  bool   deleted         = 6;
 }
 
 message WorkoutType {
@@ -17,6 +19,8 @@ message WorkoutType {
   int32             sort_order = 3;
   repeated Exercise exercises  = 4;
   string            created_at = 5;
+  string            updated_at = 6;
+  bool              deleted    = 7;
 }
 
 message WorkoutLog {
@@ -27,6 +31,8 @@ message WorkoutLog {
   optional string reps        = 5;
   optional double weight_kg   = 6;
   string          logged_at   = 7;
+  string          updated_at  = 8;
+  bool            deleted     = 9;
 }
 
 message ListWorkoutTypesRequest {}

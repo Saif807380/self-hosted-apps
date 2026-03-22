@@ -27,6 +27,8 @@ type TouristSpot struct {
 	LocationId    string                 `protobuf:"bytes,2,opt,name=location_id,json=locationId,proto3" json:"location_id,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,6,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -89,6 +91,20 @@ func (x *TouristSpot) GetDescription() string {
 	return ""
 }
 
+func (x *TouristSpot) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *TouristSpot) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
 type TravelLocation struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -100,6 +116,7 @@ type TravelLocation struct {
 	TouristSpots       []*TouristSpot         `protobuf:"bytes,7,rep,name=tourist_spots,json=touristSpots,proto3" json:"tourist_spots,omitempty"`
 	CreatedAt          string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt          string                 `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted            bool                   `protobuf:"varint,10,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -195,6 +212,13 @@ func (x *TravelLocation) GetUpdatedAt() string {
 		return x.UpdatedAt
 	}
 	return ""
+}
+
+func (x *TravelLocation) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
 }
 
 type ListLocationsRequest struct {
@@ -993,14 +1017,17 @@ var File_trove_v1_travel_travel_proto protoreflect.FileDescriptor
 
 const file_trove_v1_travel_travel_proto_rawDesc = "" +
 	"\n" +
-	"\x1ctrove/v1/travel/travel.proto\x12\x0ftrove.v1.travel\"\x89\x01\n" +
+	"\x1ctrove/v1/travel/travel.proto\x12\x0ftrove.v1.travel\"\xc2\x01\n" +
 	"\vTouristSpot\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vlocation_id\x18\x02 \x01(\tR\n" +
 	"locationId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12%\n" +
-	"\vdescription\x18\x04 \x01(\tH\x00R\vdescription\x88\x01\x01B\x0e\n" +
-	"\f_description\"\x8b\x03\n" +
+	"\vdescription\x18\x04 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x05 \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\x06 \x01(\bR\adeletedB\x0e\n" +
+	"\f_description\"\xa5\x03\n" +
 	"\x0eTravelLocation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12\x18\n" +
@@ -1013,7 +1040,9 @@ const file_trove_v1_travel_travel_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\tR\tupdatedAtB\x0f\n" +
+	"updated_at\x18\t \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\n" +
+	" \x01(\bR\adeletedB\x0f\n" +
 	"\r_visited_fromB\r\n" +
 	"\v_visited_toB\x17\n" +
 	"\x15_photo_collection_url\">\n" +
