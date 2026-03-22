@@ -15,7 +15,7 @@ import (
 	"github.com/saifkazi/trove/backend/internal/service"
 )
 
-func NewRouter(services *service.Services, uploadsDir string) http.Handler {
+func NewRouter(services *service.Services, uploadsDir string, tlsEnabled ...bool) http.Handler {
 	mux := http.NewServeMux()
 
 	// Health check
@@ -44,6 +44,10 @@ func NewRouter(services *service.Services, uploadsDir string) http.Handler {
 	mux.HandleFunc("/sync/images", handleSyncImageUpload(uploadsDir))
 	mux.HandleFunc("/sync/images/manifest", handleSyncImageManifest(uploadsDir))
 
+	// When TLS is enabled, native HTTP/2 via ALPN is used — skip h2c wrapper
+	if len(tlsEnabled) > 0 && tlsEnabled[0] {
+		return withCORS(mux)
+	}
 	// h2c enables HTTP/2 over cleartext (needed for gRPC protocol support)
 	return h2c.NewHandler(withCORS(mux), &http2.Server{})
 }
