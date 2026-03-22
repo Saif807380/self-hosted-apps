@@ -15,18 +15,23 @@ type Book struct {
 	CoverImage *string   `db:"cover_image" json:"coverImage,omitempty"`
 	YearsRead  []int16   `db:"-"           json:"yearsRead"`
 	Tags       []Tag     `db:"-"           json:"tags"`
+	Deleted    bool      `db:"deleted"     json:"deleted"`
 	CreatedAt  time.Time `db:"created_at"  json:"createdAt"`
 	UpdatedAt  time.Time `db:"updated_at"  json:"updatedAt"`
 }
 
 type Tag struct {
-	ID   uuid.UUID `db:"id"   json:"id"`
-	Name string    `db:"name" json:"name"`
+	ID        uuid.UUID `db:"id"         json:"id"`
+	Name      string    `db:"name"       json:"name"`
+	Deleted   bool      `db:"deleted"    json:"deleted"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 type Collection struct {
-	ID   uuid.UUID `db:"id"   json:"id"`
-	Name string    `db:"name" json:"name"`
+	ID        uuid.UUID `db:"id"         json:"id"`
+	Name      string    `db:"name"       json:"name"`
+	Deleted   bool      `db:"deleted"    json:"deleted"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 type VideoGame struct {
@@ -37,6 +42,7 @@ type VideoGame struct {
 	Review      *string   `db:"review"      json:"review,omitempty"`
 	CoverImage  *string   `db:"cover_image" json:"coverImage,omitempty"`
 	YearsPlayed []int16   `db:"-"           json:"yearsPlayed"`
+	Deleted     bool      `db:"deleted"     json:"deleted"`
 	CreatedAt   time.Time `db:"created_at"  json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at"  json:"updatedAt"`
 }
@@ -49,6 +55,7 @@ type TravelLocation struct {
 	VisitedTo          *time.Time    `db:"visited_to"           json:"visitedTo,omitempty"`
 	PhotoCollectionURL *string       `db:"photo_collection_url" json:"photoCollectionUrl,omitempty"`
 	TouristSpots       []TouristSpot `db:"-"                    json:"touristSpots"`
+	Deleted            bool          `db:"deleted"              json:"deleted"`
 	CreatedAt          time.Time     `db:"created_at"           json:"createdAt"`
 	UpdatedAt          time.Time     `db:"updated_at"           json:"updatedAt"`
 }
@@ -58,6 +65,8 @@ type TouristSpot struct {
 	LocationID  uuid.UUID `db:"location_id" json:"locationId"`
 	Name        string    `db:"name"        json:"name"`
 	Description *string   `db:"description" json:"description,omitempty"`
+	Deleted     bool      `db:"deleted"     json:"deleted"`
+	UpdatedAt   time.Time `db:"updated_at"  json:"updatedAt"`
 }
 
 type WorkoutType struct {
@@ -65,7 +74,9 @@ type WorkoutType struct {
 	Name      string     `db:"name"       json:"name"`
 	SortOrder int16      `db:"sort_order" json:"sortOrder"`
 	Exercises []Exercise `db:"-"          json:"exercises"`
+	Deleted   bool       `db:"deleted"    json:"deleted"`
 	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
+	UpdatedAt time.Time  `db:"updated_at" json:"updatedAt"`
 }
 
 type Exercise struct {
@@ -73,6 +84,8 @@ type Exercise struct {
 	WorkoutTypeID uuid.UUID `db:"workout_type_id" json:"workoutTypeId"`
 	Name          string    `db:"name"            json:"name"`
 	SortOrder     int16     `db:"sort_order"      json:"sortOrder"`
+	Deleted       bool      `db:"deleted"         json:"deleted"`
+	UpdatedAt     time.Time `db:"updated_at"      json:"updatedAt"`
 }
 
 type WorkoutLog struct {
@@ -82,5 +95,7 @@ type WorkoutLog struct {
 	Sets       *int16    `db:"sets"        json:"sets,omitempty"`
 	Reps       *string   `db:"reps"        json:"reps,omitempty"`
 	WeightKg   *float64  `db:"weight_kg"   json:"weightKg,omitempty"`
+	Deleted    bool      `db:"deleted"     json:"deleted"`
 	LoggedAt   time.Time `db:"logged_at"   json:"loggedAt"`
+	UpdatedAt  time.Time `db:"updated_at"  json:"updatedAt"`
 }

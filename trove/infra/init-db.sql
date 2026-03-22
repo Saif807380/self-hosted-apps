@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS books (
     rating      SMALLINT CHECK (rating BETWEEN 1 AND 5),
     review      TEXT,
     cover_image VARCHAR(500),
+    deleted     BOOLEAN NOT NULL DEFAULT false,
     created_at  TIMESTAMPTZ DEFAULT now(),
     updated_at  TIMESTAMPTZ DEFAULT now()
 );
@@ -17,8 +18,10 @@ CREATE TABLE IF NOT EXISTS book_years_read (
 );
 
 CREATE TABLE IF NOT EXISTS tags (
-    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) UNIQUE NOT NULL
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name       VARCHAR(100) UNIQUE NOT NULL,
+    deleted    BOOLEAN NOT NULL DEFAULT false,
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS book_tags (
@@ -28,8 +31,10 @@ CREATE TABLE IF NOT EXISTS book_tags (
 );
 
 CREATE TABLE IF NOT EXISTS collections (
-    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(300) UNIQUE NOT NULL
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name       VARCHAR(300) UNIQUE NOT NULL,
+    deleted    BOOLEAN NOT NULL DEFAULT false,
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS collection_books (
@@ -46,6 +51,7 @@ CREATE TABLE IF NOT EXISTS video_games (
     rating      SMALLINT CHECK (rating BETWEEN 1 AND 5),
     review      TEXT,
     cover_image VARCHAR(500),
+    deleted     BOOLEAN NOT NULL DEFAULT false,
     created_at  TIMESTAMPTZ DEFAULT now(),
     updated_at  TIMESTAMPTZ DEFAULT now()
 );
@@ -64,6 +70,7 @@ CREATE TABLE IF NOT EXISTS travel_locations (
     visited_from         DATE,
     visited_to           DATE,
     photo_collection_url VARCHAR(500),
+    deleted              BOOLEAN NOT NULL DEFAULT false,
     created_at           TIMESTAMPTZ DEFAULT now(),
     updated_at           TIMESTAMPTZ DEFAULT now()
 );
@@ -72,7 +79,9 @@ CREATE TABLE IF NOT EXISTS tourist_spots (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     location_id UUID REFERENCES travel_locations(id) ON DELETE CASCADE,
     name        VARCHAR(300) NOT NULL,
-    description TEXT
+    description TEXT,
+    deleted     BOOLEAN NOT NULL DEFAULT false,
+    updated_at  TIMESTAMPTZ DEFAULT now()
 );
 
 -- Workouts
@@ -80,14 +89,18 @@ CREATE TABLE IF NOT EXISTS workout_types (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name       VARCHAR(200) NOT NULL,
     sort_order SMALLINT DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT now()
+    deleted    BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS exercises (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_type_id UUID REFERENCES workout_types(id) ON DELETE CASCADE,
     name            VARCHAR(300) NOT NULL,
-    sort_order      SMALLINT DEFAULT 0
+    sort_order      SMALLINT DEFAULT 0,
+    deleted         BOOLEAN NOT NULL DEFAULT false,
+    updated_at      TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS workout_logs (
@@ -97,7 +110,15 @@ CREATE TABLE IF NOT EXISTS workout_logs (
     sets        SMALLINT,
     reps        VARCHAR(50),
     weight_kg   DECIMAL(6,2),
-    logged_at   TIMESTAMPTZ DEFAULT now()
+    deleted     BOOLEAN NOT NULL DEFAULT false,
+    logged_at   TIMESTAMPTZ DEFAULT now(),
+    updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- Sync metadata
+CREATE TABLE IF NOT EXISTS sync_metadata (
+    key   VARCHAR(100) PRIMARY KEY,
+    value TEXT
 );
 
 -- Indexes
@@ -107,3 +128,14 @@ CREATE INDEX IF NOT EXISTS idx_video_games_title     ON video_games (title);
 CREATE INDEX IF NOT EXISTS idx_travel_city           ON travel_locations (city);
 CREATE INDEX IF NOT EXISTS idx_travel_country        ON travel_locations (country);
 CREATE INDEX IF NOT EXISTS idx_workout_logs_exercise ON workout_logs (exercise_id, week_number);
+
+-- Sync indexes (updated_at for delta queries)
+CREATE INDEX IF NOT EXISTS idx_books_updated_at            ON books (updated_at);
+CREATE INDEX IF NOT EXISTS idx_video_games_updated_at      ON video_games (updated_at);
+CREATE INDEX IF NOT EXISTS idx_travel_locations_updated_at  ON travel_locations (updated_at);
+CREATE INDEX IF NOT EXISTS idx_tags_updated_at              ON tags (updated_at);
+CREATE INDEX IF NOT EXISTS idx_collections_updated_at       ON collections (updated_at);
+CREATE INDEX IF NOT EXISTS idx_tourist_spots_updated_at     ON tourist_spots (updated_at);
+CREATE INDEX IF NOT EXISTS idx_workout_types_updated_at     ON workout_types (updated_at);
+CREATE INDEX IF NOT EXISTS idx_exercises_updated_at         ON exercises (updated_at);
+CREATE INDEX IF NOT EXISTS idx_workout_logs_updated_at      ON workout_logs (updated_at);
