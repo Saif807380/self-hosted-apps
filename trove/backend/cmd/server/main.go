@@ -30,7 +30,7 @@ func main() {
 
 	stores := dao.NewStores(db)
 	services := service.NewServices(stores, redisClient)
-	mux := controller.NewRouter(services, cfg.UploadsDir)
+	mux := controller.NewRouter(services, cfg.UploadsDir, cfg.TLSEnabled())
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
@@ -40,9 +40,16 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("server listening on :%d", cfg.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
+		if cfg.TLSEnabled() {
+			log.Printf("server listening on :%d (TLS)", cfg.Port)
+			if err := srv.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("server error: %v", err)
+			}
+		} else {
+			log.Printf("server listening on :%d", cfg.Port)
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("server error: %v", err)
+			}
 		}
 	}()
 

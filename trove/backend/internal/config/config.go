@@ -7,6 +7,8 @@ type Config struct {
 	DatabaseURL string
 	RedisURL    string
 	UploadsDir  string
+	TLSCertFile string
+	TLSKeyFile  string
 }
 
 func Load() *Config {
@@ -15,7 +17,13 @@ func Load() *Config {
 		DatabaseURL: getEnv("DATABASE_URL", "postgres://lms:lms@localhost:5432/lms?sslmode=disable"),
 		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379"),
 		UploadsDir:  getEnv("UPLOADS_DIR", "./uploads"),
+		TLSCertFile: getEnv("TLS_CERT_FILE", ""),
+		TLSKeyFile:  getEnv("TLS_KEY_FILE", ""),
 	}
+}
+
+func (c *Config) TLSEnabled() bool {
+	return c.TLSCertFile != "" && c.TLSKeyFile != ""
 }
 
 func getEnv(key, fallback string) string {
