@@ -27,6 +27,8 @@ type Exercise struct {
 	WorkoutTypeId string                 `protobuf:"bytes,2,opt,name=workout_type_id,json=workoutTypeId,proto3" json:"workout_type_id,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	SortOrder     int32                  `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,6,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -89,6 +91,20 @@ func (x *Exercise) GetSortOrder() int32 {
 	return 0
 }
 
+func (x *Exercise) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *Exercise) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
 type WorkoutType struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -96,6 +112,8 @@ type WorkoutType struct {
 	SortOrder     int32                  `protobuf:"varint,3,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
 	Exercises     []*Exercise            `protobuf:"bytes,4,rep,name=exercises,proto3" json:"exercises,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,7,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -165,6 +183,20 @@ func (x *WorkoutType) GetCreatedAt() string {
 	return ""
 }
 
+func (x *WorkoutType) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *WorkoutType) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
 type WorkoutLog struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -174,6 +206,8 @@ type WorkoutLog struct {
 	Reps          *string                `protobuf:"bytes,5,opt,name=reps,proto3,oneof" json:"reps,omitempty"`
 	WeightKg      *float64               `protobuf:"fixed64,6,opt,name=weight_kg,json=weightKg,proto3,oneof" json:"weight_kg,omitempty"`
 	LoggedAt      string                 `protobuf:"bytes,7,opt,name=logged_at,json=loggedAt,proto3" json:"logged_at,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,9,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -255,6 +289,20 @@ func (x *WorkoutLog) GetLoggedAt() string {
 		return x.LoggedAt
 	}
 	return ""
+}
+
+func (x *WorkoutLog) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *WorkoutLog) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
 }
 
 type ListWorkoutTypesRequest struct {
@@ -1101,13 +1149,16 @@ var File_trove_v1_workouts_workouts_proto protoreflect.FileDescriptor
 
 const file_trove_v1_workouts_workouts_proto_rawDesc = "" +
 	"\n" +
-	" trove/v1/workouts/workouts.proto\x12\x11trove.v1.workouts\"u\n" +
+	" trove/v1/workouts/workouts.proto\x12\x11trove.v1.workouts\"\xae\x01\n" +
 	"\bExercise\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x0fworkout_type_id\x18\x02 \x01(\tR\rworkoutTypeId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
-	"sort_order\x18\x04 \x01(\x05R\tsortOrder\"\xaa\x01\n" +
+	"sort_order\x18\x04 \x01(\x05R\tsortOrder\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x05 \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\x06 \x01(\bR\adeleted\"\xe3\x01\n" +
 	"\vWorkoutType\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
@@ -1115,7 +1166,10 @@ const file_trove_v1_workouts_workouts_proto_rawDesc = "" +
 	"sort_order\x18\x03 \x01(\x05R\tsortOrder\x129\n" +
 	"\texercises\x18\x04 \x03(\v2\x1b.trove.v1.workouts.ExerciseR\texercises\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\tR\tcreatedAt\"\xef\x01\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x06 \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\a \x01(\bR\adeleted\"\xa8\x02\n" +
 	"\n" +
 	"WorkoutLog\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
@@ -1126,7 +1180,10 @@ const file_trove_v1_workouts_workouts_proto_rawDesc = "" +
 	"\x04sets\x18\x04 \x01(\x05H\x00R\x04sets\x88\x01\x01\x12\x17\n" +
 	"\x04reps\x18\x05 \x01(\tH\x01R\x04reps\x88\x01\x01\x12 \n" +
 	"\tweight_kg\x18\x06 \x01(\x01H\x02R\bweightKg\x88\x01\x01\x12\x1b\n" +
-	"\tlogged_at\x18\a \x01(\tR\bloggedAtB\a\n" +
+	"\tlogged_at\x18\a \x01(\tR\bloggedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\b \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\t \x01(\bR\adeletedB\a\n" +
 	"\x05_setsB\a\n" +
 	"\x05_repsB\f\n" +
 	"\n" +

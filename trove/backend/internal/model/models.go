@@ -99,3 +99,43 @@ type WorkoutLog struct {
 	LoggedAt   time.Time `db:"logged_at"   json:"loggedAt"`
 	UpdatedAt  time.Time `db:"updated_at"  json:"updatedAt"`
 }
+
+// Junction table types for sync
+
+type BookYearRead struct {
+	BookID uuid.UUID `db:"book_id"`
+	Year   int16     `db:"year"`
+}
+
+type BookTagEntry struct {
+	BookID uuid.UUID `db:"book_id"`
+	TagID  uuid.UUID `db:"tag_id"`
+}
+
+type CollectionBookEntry struct {
+	CollectionID uuid.UUID `db:"collection_id"`
+	BookID       uuid.UUID `db:"book_id"`
+}
+
+type GameYearPlayed struct {
+	GameID uuid.UUID `db:"game_id"`
+	Year   int16     `db:"year"`
+}
+
+// ChangeSet holds a batch of changes for sync
+
+type ChangeSet struct {
+	Books           []Book
+	Tags            []Tag
+	Collections     []Collection
+	VideoGames      []VideoGame
+	TravelLocations []TravelLocation
+	TouristSpots    []TouristSpot
+	WorkoutTypes    []WorkoutType
+	Exercises       []Exercise
+	WorkoutLogs     []WorkoutLog
+	BookYearsRead   []BookYearRead
+	BookTags        []BookTagEntry
+	CollectionBooks []CollectionBookEntry
+	GameYearsPlayed []GameYearPlayed
+}

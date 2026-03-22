@@ -25,6 +25,8 @@ type Tag struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted       bool                   `protobuf:"varint,4,opt,name=deleted,proto3" json:"deleted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -73,14 +75,31 @@ func (x *Tag) GetName() string {
 	return ""
 }
 
+func (x *Tag) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *Tag) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
 var File_trove_v1_common_proto protoreflect.FileDescriptor
 
 const file_trove_v1_common_proto_rawDesc = "" +
 	"\n" +
-	"\x15trove/v1/common.proto\x12\btrove.v1\")\n" +
+	"\x15trove/v1/common.proto\x12\btrove.v1\"b\n" +
 	"\x03Tag\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04nameB8Z6github.com/saifkazi/trove/backend/gen/trove/v1;trovev1b\x06proto3"
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\tR\tupdatedAt\x12\x18\n" +
+	"\adeleted\x18\x04 \x01(\bR\adeletedB8Z6github.com/saifkazi/trove/backend/gen/trove/v1;trovev1b\x06proto3"
 
 var (
 	file_trove_v1_common_proto_rawDescOnce sync.Once

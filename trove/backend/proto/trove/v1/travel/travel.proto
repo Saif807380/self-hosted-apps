@@ -9,6 +9,8 @@ message TouristSpot {
   string          location_id = 2;
   string          name        = 3;
   optional string description = 4;
+  string          updated_at  = 5;
+  bool            deleted     = 6;
 }
 
 message TravelLocation {
@@ -21,6 +23,7 @@ message TravelLocation {
   repeated TouristSpot tourist_spots        = 7;
   string               created_at           = 8;
   string               updated_at           = 9;
+  bool                 deleted              = 10;
 }
 
 message ListLocationsRequest {
