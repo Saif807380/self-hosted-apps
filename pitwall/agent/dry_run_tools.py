@@ -2,6 +2,8 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
+import config.config as config
+
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
 
 
@@ -45,9 +47,16 @@ def get_recent_news() -> str:
     return _load_fixture("news.json")
 
 
+@tool
+def get_sprint_telemetry() -> str:
+    """Get Sprint Qualifying and Sprint Race results from this weekend. (DRY RUN — fixture data)"""
+    return _load_fixture("sprint_telemetry.json")
+
+
 ALL_DRY_RUN_TOOLS = [
     get_fantasy_state,
     get_practice_telemetry,
+    *([ get_sprint_telemetry ] if config.IS_SPRINT_WEEKEND else []),
     get_season_form,
     get_circuit_history_data,
     get_weather_forecast,

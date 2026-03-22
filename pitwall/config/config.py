@@ -21,12 +21,13 @@ RACE_YEAR = int(os.getenv("RACE_YEAR", "2026"))
 RACE_ROUND = int(os.getenv("RACE_ROUND", "1"))
 CIRCUIT_CITY = os.getenv("CIRCUIT_CITY", "Melbourne")
 CIRCUIT_COUNTRY_CODE = os.getenv("CIRCUIT_COUNTRY_CODE", "AU")
+IS_SPRINT_WEEKEND = os.getenv("IS_SPRINT_WEEKEND", "false").lower() == "true"
 
 # Game rules
 MAX_DRIVERS = 5
 MAX_CONSTRUCTORS = 2
 SWAP_PENALTY_POINTS = -10  # per transfer beyond free allowance
-TOTAL_BUDGET = 100.0  # $100M always
+TOTAL_BUDGET = float(os.getenv("TOTAL_BUDGET", "100.0"))
 
 # Rules file path (fed to the LLM alongside data)
 RULES_FILE = os.path.join(os.path.dirname(__file__), "config", "Rules.md")

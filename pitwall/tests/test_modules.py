@@ -80,6 +80,30 @@ def test_telemetry_season(year: int, up_to_round: int):
         console.print(f"[bold red]Season Summary: FAILED - {e}[/bold red]")
 
 
+def test_sprint(year: int, round_num: int):
+    console.print("\n[bold cyan]--- Sprint Results (fastf1) ---[/bold cyan]\n")
+    try:
+        from pitwall.telemetry.session_data import get_sprint_results, get_sprint_qualifying_results
+        with console.status(f"Loading sprint qualifying for {year} R{round_num}..."):
+            sq_results = get_sprint_qualifying_results(year, round_num)
+
+        console.print(f"[green]Sprint Qualifying — {len(sq_results)} drivers:[/green]")
+        for r in sq_results:
+            best = f"{r.q3_time:.3f}s" if r.q3_time else "-"
+            console.print(f"  P{r.position:2d} {r.driver:4s} ({r.team:20s}) best: {best:>10s}  [Out: {r.knocked_out_in}]")
+
+        with console.status(f"Loading sprint race for {year} R{round_num}..."):
+            race_results = get_sprint_results(year, round_num)
+
+        console.print(f"\n[green]Sprint Race — {len(race_results)} drivers:[/green]")
+        for r in race_results:
+            console.print(f"  P{r.position:2d} {r.driver:4s} ({r.team:20s}) Grid P{r.grid_position:2d} | {r.points:4.1f} pts | {r.status}")
+
+        console.print("\n[bold green]Sprint: OK[/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]Sprint: FAILED - {e}[/bold red]")
+
+
 def test_historical(circuit: str):
     console.print("\n[bold cyan]--- Circuit History (fastf1) ---[/bold cyan]\n")
     try:
@@ -140,7 +164,7 @@ def test_news():
 def main():
     parser = argparse.ArgumentParser(description="Test pitwall modules without LLM")
     parser.add_argument("modules", nargs="*", default=["all"],
-                        help="Modules to test: scraper, practice, quali, race, season, history, weather, news, all")
+                        help="Modules to test: practice, quali, race, sprint, season, history, weather, news, all")
     parser.add_argument("--year", type=int, default=2024, help="Year for fastf1 data (default: 2024)")
     parser.add_argument("--round", type=int, default=1, help="Round for fastf1 data (default: 1)")
     parser.add_argument("--circuit", type=str, default="Melbourne", help="Circuit name for history")
@@ -163,6 +187,8 @@ def main():
         test_telemetry_quali(args.year, args.round)
     if run_all or "race" in targets:
         test_telemetry_race(args.year, args.round)
+    if "sprint" in targets:
+        test_sprint(args.year, args.round)
     if run_all or "season" in targets:
         test_telemetry_season(args.year, args.round)
     if run_all or "history" in targets:

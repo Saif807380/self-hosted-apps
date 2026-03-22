@@ -41,6 +41,16 @@ class RaceResult:
 
 
 @dataclass
+class SprintResult:
+    driver: str
+    team: str
+    position: int
+    grid_position: int
+    points: float
+    status: str
+
+
+@dataclass
 class DriverSeasonStats:
     driver: str
     team: str
@@ -104,14 +114,16 @@ def _get_long_run_stints(driver_laps) -> list[list[float]]:
     return [s for s in stints if len(s) >= MIN_LONG_RUN_LAPS]
 
 
-def get_practice_pace(year: int, round_num: int) -> list[DriverPace]:
+def get_practice_pace(year: int, round_num: int, sprint_weekend: bool = False) -> list[DriverPace]:
     results = []
     driver_long_run_times: dict[str, list[float]] = {}
     driver_best_lap: dict[str, float] = {}
     driver_all_times: dict[str, list[float]] = {}
     driver_info: dict[str, dict] = {}
 
-    for session_name in ("FP1", "FP2"):
+    # Sprint weekends have no FP2 — only FP1 before sprint qualifying
+    sessions = ("FP1",) if sprint_weekend else ("FP1", "FP2")
+    for session_name in sessions:
         try:
             session = fastf1.get_session(year, round_num, session_name)
             session.load()
@@ -232,6 +244,77 @@ def get_race_results(year: int, round_num: int) -> list[RaceResult]:
         ))
 
     results.sort(key=lambda r: r.position if r.position > 0 else 99)
+    return results
+
+
+def get_sprint_results(year: int, round_num: int) -> list[SprintResult]:
+    session = fastf1.get_session(year, round_num, "Sprint")
+    session.load(laps=False, telemetry=False, weather=False, messages=False)
+
+    results = []
+    for _, row in session.results.iterrows():
+        results.append(SprintResult(
+            driver=str(row["Abbreviation"]),
+            team=str(row["TeamName"]),
+            position=int(row["Position"]) if str(row["Position"]) != "nan" else 0,
+            grid_position=int(row["GridPosition"]) if str(row["GridPosition"]) != "nan" else 0,
+            points=float(row["Points"]) if not pd.isna(row["Points"]) else 0.0,
+            status=str(row.get("Status", "")),
+        ))
+
+    results.sort(key=lambda r: r.position if r.position > 0 else 99)
+    return results
+
+
+def get_sprint_qualifying_results(year: int, round_num: int) -> list[QualifyingResult]:
+    # fastf1 doesn't populate session.results for Sprint Qualifying — load laps
+    # instead and derive positions from each driver's best accurate lap time.
+    session = fastf1.get_session(year, round_num, "Sprint Qualifying")
+    session.load(telemetry=False, weather=False, messages=False)
+
+    driver_best: dict[str, float] = {}
+    driver_team: dict[str, str] = {}
+
+    for drv in session.drivers:
+        laps = session.laps.pick_drivers(drv)
+        if laps.empty:
+            continue
+        info = laps.iloc[0]
+        driver_abbr = str(info["Driver"])
+        driver_team[driver_abbr] = str(info["Team"])
+
+        for _, lap in laps.iterrows():
+            if pd.isna(lap["LapTime"]):
+                continue
+            if not lap.get("IsAccurate", False):
+                continue
+            secs = lap["LapTime"].total_seconds()
+            if secs < driver_best.get(driver_abbr, float("inf")):
+                driver_best[driver_abbr] = secs
+
+    # Sort by best lap time to establish grid order
+    ordered = sorted(driver_best.items(), key=lambda x: x[1])
+
+    results = []
+    for pos, (driver_abbr, best_time) in enumerate(ordered, start=1):
+        # SQ format: top 10 reach SQ3, P11-15 reach SQ2, P16-20 out in SQ1
+        if pos <= 10:
+            knocked_out_in = "SQ3"
+        elif pos <= 15:
+            knocked_out_in = "SQ2"
+        else:
+            knocked_out_in = "SQ1"
+
+        results.append(QualifyingResult(
+            driver=driver_abbr,
+            team=driver_team[driver_abbr],
+            position=pos,
+            q1_time=None,
+            q2_time=None,
+            q3_time=round(best_time, 3),  # best lap as a proxy for SQ time
+            knocked_out_in=knocked_out_in,
+        ))
+
     return results
 
 
