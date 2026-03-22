@@ -29,22 +29,51 @@ def get_fantasy_state() -> str:
 
 @tool
 def get_practice_telemetry() -> str:
-    """Get FP1/FP2 long-run pace analysis for all drivers at the current race weekend. Returns avg pace, lap count, and consistency (lower stdev = more consistent). Falls back to previous year's same round if current year data is not available."""
+    """Get FP1 long-run pace analysis for all drivers at the current race weekend (FP1 only on sprint weekends, FP1/FP2 on normal weekends). Returns avg pace, lap count, and consistency (lower stdev = more consistent). Falls back to previous year's same round if current year data is not available."""
     try:
         from telemetry.session_data import get_practice_pace
-        paces = get_practice_pace(config.RACE_YEAR, config.RACE_ROUND)
+        paces = get_practice_pace(config.RACE_YEAR, config.RACE_ROUND, sprint_weekend=config.IS_SPRINT_WEEKEND)
         if paces:
             return json.dumps({"year": config.RACE_YEAR, "round": config.RACE_ROUND, "data": [asdict(p) for p in paces]}, indent=2)
 
         # Fall back to previous year's same round
         prev_year = config.RACE_YEAR - 1
-        paces = get_practice_pace(prev_year, config.RACE_ROUND)
+        paces = get_practice_pace(prev_year, config.RACE_ROUND, sprint_weekend=config.IS_SPRINT_WEEKEND)
         if paces:
             return json.dumps({"year": prev_year, "round": config.RACE_ROUND, "note": f"Using {prev_year} data as {config.RACE_YEAR} practice data is not yet available. Driver lineups may differ.", "data": [asdict(p) for p in paces]}, indent=2)
 
         return json.dumps({"info": f"No practice data available for {config.RACE_YEAR} or {prev_year} R{config.RACE_ROUND}."})
     except Exception as e:
         return json.dumps({"error": f"Failed to load practice data: {e}"})
+
+
+@tool
+def get_sprint_telemetry() -> str:
+    """Get Sprint Qualifying results from this weekend. Shows each driver's grid position for the sprint race, best lap time, and which SQ segment they were eliminated in (SQ1/SQ2/SQ3). Strong same-weekend signal for one-lap pace. Falls back to previous year's same round if current year data is not available."""
+    try:
+        from telemetry.session_data import get_sprint_qualifying_results
+        sprint_quali = get_sprint_qualifying_results(config.RACE_YEAR, config.RACE_ROUND)
+        if sprint_quali:
+            return json.dumps({
+                "year": config.RACE_YEAR,
+                "round": config.RACE_ROUND,
+                "sprint_qualifying": [asdict(r) for r in sprint_quali],
+            }, indent=2)
+
+        # Fall back to previous year's same round
+        prev_year = config.RACE_YEAR - 1
+        sprint_quali = get_sprint_qualifying_results(prev_year, config.RACE_ROUND)
+        if sprint_quali:
+            return json.dumps({
+                "year": prev_year,
+                "round": config.RACE_ROUND,
+                "note": f"Using {prev_year} data as {config.RACE_YEAR} sprint qualifying data is not yet available. Driver lineups may differ.",
+                "sprint_qualifying": [asdict(r) for r in sprint_quali],
+            }, indent=2)
+
+        return json.dumps({"info": f"No sprint qualifying data available for {config.RACE_YEAR} or {prev_year} R{config.RACE_ROUND}."})
+    except Exception as e:
+        return json.dumps({"error": f"Failed to load sprint qualifying data: {e}"})
 
 
 @tool
@@ -111,6 +140,7 @@ def get_recent_news() -> str:
 ALL_TOOLS = [
     get_fantasy_state,
     get_practice_telemetry,
+    *([ get_sprint_telemetry ] if config.IS_SPRINT_WEEKEND else []),
     get_season_form,
     get_circuit_history_data,
     get_weather_forecast,

@@ -6,20 +6,44 @@ from agent.tools import ALL_TOOLS
 from agent.prompts import build_system_prompt
 
 
-HUMAN_MESSAGE = (
-    "Before making any recommendations, you MUST call ALL of these tools to gather data:\n"
-    "1. get_fantasy_state — current roster and market prices\n"
-    "2. get_practice_telemetry — FP1/FP2 pace data\n"
-    "3. get_season_form — season standings and form\n"
-    "4. get_circuit_history_data — past results at this circuit\n"
-    "5. get_weather_forecast — weekend weather\n"
-    "6. get_recent_news — recent F1 news for penalties/injuries/upgrades\n\n"
-    "Call all 6 tools first, then analyze the combined data to recommend the optimal roster "
-    "that maximizes expected points while obeying all constraints. Show your reasoning."
+def _build_human_message() -> str:
+    tools = [
+        "1. get_fantasy_state — current roster and market prices",
+        "2. get_practice_telemetry — FP1 pace data" if config.IS_SPRINT_WEEKEND else "2. get_practice_telemetry — FP1/FP2 pace data",
+    ]
+    if config.IS_SPRINT_WEEKEND:
+        tools.append("3. get_sprint_telemetry — sprint qualifying grid positions and best lap times")
+        tools += [
+            "4. get_season_form — season standings and form",
+            "5. get_circuit_history_data — past results at this circuit",
+            "6. get_weather_forecast — weekend weather",
+            "7. get_recent_news — recent F1 news for penalties/injuries/upgrades",
+        ]
+    else:
+        tools += [
+            "3. get_season_form — season standings and form",
+            "4. get_circuit_history_data — past results at this circuit",
+            "5. get_weather_forecast — weekend weather",
+            "6. get_recent_news — recent F1 news for penalties/injuries/upgrades",
+        ]
+    tool_list = "\n".join(tools)
+    count = len(tools)
+    return (
+        f"Before making any recommendations, you MUST call ALL of these tools to gather data:\n"
+        f"{tool_list}\n\n"
+        f"Call all {count} tools first, then use the combined data to answer the request below. "
+        "Show your reasoning."
+    )
+
+
+HUMAN_MESSAGE = _build_human_message()
+
+DEFAULT_TASK = (
+    "Recommend the optimal roster that maximizes expected points while obeying all constraints."
 )
 
 
-def run_agent(verbose: bool = False, tools: list | None = None) -> str:
+def run_agent(verbose: bool = False, tools: list | None = None, query: str | None = None) -> str:
     llm = ChatGoogleGenerativeAI(
         model=config.GEMINI_MODEL,
         google_api_key=config.GEMINI_API_KEY,
@@ -29,12 +53,15 @@ def run_agent(verbose: bool = False, tools: list | None = None) -> str:
     agent_tools = tools if tools is not None else ALL_TOOLS
     agent = create_react_agent(llm, agent_tools)
 
-    system_prompt = build_system_prompt()
+    system_prompt = build_system_prompt(query=query)
+
+    task = query.strip() if query else DEFAULT_TASK
+    user_message = f"{HUMAN_MESSAGE}\n\n**Your task:** {task}"
 
     result = agent.invoke({
         "messages": [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": HUMAN_MESSAGE},
+            {"role": "user", "content": user_message},
         ],
     })
 

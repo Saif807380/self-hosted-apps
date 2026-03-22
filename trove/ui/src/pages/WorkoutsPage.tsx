@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from 'react'
 import { Box, Flex, Heading, Text, Spinner } from '@chakra-ui/react'
 import { useWorkouts } from '@/hooks/useWorkouts'
 import { toaster } from '@/lib/toaster'
@@ -22,8 +22,9 @@ function SectionHeading({ children }: { children: ReactNode }) {
 function AddItemRow({ placeholder, onAdd }: { placeholder: string; onAdd: (name: string) => Promise<void> }) {
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     const name = value.trim()
     if (!name) return
     setSaving(true)
@@ -32,12 +33,14 @@ function AddItemRow({ placeholder, onAdd }: { placeholder: string; onAdd: (name:
       setValue('')
     } finally {
       setSaving(false)
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
-  }
+  }, [value, onAdd])
 
   return (
     <Flex gap={1} mt={2}>
       <input
+        ref={inputRef}
         type="text"
         value={value}
         placeholder={placeholder}
@@ -122,7 +125,8 @@ export default function WorkoutsPage() {
   }
 
   const handleCreateType = async (name: string) => {
-    await createType(name)
+    const newType = await createType(name)
+    setSelectedTypeId(newType.id)
     toaster.create({ title: 'Workout type added', type: 'success', duration: 3000 })
   }
 

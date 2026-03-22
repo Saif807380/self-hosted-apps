@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--round", type=int, help="Override RACE_ROUND from .env")
     parser.add_argument("--dry-run", action="store_true", help="Use fixture data instead of live scraping/telemetry")
     parser.add_argument("--verbose", action="store_true", help="Print agent intermediate reasoning")
+    parser.add_argument("--query", type=str, help="Custom question or instruction for the agent (e.g. 'Should I activate my wildcard?')")
     return parser.parse_args()
 
 
@@ -53,7 +54,7 @@ def main():
 
     with console.status("[bold cyan]Analyzing data and building roster recommendation...[/bold cyan]"):
         try:
-            result = run_agent(verbose=args.verbose, tools=tools)
+            result = run_agent(verbose=args.verbose, tools=tools, query=args.query)
         except Exception as e:
             console.print(f"\n[red]Agent error: {e}[/red]")
             if args.verbose:
