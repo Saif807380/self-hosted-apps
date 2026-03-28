@@ -1,6 +1,8 @@
 import { Dialog, Portal, Button, Box, Flex, Stack, Text, CloseButton } from '@chakra-ui/react'
 import type { VideoGame } from '@/types/api'
 import StarRating from '@/components/StarRating'
+import { useImageUrl } from '@/hooks/useImageUrl'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface GameDetailModalProps {
   game: VideoGame | null
@@ -26,6 +28,9 @@ function getCoverGradient(title: string): [string, string] {
 }
 
 export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelete }: GameDetailModalProps) {
+  const coverUrl = useImageUrl(game?.coverImage)
+  const isMobile = useIsMobile()
+
   if (!game) return null
 
   const [gradFrom, gradTo] = getCoverGradient(game.title)
@@ -44,12 +49,11 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
         <Dialog.Backdrop />
         <Dialog.Positioner>
           {/* Cover: 120px wide, 3:4 ratio → 160px tall. 90% (144px) in blurred area, 10% (16px) below */}
-          <Dialog.Content maxW="380px" mx={4} position="relative">
-            {/* Blurred background section (200px). Cover top = 200 - 144 = 56px */}
-            <Box h="300px" overflow="hidden" position="relative" flexShrink={0}>
-              {game.coverImage ? (
+          <Dialog.Content maxW={isMobile ? '320px' : '380px'} mx={4} position="relative">
+            <Box h={isMobile ? '200px' : '300px'} overflow="hidden" position="relative" flexShrink={0}>
+              {coverUrl ? (
                 <img
-                  src={game.coverImage}
+                  src={coverUrl}
                   alt=""
                   aria-hidden
                   style={{
@@ -81,9 +85,9 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
             {/* Cover card: absolutely positioned, straddling blurred area and body */}
             <Box
               position="absolute"
-              top="50px"
+              top={isMobile ? '30px' : '50px'}
               left="50%"
-              w="220px"
+              w={isMobile ? '140px' : '220px'}
               borderRadius="8px"
               overflow="hidden"
               zIndex={2}
@@ -94,9 +98,9 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
             >
               <Box position="relative" pb="133%">
                 <Box position="absolute" inset={0}>
-                  {game.coverImage ? (
+                  {coverUrl ? (
                     <img
-                      src={game.coverImage}
+                      src={coverUrl}
                       alt={game.title}
                       style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }}
                     />
@@ -119,7 +123,7 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
             </Box>
 
             {/* pt="24px" = 16px cover overlap + 8px breathing room */}
-            <Dialog.Body pt="72px" pb={4}>
+            <Dialog.Body pt={isMobile ? '32px' : '72px'} pb={4}>
               <Stack gap={3} align="center">
                 <Text
                   fontFamily="heading" fontWeight="700" fontSize="xl"

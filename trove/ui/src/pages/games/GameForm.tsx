@@ -6,6 +6,7 @@ import {
 import type { VideoGame, VideoGameFormData } from '@/types/api'
 import StarRating from '@/components/StarRating'
 import { uploadFile } from '@/services/upload'
+import { useImageUrl } from '@/hooks/useImageUrl'
 
 interface GameFormProps {
   isOpen: boolean
@@ -46,6 +47,7 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const coverUrl = useImageUrl(state.coverImage || undefined)
 
   useEffect(() => {
     if (isOpen) {
@@ -74,9 +76,7 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
     }
   }
 
-  const handleYearKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter') return
-    e.preventDefault()
+  const addYearFromInput = () => {
     const year = parseInt(state.yearInput.trim(), 10)
     if (year >= 1970 && year <= CURRENT_YEAR + 1 && !state.yearsPlayed.includes(year)) {
       setState(prev => ({
@@ -85,6 +85,12 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
         yearInput: '',
       }))
     }
+  }
+
+  const handleYearKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    addYearFromInput()
   }
 
   const removeYear = (year: number) =>
@@ -129,7 +135,7 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content maxW="500px" mx={4}>
+          <Dialog.Content maxW={{ base: '340px', md: '500px' }} mx={4}>
             <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
               <Dialog.Header borderBottomWidth="1px" borderColor="border.default" pb={3}>
                 <Dialog.Title fontFamily="heading" fontWeight="600" fontSize="lg">
@@ -168,9 +174,9 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
                     >
                       {uploading ? (
                         <Spinner size="sm" color="accent" />
-                      ) : state.coverImage ? (
+                      ) : coverUrl ? (
                         <img
-                          src={state.coverImage}
+                          src={coverUrl}
                           alt="Cover preview"
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
@@ -272,6 +278,7 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
                       value={state.yearInput}
                       onChange={e => { set('yearInput', e.target.value); if (errors.yearsPlayed) setErrors(prev => ({ ...prev, yearsPlayed: '' })) }}
                       onKeyDown={handleYearKeyDown}
+                      onBlur={addYearFromInput}
                       placeholder={`e.g. ${CURRENT_YEAR} — press Enter to add`}
                       min={1970}
                       max={CURRENT_YEAR + 1}

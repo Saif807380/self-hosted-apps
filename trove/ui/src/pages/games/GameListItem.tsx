@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Box, Flex, Text } from '@chakra-ui/react'
 import type { VideoGame } from '@/types/api'
 import StarRating from '@/components/StarRating'
+import { useImageUrl } from '@/hooks/useImageUrl'
 
 interface GameListItemProps {
   game: VideoGame
@@ -27,6 +28,7 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
   const [hovered, setHovered] = useState(false)
   const [gradFrom, gradTo] = getCoverGradient(game.title)
   const initial = game.title[0]?.toUpperCase() ?? '?'
+  const coverUrl = useImageUrl(game.coverImage)
 
   return (
     <Box
@@ -49,9 +51,9 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
       <Flex align="stretch">
         {/* Thumbnail — fixed width, fills item height */}
         <Box w="90px" flexShrink={0}>
-          {game.coverImage ? (
+          {coverUrl ? (
             <img
-              src={game.coverImage}
+              src={coverUrl}
               alt={game.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />

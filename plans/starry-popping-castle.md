@@ -205,16 +205,28 @@ mkcert -cert-file infra/certs/cert.pem -key-file infra/certs/key.pem \
 
 ### 4.5 Modify `ui/index.html`
 - Add `<link rel="manifest">` and iOS meta tags (`apple-mobile-web-app-capable`, etc.)
+- Add viewport meta tag for mobile scaling: `<meta name="viewport" content="width=device-width, initial-scale=1">`
+
+### 4.6 Mobile-Responsive UI (integrated into PWA)
+- Create `useIsMobile` hook for responsive detection across all components
+- Hamburger menu in Layout.tsx for mobile navigation
+- Responsive pages: list-view default on mobile, sidebar filters full-width when opened
+- Responsive modals: scaled-down sizing on mobile screens
+- Responsive grid: 2 columns on mobile, 3+ on desktop
 
 ### Verification
 - `bun run build` produces `sw.js` in dist
 - DevTools → Application → Service Workers shows registered
 - Toggle offline in DevTools → app shell loads (empty data expected)
 - On phone, "Add to Home Screen" works
+- Mobile: hamburger menu, responsive layout, appropriately-sized cards and modals
+- Desktop: full navigation visible, sidebar persistent, larger grid cards and modals
 
 ### Gotchas
 - iOS Safari: no install prompt — user must manually "Add to Home Screen" from share sheet
 - SW update strategy: `autoUpdate` checks on navigation, auto-activates — safest for personal use
+- Mobile breakpoint: 767px (matches Chakra `md` breakpoint at 768px)
+- `useIsMobile` hook must initialize with `window.matchMedia(...).matches` to avoid SSR mismatch
 
 ---
 
@@ -332,9 +344,43 @@ mkcert -cert-file infra/certs/cert.pem -key-file infra/certs/key.pem \
 
 ## Phase 7: UI Indicators & Polish
 
-**Goal**: Visual feedback for sync status, offline mode, and pending changes.
+**Goal**: Visual feedback for sync status, offline mode, and pending changes. Mobile-responsive UI/UX for PWA.
 
-### 7.1 New: `ui/src/components/SyncIndicator.tsx`
+### 7.1 New: `ui/src/hooks/useIsMobile.ts`
+- Hook using `window.matchMedia('(max-width: 767px)')` for responsive detection
+- Live updates via `change` event listener
+- Lazy initialization to avoid SSR mismatch
+- Used across Layout, Pages (Books/Games/Travel), and Modal components
+
+### 7.2 Update: `ui/src/components/Layout.tsx` — Hamburger Menu
+- Desktop nav hidden on mobile: `display={{ base: 'none', md: 'flex' }}`
+- Animated hamburger icon (3 bars ↔ X) on mobile
+- Mobile dropdown menu with nav links (10px/16px padding, 1rem font)
+- SyncIndicator and ThemeToggle remain visible in header
+- Main content padding responsive: `px={{ base: 3, md: 6 }} py={{ base: 4, md: 8 }}`
+
+### 7.3 Update: `ui/src/pages/BooksPage.tsx` — Mobile-Responsive Layout
+- Default state mobile: `view='list'` (not grid), `sidebarOpen=false`
+- Layout: `Flex direction={isMobile ? 'column' : 'row'}`
+- Filters panel: full-width on mobile, sticky sidebar on desktop
+- Collapsible panel fix: `height: isMobile && !sidebarOpen ? '0px' : 'auto'` prevents gap
+- Grid: `columns={{ base: 2, sm: 3, ... }}` (2 cards per row on mobile)
+
+### 7.4 Update: `ui/src/pages/GamesPage.tsx` — Same mobile-responsive pattern as BooksPage
+
+### 7.5 Update: `ui/src/pages/TravelPage.tsx` — Same mobile-responsive pattern as BooksPage
+
+### 7.6 Update: Detail Modals — Mobile-Responsive Sizing
+- `BookDetailModal.tsx`: `maxW={isMobile ? '320px' : '380px'}`, hero height `h={isMobile ? '200px' : '300px'}`
+- `GameDetailModal.tsx`: Same sizing pattern, cover card `w={isMobile ? '140px' : '220px'}`
+- `LocationDetailModal.tsx`: `maxW={isMobile ? '320px' : '420px'}`, banner height `h={isMobile ? '120px' : '180px'}`
+
+### 7.7 Update: Form Modals — Mobile-Responsive Sizing
+- `BookForm.tsx`: `maxW={{ base: '340px', md: '500px' }}`
+- `GameForm.tsx`: `maxW={{ base: '340px', md: '500px' }}`
+- `LocationForm.tsx`: `maxW={{ base: '340px', md: '480px' }}`
+
+### 7.8 New: `ui/src/components/SyncIndicator.tsx`
 - Persistent icon in navbar:
   - Green cloud: "Synced" (outbox empty, recent sync)
   - Yellow dot: "Pending changes" (outbox has entries)
@@ -343,13 +389,14 @@ mkcert -cert-file infra/certs/cert.pem -key-file infra/certs/key.pem \
   - Gray: "Offline"
 - Click → popover with details, manual "Sync Now" button
 
-### 7.2 New: `ui/src/components/OfflineBanner.tsx`
+### 7.9 New: `ui/src/components/OfflineBanner.tsx`
 - Thin banner when offline: "Working offline — changes will sync when connected"
 
-### 7.3 Modify `ui/src/components/Layout.tsx`
-- Add `<SyncIndicator />` to navbar
-
 ### Verification
+- Mobile: hamburger menu appears on small screens, nav links functional
+- Mobile: default list view, filters hidden initially, full-width when expanded
+- Mobile: grid 2 cards per row, appropriately sized
+- Mobile: detail modals fit screen with proportional sizing
 - Connected + idle → green
 - Create entry → yellow → spinning → green
 - Toggle offline → gray + banner
@@ -358,6 +405,19 @@ mkcert -cert-file infra/certs/cert.pem -key-file infra/certs/key.pem \
 
 ---
 
+## Phase Status & Completion
+
+- [x] **Phase 1** (DB Schema) — Soft deletes + `updated_at` columns added
+- [x] **Phase 2** (Sync API) — ConnectRPC sync endpoints + image upload infrastructure
+- [x] **Phase 3** (TLS) — HTTPS support, cert generation, port forwarding setup
+- [ ] **Phase 4** (PWA) — Service worker + manifest (in progress: mobile-responsive UI/UX completed)
+  - ✅ Mobile-responsive layout (hamburger menu, list-default, full-width sidebar on mobile)
+  - ✅ Responsive modals and forms (scaled-down on mobile)
+  - ⏳ Remaining: Service worker registration, offline app shell
+- [ ] **Phase 5** (IndexedDB + Sync Engine) — Offline-first sync architecture
+- [ ] **Phase 6** (Image Sync) — Local blob storage + background image sync
+- [ ] **Phase 7** (UI Polish) — Sync indicators, offline banner (in progress: mobile UI completed)
+
 ## Phase Dependency Graph
 
 ```
@@ -365,10 +425,13 @@ Phase 1 (DB Schema) → Phase 2 (Sync API) → Phase 5 (IndexedDB + Sync)
                                                 ↓
 Phase 3 (TLS) — can be done anytime        Phase 6 (Image Sync)
 Phase 4 (PWA) — can be done anytime            ↓
-                                           Phase 7 (UI Polish)
+    ↓ (mobile UI ✅)                      Phase 7 (UI Polish)
+Phase 7 (Sync indicators)
 ```
 
 **Recommended order**: 1 → 2 → 4 → 3 → 5 → 6 → 7
+
+**Current focus**: Phase 4 mobile-responsive UI (✅ complete) → Phase 4 PWA shell → Phase 3 TLS → Phase 5 IndexedDB sync
 
 Do PWA shell (4) early — low risk, immediate value (installable app).
 Do TLS (3) before Phase 5 — phone needs HTTPS to reach sync endpoints.

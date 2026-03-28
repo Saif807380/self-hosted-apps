@@ -13,6 +13,7 @@ interface WeekLogSectionProps {
   logs: WorkoutLog[]
   weekNumber: number
   onUpsertLog: (exerciseId: string, weekNumber: number, sets?: number, reps?: string, weightKg?: number) => Promise<void>
+  isMobile?: boolean
 }
 
 function getLogForExercise(logs: WorkoutLog[], exerciseId: string, weekNumber: number): WorkoutLog | undefined {
@@ -44,7 +45,7 @@ const INPUT_STYLE: CSSProperties = {
   outline: 'none',
 }
 
-export default function WeekLogSection({ exercises, logs, weekNumber, onUpsertLog }: WeekLogSectionProps) {
+export default function WeekLogSection({ exercises, logs, weekNumber, onUpsertLog, isMobile }: WeekLogSectionProps) {
   const [rows, setRows] = useState<Record<string, RowState>>({})
   const prevLogsRef = useRef(logs)
   const prevWeekRef = useRef(weekNumber)
@@ -99,6 +100,58 @@ export default function WeekLogSection({ exercises, logs, weekNumber, onUpsertLo
       <Text fontSize="sm" color="text.muted" fontStyle="italic">
         No exercises added yet.
       </Text>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <Flex direction="column" gap={2}>
+        {exercises.map((ex, i) => {
+          const row = rows[ex.id] ?? { sets: '', reps: '', weightKg: '' }
+          const isAlt = i % 2 === 1
+          return (
+            <Box
+              key={ex.id}
+              p={3}
+              borderRadius="8px"
+              border="1px solid"
+              borderColor="border.default"
+              bg={isAlt ? 'bg.subtle' : 'bg.surface'}
+            >
+              <Text fontSize="sm" fontWeight={500} color="text.primary" mb={2}>{ex.name}</Text>
+              <Flex gap={2}>
+                {([
+                  { field: 'sets' as const, label: 'Sets' },
+                  { field: 'reps' as const, label: 'Reps' },
+                  { field: 'weightKg' as const, label: 'Wt (kg)' },
+                ]).map(({ field, label }) => (
+                  <Box key={field} flex={1}>
+                    <Text fontSize="xs" color="text.muted" mb={1}>{label}</Text>
+                    <input
+                      type={field === 'reps' ? 'text' : 'number'}
+                      inputMode={field === 'reps' ? 'text' : 'decimal'}
+                      min={0}
+                      step={field === 'weightKg' ? 0.5 : 1}
+                      value={row[field]}
+                      placeholder="—"
+                      onChange={e => handleChange(ex.id, field, e.target.value)}
+                      onBlur={handleBlur}
+                      style={{
+                        ...INPUT_STYLE,
+                        width: '100%',
+                        padding: '8px',
+                        fontSize: '0.9rem',
+                        textAlign: 'center',
+                        minHeight: '40px',
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Flex>
+            </Box>
+          )
+        })}
+      </Flex>
     )
   }
 
@@ -160,9 +213,10 @@ export default function WeekLogSection({ exercises, logs, weekNumber, onUpsertLo
 interface WeekHistoryTableProps {
   exercises: Exercise[]
   logs: WorkoutLog[]
+  isMobile?: boolean
 }
 
-export function WeekHistoryTable({ exercises, logs }: WeekHistoryTableProps) {
+export function WeekHistoryTable({ exercises, logs, isMobile }: WeekHistoryTableProps) {
   const weeks = [...new Set(logs.map(l => l.weekNumber))].sort((a, b) => b - a)
 
   if (!weeks.length) {
@@ -175,16 +229,60 @@ export function WeekHistoryTable({ exercises, logs }: WeekHistoryTableProps) {
 
   const exMap = Object.fromEntries(exercises.map(e => [e.id, e]))
 
+  if (isMobile) {
+    return (
+      <Flex direction="column" gap={3} w="100%">
+        {weeks.map(week => {
+          const weekLogs = logs.filter(l => l.weekNumber === week)
+          return (
+            <Box
+              key={week}
+              p={3}
+              borderRadius="8px"
+              border="1px solid"
+              borderColor="border.default"
+              bg={week % 2 === 0 ? 'bg.subtle' : 'bg.surface'}
+            >
+              <Text fontSize="sm" fontWeight={700} color="text.primary" mb={2}>
+                Week {week}
+              </Text>
+              <Flex direction="column" gap={2}>
+                {weekLogs.map(log => (
+                  <Box key={log.id}>
+                    <Text fontSize="sm" fontWeight={500} color="text.primary">
+                      {exMap[log.exerciseId]?.name ?? '—'}
+                    </Text>
+                    <Flex gap={3} mt={1}>
+                      <Text fontSize="xs" color="text.muted">
+                        Sets: <span style={{ color: 'var(--chakra-colors-text-secondary)' }}>{log.sets ?? '—'}</span>
+                      </Text>
+                      <Text fontSize="xs" color="text.muted">
+                        Reps: <span style={{ color: 'var(--chakra-colors-text-secondary)' }}>{log.reps ?? '—'}</span>
+                      </Text>
+                      <Text fontSize="xs" color="text.muted">
+                        Wt: <span style={{ color: 'var(--chakra-colors-text-secondary)' }}>{log.weightKg != null ? `${log.weightKg}kg` : '—'}</span>
+                      </Text>
+                    </Flex>
+                  </Box>
+                ))}
+              </Flex>
+            </Box>
+          )
+        })}
+      </Flex>
+    )
+  }
+
   return (
     <Box overflowX="auto">
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
         <thead>
           <tr>
-            {['Week', 'Exercise', 'Sets', 'Reps / Duration', 'Weight (kg)'].map(h => (
+            {['Week', 'Exercise', 'Sets', 'Reps / Duration', 'Weight (kg)'].map((h, idx) => (
               <th
                 key={h}
                 style={{
-                  textAlign: h === 'Week' || h === 'Exercise' ? 'left' : 'center',
+                  textAlign: idx < 2 ? 'left' : 'center',
                   padding: '6px 10px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -232,9 +330,10 @@ interface WeekSelectorProps {
   selectedWeek: number
   onSelect: (week: number) => void
   onDeleteWeek: (week: number) => void
+  isMobile?: boolean
 }
 
-export function WeekSelector({ logs, selectedWeek, onSelect, onDeleteWeek }: WeekSelectorProps) {
+export function WeekSelector({ logs, selectedWeek, onSelect, onDeleteWeek, isMobile }: WeekSelectorProps) {
   const existingWeeks = [...new Set(logs.map(l => l.weekNumber))].sort((a, b) => a - b)
   const maxWeek = existingWeeks.length ? Math.max(...existingWeeks) : 0
   const nextWeek = maxWeek + 1
@@ -262,7 +361,7 @@ export function WeekSelector({ logs, selectedWeek, onSelect, onDeleteWeek }: Wee
             type="button"
             onClick={() => onSelect(w)}
             style={{
-              padding: '3px 10px',
+              padding: isMobile ? '6px 12px' : '3px 10px',
               fontSize: '0.8rem',
               fontWeight: 600,
               cursor: 'pointer',
@@ -284,7 +383,7 @@ export function WeekSelector({ logs, selectedWeek, onSelect, onDeleteWeek }: Wee
               onClick={() => onDeleteWeek(w)}
               title={`Delete week ${w}`}
               style={{
-                padding: '0 6px',
+                padding: isMobile ? '0 8px' : '0 6px',
                 cursor: 'pointer',
                 border: 'none',
                 borderLeft: '1px solid var(--chakra-colors-border-default)',
@@ -308,7 +407,7 @@ export function WeekSelector({ logs, selectedWeek, onSelect, onDeleteWeek }: Wee
           type="button"
           onClick={() => onSelect(nextWeek)}
           style={{
-            padding: '3px 10px',
+            padding: isMobile ? '6px 12px' : '3px 10px',
             borderRadius: '6px',
             fontSize: '0.8rem',
             fontWeight: 500,

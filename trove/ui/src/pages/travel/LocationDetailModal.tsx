@@ -4,6 +4,7 @@ import {
   Dialog, Portal, Button, Box, Flex, Stack, Text, CloseButton, Input, Spinner,
 } from '@chakra-ui/react'
 import type { TravelLocation, TouristSpot } from '@/types/api'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface LocationDetailModalProps {
   location: TravelLocation | null
@@ -41,6 +42,7 @@ export default function LocationDetailModal({
   const [newSpotName, setNewSpotName] = useState('')
   const [addingSpot, setAddingSpot] = useState(false)
   const [deletingSpotId, setDeletingSpotId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
 
   if (!location) return null
 
@@ -88,11 +90,10 @@ export default function LocationDetailModal({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content maxW="420px" mx={4} overflow="hidden">
-            {/* Gradient banner — full width, no header */}
+          <Dialog.Content maxW={isMobile ? '320px' : '420px'} mx={4} overflow="hidden">
             <Box
               position="relative"
-              h="180px"
+              h={isMobile ? '120px' : '180px'}
               style={{ background: `linear-gradient(150deg, ${gradFrom} 0%, ${gradTo} 100%)` }}
               display="flex"
               alignItems="center"
