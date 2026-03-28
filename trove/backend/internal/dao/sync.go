@@ -126,6 +126,8 @@ func (s *SyncStore) GetChangesSince(ctx context.Context, since time.Time) (*mode
 
 // ApplyChanges upserts all entities in a single transaction using topological ordering.
 // LWW: only updates if incoming updated_at > existing updated_at.
+// Client timestamps are overridden with server time so that pushed changes
+// are always visible in the next PullChanges (avoids stale-timestamp race).
 func (s *SyncStore) ApplyChanges(ctx context.Context, cs *model.ChangeSet) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
@@ -135,6 +137,37 @@ func (s *SyncStore) ApplyChanges(ctx context.Context, cs *model.ChangeSet) error
 
 	if _, err := tx.Exec(ctx, "SET CONSTRAINTS ALL DEFERRED"); err != nil {
 		return fmt.Errorf("defer constraints: %w", err)
+	}
+
+	// Override client timestamps with server time so pushed records
+	// are guaranteed to be newer than any previous lastSync.
+	now := time.Now().UTC()
+	for i := range cs.Tags {
+		cs.Tags[i].UpdatedAt = now
+	}
+	for i := range cs.Collections {
+		cs.Collections[i].UpdatedAt = now
+	}
+	for i := range cs.WorkoutTypes {
+		cs.WorkoutTypes[i].UpdatedAt = now
+	}
+	for i := range cs.Books {
+		cs.Books[i].UpdatedAt = now
+	}
+	for i := range cs.VideoGames {
+		cs.VideoGames[i].UpdatedAt = now
+	}
+	for i := range cs.TravelLocations {
+		cs.TravelLocations[i].UpdatedAt = now
+	}
+	for i := range cs.Exercises {
+		cs.Exercises[i].UpdatedAt = now
+	}
+	for i := range cs.TouristSpots {
+		cs.TouristSpots[i].UpdatedAt = now
+	}
+	for i := range cs.WorkoutLogs {
+		cs.WorkoutLogs[i].UpdatedAt = now
 	}
 
 	// Layer 1: no FK deps

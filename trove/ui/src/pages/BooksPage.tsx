@@ -3,6 +3,7 @@ import { Box, Flex, Heading, SimpleGrid, Text, Spinner } from '@chakra-ui/react'
 import { useBooks } from '@/hooks/useBooks'
 import { useTags } from '@/hooks/useTags'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { toaster } from '@/lib/toaster'
 import type { Book, BookFormData } from '@/types/api'
 import BookCard from './books/BookCard'
@@ -17,16 +18,17 @@ import ViewToggle from '@/components/ViewToggle'
 const SIDEBAR_WIDTH = 240
 
 export default function BooksPage() {
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [yearRead, setYearRead] = useState<number | undefined>()
   const [tagIds, setTagIds] = useState<string[]>([])
   const [sort, setSort] = useState('title_asc')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 767px)').matches)
   const [formOpen, setFormOpen] = useState(false)
   const [editBook, setEditBook] = useState<Book | null>(null)
   const [viewBook, setViewBook] = useState<Book | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null)
-  const [view, setView] = useState<'grid' | 'list'>('grid')
+  const [view, setView] = useState<'grid' | 'list'>(() => window.matchMedia('(max-width: 767px)').matches ? 'list' : 'grid')
 
   const debouncedSearch = useDebounce(search, 300)
   const { books, loading, error, createBook, updateBook, deleteBook } = useBooks({
@@ -122,11 +124,10 @@ export default function BooksPage() {
         <ViewToggle view={view} onChange={setView} />
       </Flex>
 
-      {/* Main layout: sidebar column + grid */}
-      <Flex gap={6} align="flex-start">
-        {/* Sidebar column — toggle always visible, panel collapsible */}
-        <Box flexShrink={0}>
-          {/* Toggle button lives here, with the filters */}
+      {/* Main layout: sidebar + content (column on mobile, row on desktop) */}
+      <Flex gap={6} align="flex-start" direction={isMobile ? 'column' : 'row'}>
+        {/* Sidebar — full width on mobile, fixed width on desktop */}
+        <Box flexShrink={0} w={isMobile ? '100%' : 'auto'}>
           <button
             type="button"
             onClick={() => setSidebarOpen(prev => !prev)}
@@ -154,21 +155,24 @@ export default function BooksPage() {
           {/* Collapsible panel */}
           <Box
             style={{
-              width: sidebarOpen ? `${SIDEBAR_WIDTH}px` : '0px',
+              width: isMobile
+                ? sidebarOpen ? '100%' : '0px'
+                : sidebarOpen ? `${SIDEBAR_WIDTH}px` : '0px',
+              height: isMobile && !sidebarOpen ? '0px' : 'auto',
               opacity: sidebarOpen ? 1 : 0,
               overflow: 'hidden',
-              transition: 'width 0.25s ease, opacity 0.2s ease',
+              transition: 'width 0.25s ease, height 0.25s ease, opacity 0.2s ease',
               marginTop: sidebarOpen ? '10px' : 0,
             }}
           >
             <Box
-              w={`${SIDEBAR_WIDTH}px`}
+              w={isMobile ? '100%' : `${SIDEBAR_WIDTH}px`}
               bg="bg.surface"
               border="1px solid"
               borderColor="border.default"
               borderRadius="10px"
               p={4}
-              position="sticky"
+              position={isMobile ? 'static' : 'sticky'}
               top="72px"
             >
               <BookFilters
@@ -190,7 +194,7 @@ export default function BooksPage() {
         </Box>
 
         {/* Book grid */}
-        <Box flex={1} minW={0}>
+        <Box flex={1} minW={0} w={isMobile ? '100%' : 'auto'}>
           {loading ? (
             <Flex justify="center" py={24}>
               <Spinner color="accent" size="lg" />
@@ -206,7 +210,7 @@ export default function BooksPage() {
               onClear={handleClearFilters}
             />
           ) : view === 'grid' ? (
-            <SimpleGrid columns={{ base: 3, sm: 4, md: sidebarOpen ? 4 : 5, lg: sidebarOpen ? 5 : 6, xl: sidebarOpen ? 6 : 7 }} gap={6}>
+            <SimpleGrid columns={{ base: 2, sm: 3, md: sidebarOpen ? 4 : 5, lg: sidebarOpen ? 5 : 6, xl: sidebarOpen ? 6 : 7 }} gap={{ base: 3, md: 6 }}>
               {sortedBooks.map(book => (
                 <BookCard key={book.id} book={book} onClick={setViewBook} />
               ))}

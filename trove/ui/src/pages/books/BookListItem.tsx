@@ -3,6 +3,7 @@ import { Box, Flex, Text } from '@chakra-ui/react'
 import type { Book } from '@/types/api'
 import StarRating from '@/components/StarRating'
 import TagBadge from '@/components/TagBadge'
+import { useImageUrl } from '@/hooks/useImageUrl'
 
 interface BookListItemProps {
   book: Book
@@ -28,6 +29,7 @@ export default function BookListItem({ book, onClick }: BookListItemProps) {
   const [hovered, setHovered] = useState(false)
   const [gradFrom, gradTo] = getCoverGradient(book.title)
   const initial = book.title[0]?.toUpperCase() ?? '?'
+  const coverUrl = useImageUrl(book.coverImage)
 
   return (
     <Box
@@ -50,9 +52,9 @@ export default function BookListItem({ book, onClick }: BookListItemProps) {
       <Flex align="stretch">
         {/* Thumbnail — fixed width, fills item height */}
         <Box w="90px" flexShrink={0} position="relative">
-          {book.coverImage ? (
+          {coverUrl ? (
             <img
-              src={book.coverImage}
+              src={coverUrl}
               alt={book.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />

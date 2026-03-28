@@ -16,6 +16,7 @@ import {
 import type { Book, BookFormData, Tag } from '@/types/api'
 import StarRating from '@/components/StarRating'
 import { uploadFile } from '@/services/upload'
+import { useImageUrl } from '@/hooks/useImageUrl'
 
 interface BookFormProps {
   isOpen: boolean
@@ -65,6 +66,7 @@ export default function BookForm({
   const [submitting, setSubmitting] = useState(false)
   const [creatingTag, setCreatingTag] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const coverUrl = useImageUrl(state.coverImage || undefined)
 
   useEffect(() => {
     if (isOpen) {
@@ -96,9 +98,7 @@ export default function BookForm({
     }
   }
 
-  const handleYearKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter') return
-    e.preventDefault()
+  const addYearFromInput = () => {
     const year = parseInt(state.yearInput.trim(), 10)
     if (year >= 1900 && year <= CURRENT_YEAR + 1 && !state.yearsRead.includes(year)) {
       setState(prev => ({
@@ -107,6 +107,12 @@ export default function BookForm({
         yearInput: '',
       }))
     }
+  }
+
+  const handleYearKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    addYearFromInput()
   }
 
   const removeYear = (year: number) =>
@@ -181,7 +187,7 @@ export default function BookForm({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content maxW="500px" mx={4}>
+          <Dialog.Content maxW={{ base: '340px', md: '500px' }} mx={4}>
             <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
               <Dialog.Header borderBottomWidth="1px" borderColor="border.default" pb={3}>
                 <Dialog.Title fontFamily="heading" fontWeight="600" fontSize="lg">
@@ -221,9 +227,9 @@ export default function BookForm({
                     >
                       {uploading ? (
                         <Spinner size="sm" color="accent" />
-                      ) : state.coverImage ? (
+                      ) : coverUrl ? (
                         <img
-                          src={state.coverImage}
+                          src={coverUrl}
                           alt="Cover preview"
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
@@ -339,6 +345,7 @@ export default function BookForm({
                       value={state.yearInput}
                       onChange={e => { set('yearInput', e.target.value); if (errors.yearsRead) setErrors(prev => ({ ...prev, yearsRead: '' })) }}
                       onKeyDown={handleYearKeyDown}
+                      onBlur={addYearFromInput}
                       placeholder={`e.g. ${CURRENT_YEAR} — press Enter to add`}
                       min={1900}
                       max={CURRENT_YEAR + 1}

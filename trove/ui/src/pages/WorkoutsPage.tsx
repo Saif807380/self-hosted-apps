@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from 'react'
 import { Box, Flex, Heading, Text, Spinner } from '@chakra-ui/react'
 import { useWorkouts } from '@/hooks/useWorkouts'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { toaster } from '@/lib/toaster'
 import type { WorkoutType } from '@/types/api'
 import WeekLogSection, { WeekHistoryTable, WeekSelector } from './workouts/WeekLogSection'
@@ -83,6 +84,7 @@ function AddItemRow({ placeholder, onAdd }: { placeholder: string; onAdd: (name:
 }
 
 export default function WorkoutsPage() {
+  const isMobile = useIsMobile()
   const {
     types, logs, loading, error,
     fetchLogsForType,
@@ -94,6 +96,7 @@ export default function WorkoutsPage() {
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'log' | 'history' | 'progress'>('log')
   const [selectedWeek, setSelectedWeek] = useState(1)
+  const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 767px)').matches)
 
   const selectedType: WorkoutType | undefined = types.find(t => t.id === selectedTypeId)
 
@@ -122,6 +125,7 @@ export default function WorkoutsPage() {
   const handleSelectType = (id: string) => {
     setSelectedTypeId(id)
     setActiveTab('log')
+    if (isMobile) setSidebarOpen(false)
   }
 
   const handleCreateType = async (name: string) => {
@@ -196,62 +200,109 @@ export default function WorkoutsPage() {
       ) : error ? (
         <Flex justify="center" py={16}><Text color="red.500" fontSize="sm">{error}</Text></Flex>
       ) : (
-        <Flex gap={6} align="flex-start">
+        <Flex gap={6} align={isMobile ? 'stretch' : 'flex-start'} direction={isMobile ? 'column' : 'row'}>
           {/* Sidebar — workout types */}
-          <Box
-            w={`${SIDEBAR_WIDTH}px`}
-            flexShrink={0}
-            bg="bg.surface"
-            border="1px solid"
-            borderColor="border.default"
-            borderRadius="10px"
-            p={4}
-            position="sticky"
-            top="72px"
-          >
-            <SectionHeading>Workout Types</SectionHeading>
+          <Box flexShrink={0} w={isMobile ? '100%' : 'auto'}>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(prev => !prev)}
+              aria-label={sidebarOpen ? 'Hide workout types' : 'Show workout types'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 12px',
+                borderRadius: '7px',
+                fontSize: '0.8rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                border: '1px solid var(--chakra-colors-border-default)',
+                background: 'var(--chakra-colors-bg-surface)',
+                color: 'var(--chakra-colors-text-secondary)',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ fontSize: '1rem', lineHeight: 1 }}>☰</span>
+              {sidebarOpen ? 'Hide Types' : 'Workout Types'}
+            </button>
 
-            <Flex direction="column" gap={1}>
-              {types.map(type => (
-                <Flex
-                  key={type.id}
-                  align="center"
-                  justify="space-between"
-                  px={2} py={1.5}
-                  borderRadius="6px"
-                  cursor="pointer"
-                  bg={selectedTypeId === type.id ? 'bg.subtle' : 'transparent'}
-                  _hover={{ bg: 'bg.subtle' }}
-                  onClick={() => handleSelectType(type.id)}
-                >
-                  <Text
-                    fontSize="sm"
-                    fontWeight={selectedTypeId === type.id ? 600 : 400}
-                    color={selectedTypeId === type.id ? 'text.primary' : 'text.secondary'}
-                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                  >
-                    {type.name}
-                  </Text>
-                  <button
-                    type="button"
-                    onClick={e => { e.stopPropagation(); handleDeleteType(type) }}
-                    title="Delete type"
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--chakra-colors-text-muted)',
-                      fontSize: '0.9rem', lineHeight: 1, padding: '2px 4px', borderRadius: '4px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    ×
-                  </button>
+            {/* Collapsible panel */}
+            <Box
+              style={{
+                width: isMobile
+                  ? sidebarOpen ? '100%' : '0px'
+                  : sidebarOpen ? `${SIDEBAR_WIDTH}px` : '0px',
+                height: isMobile && !sidebarOpen ? '0px' : 'auto',
+                opacity: sidebarOpen ? 1 : 0,
+                overflow: 'hidden',
+                transition: 'width 0.25s ease, height 0.25s ease, opacity 0.2s ease',
+                marginTop: sidebarOpen ? '10px' : 0,
+              }}
+            >
+              <Box
+                w={isMobile ? '100%' : `${SIDEBAR_WIDTH}px`}
+                bg="bg.surface"
+                border="1px solid"
+                borderColor="border.default"
+                borderRadius="10px"
+                p={4}
+                position={isMobile ? 'static' : 'sticky'}
+                top="72px"
+              >
+                <SectionHeading>Workout Types</SectionHeading>
+
+                <Flex direction="column" gap={1}>
+                  {types.map(type => (
+                    <Flex
+                      key={type.id}
+                      align="center"
+                      justify="space-between"
+                      px={2} py={1.5}
+                      borderRadius="6px"
+                      cursor="pointer"
+                      bg={selectedTypeId === type.id ? 'bg.subtle' : 'transparent'}
+                      _hover={{ bg: 'bg.subtle' }}
+                      onClick={() => handleSelectType(type.id)}
+                    >
+                      <Text
+                        fontSize="sm"
+                        fontWeight={selectedTypeId === type.id ? 600 : 400}
+                        color={selectedTypeId === type.id ? 'text.primary' : 'text.secondary'}
+                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      >
+                        {type.name}
+                      </Text>
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); handleDeleteType(type) }}
+                        title="Delete type"
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: 'var(--chakra-colors-text-muted)',
+                          fontSize: '0.9rem', lineHeight: 1, padding: '2px 4px', borderRadius: '4px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </Flex>
+                  ))}
                 </Flex>
-              ))}
-            </Flex>
 
-            <Box mt={3} pt={3} borderTop="1px solid" borderColor="border.default">
-              <AddItemRow placeholder="New type name…" onAdd={handleCreateType} />
+                <Box mt={3} pt={3} borderTop="1px solid" borderColor="border.default">
+                  <AddItemRow placeholder="New type name…" onAdd={handleCreateType} />
+                </Box>
+              </Box>
             </Box>
+            {isMobile && selectedType && (
+              <Heading
+                fontFamily="heading" fontWeight="700" fontSize="xl"
+                color="text.primary" letterSpacing="-0.01em" mt={3}
+              >
+                {selectedType.name}
+              </Heading>
+            )}
           </Box>
 
           {/* Main content */}
@@ -270,15 +321,17 @@ export default function WorkoutsPage() {
               </Flex>
             ) : (
               <Box>
-                {/* Type header */}
-                <Box mb={5}>
-                  <Heading
-                    fontFamily="heading" fontWeight="700" fontSize="xl"
-                    color="text.primary" letterSpacing="-0.01em"
-                  >
-                    {selectedType.name}
-                  </Heading>
-                </Box>
+                {/* Type header — hidden on mobile, shown inline with toggle instead */}
+                {!isMobile && (
+                  <Box mb={5}>
+                    <Heading
+                      fontFamily="heading" fontWeight="700" fontSize="xl"
+                      color="text.primary" letterSpacing="-0.01em"
+                    >
+                      {selectedType.name}
+                    </Heading>
+                  </Box>
+                )}
 
                 {/* Exercises section */}
                 <Box
@@ -327,7 +380,8 @@ export default function WorkoutsPage() {
                   gap={0} mb={4}
                   border="1px solid" borderColor="border.default"
                   borderRadius="8px" overflow="hidden"
-                  display="inline-flex"
+                  display={isMobile ? 'flex' : 'inline-flex'}
+                  w={isMobile ? '100%' : 'auto'}
                 >
                   {TABS.map(tab => (
                     <button
@@ -335,6 +389,7 @@ export default function WorkoutsPage() {
                       type="button"
                       onClick={() => setActiveTab(tab.id)}
                       style={{
+                        flex: isMobile ? 1 : undefined,
                         padding: '6px 16px',
                         fontSize: '0.82rem',
                         fontWeight: 500,
@@ -371,6 +426,7 @@ export default function WorkoutsPage() {
                           selectedWeek={selectedWeek}
                           onSelect={setSelectedWeek}
                           onDeleteWeek={handleDeleteWeek}
+                          isMobile={isMobile}
                         />
                       </Box>
                       <WeekLogSection
@@ -378,6 +434,7 @@ export default function WorkoutsPage() {
                         logs={logs}
                         weekNumber={selectedWeek}
                         onUpsertLog={handleUpsertLog}
+                        isMobile={isMobile}
                       />
                     </Box>
                   )}
@@ -385,14 +442,14 @@ export default function WorkoutsPage() {
                   {activeTab === 'history' && (
                     <Box>
                       <SectionHeading>All Weeks</SectionHeading>
-                      <WeekHistoryTable exercises={exercises} logs={logs} />
+                      <WeekHistoryTable exercises={exercises} logs={logs} isMobile={isMobile} />
                     </Box>
                   )}
 
                   {activeTab === 'progress' && (
                     <Box>
                       <SectionHeading>Exercise Progress</SectionHeading>
-                      <ProgressSection exercises={exercises} logs={logs} />
+                      <ProgressSection exercises={exercises} logs={logs} isMobile={isMobile} />
                     </Box>
                   )}
                 </Box>

@@ -1,5 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
-import { booksApi } from '@/services/books'
+import { useCallback } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/lib/db'
+import {
+  createBook as createBookOp,
+  updateBook as updateBookOp,
+  deleteBook as deleteBookOp,
+} from '@/lib/operations'
 import type { Book, BookFormData } from '@/types/api'
 
 export function useBooks({
@@ -11,56 +17,65 @@ export function useBooks({
   tagId?: string
   yearRead?: number
 } = {}) {
-  const [books, setBooks] = useState<Book[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const raw = useLiveQuery(async () => {
+    const allBooks = await db.books.filter(b => !b.deleted).toArray()
+    const allYears = await db.bookYearsRead.toArray()
+    const allBookTags = await db.bookTags.toArray()
+    const allTags = await db.tags.filter(t => !t.deleted).toArray()
+    const tagMap = new Map(allTags.map(t => [t.id, t]))
 
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await booksApi.list({
-        search: search || undefined,
-        tagId: tagId || undefined,
-        yearRead,
-      })
-      setBooks(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load books')
-    } finally {
-      setLoading(false)
+    return allBooks.map(b => ({
+      id: b.id,
+      title: b.title,
+      author: b.author,
+      rating: b.rating,
+      review: b.review,
+      coverImage: b.coverImage,
+      createdAt: b.createdAt,
+      updatedAt: b.updatedAt,
+      yearsRead: allYears.filter(y => y.bookId === b.id).map(y => y.year),
+      tags: allBookTags
+        .filter(bt => bt.bookId === b.id)
+        .map(bt => tagMap.get(bt.tagId))
+        .filter(Boolean)
+        .map(t => ({ id: t!.id, name: t!.name })),
+    }))
+  })
+
+  // Client-side filtering
+  let books: Book[] = raw ?? []
+  if (search) {
+    const q = search.toLowerCase()
+    books = books.filter(b =>
+      b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q),
+    )
+  }
+  if (tagId) {
+    books = books.filter(b => b.tags.some(t => t.id === tagId))
+  }
+  if (yearRead) {
+    books = books.filter(b => b.yearsRead.includes(yearRead))
+  }
+
+  const createBook = useCallback(async (data: BookFormData): Promise<Book> => {
+    const rec = await createBookOp(data)
+    return {
+      ...rec, yearsRead: data.yearsRead,
+      tags: [], // Will be populated on next live query tick
     }
-  }, [search, tagId, yearRead])
+  }, [])
 
-  useEffect(() => {
-    refetch()
-  }, [refetch])
+  const updateBook = useCallback(async (id: string, data: BookFormData): Promise<Book> => {
+    const rec = await updateBookOp(id, data)
+    return { ...rec, yearsRead: data.yearsRead, tags: [] }
+  }, [])
 
-  const createBook = useCallback(
-    async (data: BookFormData): Promise<Book> => {
-      const book = await booksApi.create(data)
-      await refetch()
-      return book
-    },
-    [refetch],
-  )
+  const deleteBook = useCallback(async (id: string): Promise<void> => {
+    await deleteBookOp(id)
+  }, [])
 
-  const updateBook = useCallback(
-    async (id: string, data: BookFormData): Promise<Book> => {
-      const book = await booksApi.update(id, data)
-      await refetch()
-      return book
-    },
-    [refetch],
-  )
+  // refetch is a no-op with IndexedDB (useLiveQuery auto-updates)
+  const refetch = useCallback(async () => {}, [])
 
-  const deleteBook = useCallback(
-    async (id: string): Promise<void> => {
-      await booksApi.delete(id)
-      setBooks(prev => prev.filter(b => b.id !== id))
-    },
-    [],
-  )
-
-  return { books, loading, error, refetch, createBook, updateBook, deleteBook }
+  return { books, loading: raw === undefined, error: null, refetch, createBook, updateBook, deleteBook }
 }

@@ -1,10 +1,13 @@
+import { db } from '@/lib/db'
+import { sha256 } from '@/lib/hash'
+
 export async function uploadFile(file: File): Promise<string> {
-  const form = new FormData()
-  form.append('file', file)
+  const id = crypto.randomUUID()
+  const lastDot = file.name.lastIndexOf('.')
+  const ext = lastDot > 0 ? file.name.substring(lastDot) : ''
+  const checksum = await sha256(file)
 
-  const res = await fetch('/api/v1/uploads', { method: 'POST', body: form })
-  if (!res.ok) throw new Error('Upload failed')
+  await db.imageBlobs.put({ id, ext, blob: file, checksum, uploaded: false })
 
-  const data: { path: string } = await res.json()
-  return data.path
+  return `/uploads/${id}${ext}`
 }

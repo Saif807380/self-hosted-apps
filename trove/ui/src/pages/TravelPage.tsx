@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Box, Flex, Heading, SimpleGrid, Text, Spinner } from '@chakra-ui/react'
 import { useTravel } from '@/hooks/useTravel'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { toaster } from '@/lib/toaster'
 import type { TravelLocation, TravelLocationFormData } from '@/types/api'
 import LocationCard from './travel/LocationCard'
@@ -16,15 +17,16 @@ import ViewToggle from '@/components/ViewToggle'
 const SIDEBAR_WIDTH = 240
 
 export default function TravelPage() {
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('city_asc')
   const [yearVisited, setYearVisited] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 767px)').matches)
   const [formOpen, setFormOpen] = useState(false)
   const [editLocation, setEditLocation] = useState<TravelLocation | null>(null)
   const [viewLocationId, setViewLocationId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<TravelLocation | null>(null)
-  const [view, setView] = useState<'grid' | 'list'>('grid')
+  const [view, setView] = useState<'grid' | 'list'>(() => window.matchMedia('(max-width: 767px)').matches ? 'list' : 'grid')
 
   const debouncedSearch = useDebounce(search, 300)
   const {
@@ -117,8 +119,8 @@ export default function TravelPage() {
         <ViewToggle view={view} onChange={setView} />
       </Flex>
 
-      <Flex gap={6} align="flex-start">
-        <Box flexShrink={0}>
+      <Flex gap={6} align="flex-start" direction={isMobile ? 'column' : 'row'}>
+        <Box flexShrink={0} w={isMobile ? '100%' : 'auto'}>
           <button
             type="button"
             onClick={() => setSidebarOpen(prev => !prev)}
@@ -139,21 +141,24 @@ export default function TravelPage() {
 
           <Box
             style={{
-              width: sidebarOpen ? `${SIDEBAR_WIDTH}px` : '0px',
+              width: isMobile
+                ? sidebarOpen ? '100%' : '0px'
+                : sidebarOpen ? `${SIDEBAR_WIDTH}px` : '0px',
+              height: isMobile && !sidebarOpen ? '0px' : 'auto',
               opacity: sidebarOpen ? 1 : 0,
               overflow: 'hidden',
-              transition: 'width 0.25s ease, opacity 0.2s ease',
+              transition: 'width 0.25s ease, height 0.25s ease, opacity 0.2s ease',
               marginTop: sidebarOpen ? '10px' : 0,
             }}
           >
             <Box
-              w={`${SIDEBAR_WIDTH}px`}
+              w={isMobile ? '100%' : `${SIDEBAR_WIDTH}px`}
               bg="bg.surface"
               border="1px solid"
               borderColor="border.default"
               borderRadius="10px"
               p={4}
-              position="sticky"
+              position={isMobile ? 'static' : 'sticky'}
               top="72px"
             >
               <TravelFilters
@@ -171,7 +176,7 @@ export default function TravelPage() {
           </Box>
         </Box>
 
-        <Box flex={1} minW={0}>
+        <Box flex={1} minW={0} w={isMobile ? '100%' : 'auto'}>
           {loading ? (
             <Flex justify="center" py={24}><Spinner color="accent" size="lg" /></Flex>
           ) : error ? (
@@ -185,7 +190,7 @@ export default function TravelPage() {
               onClear={handleClearFilters}
             />
           ) : view === 'grid' ? (
-            <SimpleGrid columns={{ base: 2, sm: 3, md: sidebarOpen ? 3 : 4, lg: sidebarOpen ? 4 : 5, xl: sidebarOpen ? 5 : 6 }} gap={6}>
+            <SimpleGrid columns={{ base: 2, sm: 2, md: sidebarOpen ? 3 : 4, lg: sidebarOpen ? 4 : 5, xl: sidebarOpen ? 5 : 6 }} gap={{ base: 3, md: 6 }}>
               {sortedLocations.map(location => (
                 <LocationCard key={location.id} location={location} onClick={l => setViewLocationId(l.id)} />
               ))}

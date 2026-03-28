@@ -86,7 +86,7 @@ export default function LocationForm({ isOpen, onClose, onSubmit, editLocation }
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content maxW="480px" mx={4}>
+          <Dialog.Content maxW={{ base: '340px', md: '480px' }} mx={4}>
             <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
               <Dialog.Header borderBottomWidth="1px" borderColor="border.default" pb={3}>
                 <Dialog.Title fontFamily="heading" fontWeight="600" fontSize="lg">

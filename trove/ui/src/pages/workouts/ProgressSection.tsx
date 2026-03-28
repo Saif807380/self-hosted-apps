@@ -31,9 +31,10 @@ function useIsDark() {
 interface ProgressSectionProps {
   exercises: Exercise[]
   logs: WorkoutLog[]
+  isMobile?: boolean
 }
 
-export default function ProgressSection({ exercises, logs }: ProgressSectionProps) {
+export default function ProgressSection({ exercises, logs, isMobile }: ProgressSectionProps) {
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>(exercises[0]?.id ?? '')
   const isDark = useIsDark()
 
@@ -77,7 +78,7 @@ export default function ProgressSection({ exercises, logs }: ProgressSectionProp
               type="button"
               onClick={() => setSelectedExerciseId(ex.id)}
               style={{
-                padding: '3px 10px',
+                padding: isMobile ? '6px 12px' : '3px 10px',
                 borderRadius: '6px',
                 fontSize: '0.8rem',
                 fontWeight: 500,
