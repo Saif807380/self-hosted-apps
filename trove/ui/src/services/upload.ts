@@ -7,7 +7,7 @@ export async function uploadFile(file: File): Promise<string> {
   const ext = lastDot > 0 ? file.name.substring(lastDot) : ''
   const checksum = await sha256(file)
 
-  await db.imageBlobs.put({ id, ext, blob: file, checksum, uploaded: false })
+  await db.imageBlobs.put({ id, ext, blob: file, checksum, uploaded: 0 })
 
   return `/uploads/${id}${ext}`
 }
