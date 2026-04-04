@@ -133,7 +133,7 @@ export interface ImageBlobRecord {
   ext: string       // e.g. '.jpg', '.png', '.webp'
   blob: Blob
   checksum: string  // SHA-256 hex
-  uploaded: boolean
+  uploaded: number  // 0 = pending, 1 = uploaded (booleans can't be IndexedDB index keys)
 }
 
 class TroveDB extends Dexie {

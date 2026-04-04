@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 // Resolves a cover image path to either a local object URL (from IndexedDB)
 // or the original server path. Revokes object URLs on unmount.
 export function useImageUrl(path: string | undefined): string | undefined {
-  const [url, setUrl] = useState<string | undefined>(path)
+  const [url, setUrl] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     if (!path) {

@@ -18,20 +18,20 @@ export async function pushImages(): Promise<void> {
     form.append('checksum', record.checksum)
     form.append('file', record.blob, `${record.id}${record.ext}`)
 
-    const res = await fetch('/api/v1/sync/images', { method: 'POST', body: form })
+    const res = await fetch('/api/sync/images', { method: 'POST', body: form })
     if (!res.ok) {
       console.warn('[image-sync] upload failed for', record.id, res.status)
       continue
     }
 
-    await db.imageBlobs.update(record.id, { uploaded: true })
+    await db.imageBlobs.update(record.id, { uploaded: 1 })
     console.debug('[image-sync] uploaded', record.id)
   }
 }
 
 // Pull images from server that we don't have locally
 export async function pullImages(): Promise<void> {
-  const res = await fetch('/api/v1/sync/images/manifest')
+  const res = await fetch('/api/sync/images/manifest')
   if (!res.ok) {
     console.warn('[image-sync] manifest fetch failed', res.status)
     return
@@ -59,7 +59,7 @@ export async function pullImages(): Promise<void> {
       ext,
       blob,
       checksum: entry.checksum,
-      uploaded: true,
+      uploaded: 1,
     })
     console.debug('[image-sync] downloaded', entry.id)
   }
