@@ -175,6 +175,75 @@ make prod-up
 
 ---
 
+## Phone Access over Wi-Fi Hotspot (Arch Linux / CachyOS)
+
+On native Linux, services bind directly to all interfaces — no port forwarding script is needed.
+
+### 1. Generate TLS certificates (if not already done)
+
+```bash
+bash infra/generate-certs.sh
+```
+
+Certs cover `trove.local`, `localhost`, `127.0.0.1`, `::1`, `192.168.137.1`, and `10.42.0.1`.
+
+Copy the root CA to your phone and install it as a trusted certificate:
+
+```bash
+mkcert -CAROOT   # prints the directory containing rootCA.pem
+```
+
+Android: Settings → Security → Install a certificate → CA certificate
+
+### 2. Start the hotspot
+
+```bash
+nmcli dev wifi hotspot ifname wlan0 ssid Trove password "<your-password>"
+```
+
+Verify the gateway IP (usually `10.42.0.1`):
+
+```bash
+ip -4 addr show wlan0
+```
+
+### 3. (Optional) Open firewall ports
+
+If `firewalld` is active:
+
+```bash
+sudo firewall-cmd --permanent --add-port=3000/tcp
+sudo firewall-cmd --permanent --add-port=3443/tcp
+sudo firewall-cmd --permanent --add-port=8080/tcp
+sudo firewall-cmd --reload
+```
+
+If `ufw` is active instead:
+
+```bash
+sudo ufw allow 3000/tcp && sudo ufw allow 3443/tcp && sudo ufw allow 8080/tcp
+```
+
+### 4. Start services
+
+```bash
+# Dev mode
+make dev-infra && make dev-backend && make dev-ui
+
+# Or production mode
+make prod-up
+```
+
+### 5. Access from phone
+
+| Mode | URL |
+|------|-----|
+| Dev (HTTP) | `http://10.42.0.1:3000` |
+| Prod (HTTP) | `http://10.42.0.1:3000` |
+| Prod (HTTPS) | `https://10.42.0.1:3443` |
+
+---
+
 ## Notes
 
 - All services use `network_mode: host` (required for podman on WSL2 — CNI DNS doesn't work)
