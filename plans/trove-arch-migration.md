@@ -118,7 +118,7 @@ Eject safely, shut down Windows, boot into CachyOS.
 
 *Everything from here on runs on the CachyOS install. WSL2 is powered off.*
 
-## B1 — Install the runtime stack
+## B1 — Install the runtime stack ✅
 
 Runtime packages (official repos):
 ```bash
@@ -150,7 +150,7 @@ podman run --rm docker.io/library/hello-world
 ```
 If rootless is broken: `sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $USER`, then log out/in.
 
-## B2 — Clone the repo
+## B2 — Clone the repo ✅
 
 ```bash
 mkdir -p ~/development
@@ -159,11 +159,11 @@ cd ~/development/self-hosted-apps/trove
 ```
 If you pushed the A5 branch, merge it to main first (or check out `chore/arch-migration-support`). `uploads/`, `infra/certs/`, and `infra/.env` are gitignored — those come from the USB next.
 
-## B3 — Pull backups off the USB drive
+## B3 — Pull backups off the USB drive ✅
 
-Mount (usually auto-mounted by GNOME/KDE under `/run/media/saifkazi/<label>`):
+Mount (usually auto-mounted by GNOME/KDE under `/run/media/saifkazi/'32 GB/'`):
 ```bash
-USB=/run/media/saifkazi/<label>      # check lsblk or the file manager
+USB=/run/media/saifkazi/'32 GB/'    # check lsblk or the file manager
 cp "$USB"/trove-{db.sql,uploads.tar.gz,env.backup,rowcounts.txt} ~/
 
 # Optional: copy the WSL2 mkcert CA so both hosts issue certs under the same CA
@@ -173,7 +173,7 @@ mkdir -p "$CACHY_CA_DIR"
 cp "$USB"/mkcert-CA-wsl/* "$CACHY_CA_DIR/"
 ```
 
-## B4 — Restore data on CachyOS (with DB password rotation)
+## B4 — Restore data on CachyOS (with DB password rotation) ✅
 
 The old `lms:lms` credential stays on the network once you start using the hotspot, so we're rotating it as part of the migration.
 
@@ -218,7 +218,7 @@ podman exec -e PGPASSWORD="$NEW_PW" "$PG" psql -U lms -d lms -c "\
 
 `infra/.env` is gitignored, so the rotated password stays local to the CachyOS checkout. The WSL2 side keeps its own `.env` untouched when you boot back into Windows.
 
-## B5 — Generate TLS certs
+## B5 — Generate TLS certs ✅
 
 The cert now covers both hotspot IPs (thanks to the A5 edit): `trove.local localhost 127.0.0.1 ::1 192.168.137.1 10.42.0.1`.
 
@@ -236,7 +236,7 @@ mkcert -CAROOT    # prints the directory containing rootCA.pem
 # Android: Settings → Security → Install a certificate → CA certificate
 ```
 
-## B6 — Confirm the Arch hotspot IP
+## B6 — Confirm the Arch hotspot IP ✅
 
 NetworkManager's built-in hotspot defaults to `10.42.0.1`. Confirm the first time:
 ```bash
@@ -245,7 +245,7 @@ ip -4 addr show wlan0           # note the IPv4 (usually 10.42.0.1/24)
 ```
 If your gateway differs, update the SAN in `generate-certs.sh` and regenerate (`bash infra/generate-certs.sh`).
 
-## B7 — Firewall configuration
+## B7 — Firewall configuration ✅
 
 CachyOS is typically **firewalld**-active by default. Check:
 ```bash
@@ -267,7 +267,7 @@ sudo ufw allow 3000/tcp && sudo ufw allow 3443/tcp && sudo ufw allow 8080/tcp
 
 No port forwarding is needed — on native Linux with `network_mode: host`, the containers bind directly to all interfaces (including the hotspot one).
 
-## B8 — Bring the stack up
+## B8 — Bring the stack up ✅
 
 ```bash
 cd ~/development/self-hosted-apps/trove

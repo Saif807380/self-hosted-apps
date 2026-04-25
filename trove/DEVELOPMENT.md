@@ -187,13 +187,15 @@ bash infra/generate-certs.sh
 
 Certs cover `trove.local`, `localhost`, `127.0.0.1`, `::1`, `192.168.137.1`, and `10.42.0.1`.
 
-Copy the root CA to your phone and install it as a trusted certificate:
+Copy the root CA to your phone and install it as a trusted certificate. The easiest way is to serve it temporarily over HTTP while the hotspot is active:
 
 ```bash
-mkcert -CAROOT   # prints the directory containing rootCA.pem
+cd "$(mkcert -CAROOT)" && python3 -m http.server 8888
 ```
 
-Android: Settings → Security → Install a certificate → CA certificate
+Then open `http://10.42.0.1:8888/rootCA.pem` in the phone browser to download it, then stop the server (`Ctrl+C`).
+
+Android: Settings → Security → Encryption & credentials → Install a certificate → CA certificate → select the downloaded file.
 
 ### 2. Start the hotspot
 
@@ -207,7 +209,9 @@ Verify the gateway IP (usually `10.42.0.1`):
 ip -4 addr show wlan0
 ```
 
-### 3. (Optional) Open firewall ports
+> **Note:** Starting the hotspot switches the physical WiFi card to AP mode, disconnecting the laptop from any existing WiFi network. This is a single-card hardware limitation on Linux (unlike Windows which uses a virtual adapter). Only enable the hotspot when you don't need the laptop's WiFi connection.
+
+### 3. Open firewall ports
 
 If `firewalld` is active:
 
@@ -218,10 +222,12 @@ sudo firewall-cmd --permanent --add-port=8080/tcp
 sudo firewall-cmd --reload
 ```
 
-If `ufw` is active instead:
+If `ufw` is active instead, two rules are required — the port rules alone are not enough, phones also need DHCP (to get an IP) which requires allowing all traffic on the hotspot interface:
 
 ```bash
 sudo ufw allow 3000/tcp && sudo ufw allow 3443/tcp && sudo ufw allow 8080/tcp
+sudo ufw allow in on wlan0
+sudo ufw reload
 ```
 
 ### 4. Start services
