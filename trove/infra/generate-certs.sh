@@ -14,7 +14,7 @@ mkcert -install
 mkcert \
   -cert-file "$CERT_DIR/cert.pem" \
   -key-file "$CERT_DIR/key.pem" \
-  trove.local localhost 127.0.0.1 ::1 192.168.137.1
+  trove.local localhost 127.0.0.1 ::1 192.168.137.1 10.42.0.1
 
 echo "Certificates generated in $CERT_DIR/"
 echo ""

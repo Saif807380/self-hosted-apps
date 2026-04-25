@@ -175,6 +175,81 @@ make prod-up
 
 ---
 
+## Phone Access over Wi-Fi Hotspot (Arch Linux / CachyOS)
+
+On native Linux, services bind directly to all interfaces — no port forwarding script is needed.
+
+### 1. Generate TLS certificates (if not already done)
+
+```bash
+bash infra/generate-certs.sh
+```
+
+Certs cover `trove.local`, `localhost`, `127.0.0.1`, `::1`, `192.168.137.1`, and `10.42.0.1`.
+
+Copy the root CA to your phone and install it as a trusted certificate. The easiest way is to serve it temporarily over HTTP while the hotspot is active:
+
+```bash
+cd "$(mkcert -CAROOT)" && python3 -m http.server 8888
+```
+
+Then open `http://10.42.0.1:8888/rootCA.pem` in the phone browser to download it, then stop the server (`Ctrl+C`).
+
+Android: Settings → Security → Encryption & credentials → Install a certificate → CA certificate → select the downloaded file.
+
+### 2. Start the hotspot
+
+```bash
+nmcli dev wifi hotspot ifname wlan0 ssid Trove password "<your-password>"
+```
+
+Verify the gateway IP (usually `10.42.0.1`):
+
+```bash
+ip -4 addr show wlan0
+```
+
+> **Note:** Starting the hotspot switches the physical WiFi card to AP mode, disconnecting the laptop from any existing WiFi network. This is a single-card hardware limitation on Linux (unlike Windows which uses a virtual adapter). Only enable the hotspot when you don't need the laptop's WiFi connection.
+
+### 3. Open firewall ports
+
+If `firewalld` is active:
+
+```bash
+sudo firewall-cmd --permanent --add-port=3000/tcp
+sudo firewall-cmd --permanent --add-port=3443/tcp
+sudo firewall-cmd --permanent --add-port=8080/tcp
+sudo firewall-cmd --reload
+```
+
+If `ufw` is active instead, two rules are required — the port rules alone are not enough, phones also need DHCP (to get an IP) which requires allowing all traffic on the hotspot interface:
+
+```bash
+sudo ufw allow 3000/tcp && sudo ufw allow 3443/tcp && sudo ufw allow 8080/tcp
+sudo ufw allow in on wlan0
+sudo ufw reload
+```
+
+### 4. Start services
+
+```bash
+# Dev mode
+make dev-infra && make dev-backend && make dev-ui
+
+# Or production mode
+make prod-up
+```
+
+### 5. Access from phone
+
+| Mode | URL |
+|------|-----|
+| Dev (HTTP) | `http://10.42.0.1:3000` |
+| Prod (HTTP) | `http://10.42.0.1:3000` |
+| Prod (HTTPS) | `https://10.42.0.1:3443` |
+
+---
+
 ## Notes
 
 - All services use `network_mode: host` (required for podman on WSL2 — CNI DNS doesn't work)
