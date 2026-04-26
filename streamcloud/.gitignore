@@ -1,0 +1,17 @@
+# Secrets
+.env
+
+# qBittorrent config (contains credentials/state)
+config/qbit/
+
+# yt-dlp archive files (local state, not portable)
+config/sports-archive.txt
+config/music-archive.txt
+
+# Staging area for photo imports
+/srv/media/photos-orig/staging/
+
+# Downloaded content (not tracked in git)
+*.ts
+*.mkv
+*.mp4
