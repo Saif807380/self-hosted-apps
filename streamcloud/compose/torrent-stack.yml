@@ -1,0 +1,32 @@
+services:
+  gluetun:
+    image: docker.io/qmcgaw/gluetun:latest
+    cap_add: [NET_ADMIN]
+    devices: [/dev/net/tun]
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${PROTON_WG_KEY}
+      - SERVER_COUNTRIES=Switzerland
+      - VPN_PORT_FORWARDING=on
+      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
+      # Allow LAN + Tailscale to reach qBittorrent WebUI
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/16,100.64.0.0/10
+    ports:
+      - 127.0.0.1:8080:8080
+    restart: unless-stopped
+
+  qbittorrent:
+    image: docker.io/linuxserver/qbittorrent:latest
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+      - WEBUI_PORT=8080
+    volumes:
+      - /srv/media/downloads:/downloads
+      - ${HOME}/Projects/self-hosted-apps/streamcloud/config/qbit:/config
+    restart: unless-stopped
+    depends_on:
+      - gluetun
