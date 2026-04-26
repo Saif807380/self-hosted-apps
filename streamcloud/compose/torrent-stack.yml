@@ -19,6 +19,7 @@ services:
   qbittorrent:
     image: docker.io/linuxserver/qbittorrent:latest
     network_mode: "service:gluetun"
+    userns_mode: keep-id
     environment:
       - PUID=1000
       - PGID=1000
@@ -30,3 +31,12 @@ services:
     restart: unless-stopped
     depends_on:
       - gluetun
+
+  flaresolverr:
+    image: docker.io/21hsmw/flaresolverr:nodriver
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Asia/Kolkata
+    ports:
+      - 127.0.0.1:8191:8191
+    restart: unless-stopped
