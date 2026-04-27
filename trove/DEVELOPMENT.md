@@ -115,6 +115,95 @@ Builds container images and starts all services. nginx serves:
 make prod-down
 ```
 
+### Auto-restart and reboot survival
+
+Each service in `infra/podman-compose.yml` has `restart: unless-stopped`. Combined with the host-wide rootless-podman setup (`loginctl enable-linger $USER` and `systemctl --user enable podman-restart.service`, done once for streamcloud), the trove stack:
+
+- Recovers from in-session container crashes
+- Comes back automatically after a host reboot
+
+If linger/podman-restart isn't already set up on this machine:
+
+```bash
+loginctl show-user $USER | grep Linger          # should show Linger=yes
+systemctl --user is-enabled podman-restart      # should be 'enabled'
+
+# If either is missing, run once:
+loginctl enable-linger $USER
+systemctl --user enable --now podman-restart.service
+```
+
+### Verify after a reboot
+
+```bash
+podman ps                                       # all four infra_* containers up
+curl -kI https://localhost:3443                 # nginx serving (HTTP/2 200)
+curl -fsS http://localhost:9000/healthz         # backend reachable (replace with real health endpoint if different)
+```
+
+If the stack didn't come up:
+
+```bash
+cd ~/Projects/self-hosted-apps/trove && make prod-up
+```
+
+---
+
+## Phone Access over Tailscale (any platform)
+
+Tailscale issues publicly-trusted Let's Encrypt certs for your `<host>.<tailnet>.ts.net` MagicDNS hostname. This is the cleanest way to access trove from a phone over the internet — no CA install on the phone, and Chrome will offer **Install app** for the PWA.
+
+### 1. Enable HTTPS in the admin console
+
+Tailscale admin console → **DNS** → enable **MagicDNS** and **HTTPS Certificates**.
+
+### 2. Issue the cert
+
+```bash
+sudo tailscale cert --cert-file infra/certs/<host>.<tailnet>.ts.net.crt \
+                    --key-file  infra/certs/<host>.<tailnet>.ts.net.key \
+                    <host>.<tailnet>.ts.net
+sudo chown $USER:$USER infra/certs/<host>.<tailnet>.ts.net.{crt,key}
+```
+
+### 3. Point nginx at the cert
+
+Edit `infra/nginx.conf` `ssl_certificate` / `ssl_certificate_key` to:
+`/etc/nginx/certs/<host>.<tailnet>.ts.net.{crt,key}` (the volume mount inside the container), then `make prod-down && make prod-up`.
+
+### 4. Auto-renewal (90-day expiry)
+
+Install the staged systemd timer once:
+
+```bash
+sudo install -m 755 infra/systemd/trove-tailscale-cert-renew /usr/local/bin/
+sudo install -m 644 infra/systemd/trove-tailscale-cert.service /etc/systemd/system/
+sudo install -m 644 infra/systemd/trove-tailscale-cert.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now trove-tailscale-cert.timer
+```
+
+The timer runs weekly. `tailscale cert` no-ops until ~14 days before expiry, then re-issues and reloads nginx in `infra_ui_1`. Update `HOSTNAME` in the script if your tailnet/host changes.
+
+### 5. MagicDNS troubleshooting (Linux + NetworkManager)
+
+If `tailscale status` warns "MagicDNS will probably not work", make systemd-resolved fully own DNS:
+
+```bash
+sudo tee /etc/NetworkManager/conf.d/dns.conf <<'EOF'
+[main]
+dns=systemd-resolved
+systemd-resolved=false
+EOF
+
+sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+sudo systemctl restart systemd-resolved NetworkManager tailscaled
+sudo tailscale down && sudo tailscale up --accept-dns=true
+
+resolvectl status tailscale0                    # should list 100.100.100.100 and ~<tailnet>.ts.net
+resolvectl query <host>.<tailnet>.ts.net        # should resolve
+```
+
 ---
 
 ## Phone Access over Wi-Fi Hotspot (WSL2)

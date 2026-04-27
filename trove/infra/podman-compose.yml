@@ -4,6 +4,7 @@ services:
   postgres:
     image: docker.io/library/postgres:16-alpine
     network_mode: host
+    restart: unless-stopped
     env_file: .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -16,12 +17,14 @@ services:
   redis:
     image: docker.io/library/redis:7-alpine
     network_mode: host
+    restart: unless-stopped
 
   backend:
     build:
       context: ..
       dockerfile: infra/Containerfile.backend
     network_mode: host
+    restart: unless-stopped
     env_file: .env
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -42,6 +45,7 @@ services:
       context: ..
       dockerfile: infra/Containerfile.ui
     network_mode: host
+    restart: unless-stopped
     volumes:
       - ./certs:/etc/nginx/certs:ro
     depends_on:
