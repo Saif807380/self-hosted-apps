@@ -15,3 +15,4 @@ config/music-archive.txt
 *.ts
 *.mkv
 *.mp4
+docs

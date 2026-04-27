@@ -1,0 +1,10 @@
+[Unit]
+Description=Streamcloud — hourly hard-ceiling check for /srv/media/video
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

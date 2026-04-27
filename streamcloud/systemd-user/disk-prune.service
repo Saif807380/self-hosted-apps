@@ -1,0 +1,11 @@
+[Unit]
+Description=Streamcloud — hard-ceiling guard for /srv/media/video
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/Projects/self-hosted-apps/streamcloud/scripts/disk-prune.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

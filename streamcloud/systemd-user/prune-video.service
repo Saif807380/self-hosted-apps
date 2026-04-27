@@ -1,0 +1,11 @@
+[Unit]
+Description=Streamcloud — prune watched video older than PRUNE_AGE_DAYS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/Projects/self-hosted-apps/streamcloud/scripts/prune-video.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
