@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOSTNAME="cachyos.tail4f0f0b.ts.net"
+CERT_DIR="/home/saifkazi/Projects/self-hosted-apps/trove/infra/certs"
+CRT="$CERT_DIR/$HOSTNAME.crt"
+KEY="$CERT_DIR/$HOSTNAME.key"
+CONTAINER="infra_ui_1"
+OWNER="saifkazi:saifkazi"
+
+mkdir -p "$CERT_DIR"
+
+OLD_FP=""
+if [ -f "$CRT" ]; then
+    OLD_FP=$(openssl x509 -in "$CRT" -noout -fingerprint -sha256 2>/dev/null || true)
+fi
+
+tailscale cert --cert-file "$CRT" --key-file "$KEY" "$HOSTNAME"
+
+chown "$OWNER" "$CRT" "$KEY"
+chmod 644 "$CRT"
+chmod 600 "$KEY"
+
+NEW_FP=$(openssl x509 -in "$CRT" -noout -fingerprint -sha256)
+
+if [ "$OLD_FP" = "$NEW_FP" ]; then
+    echo "Cert unchanged, no reload needed"
+    exit 0
+fi
+
+echo "Cert changed, reloading nginx in $CONTAINER"
+if podman exec "$CONTAINER" nginx -s reload; then
+    echo "nginx reloaded"
+else
+    echo "nginx reload failed, restarting container"
+    podman restart "$CONTAINER"
+fi
