@@ -1,0 +1,12 @@
+[Unit]
+Description=Generate ListenBrainz auto-playlists via troi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/Projects/self-hosted-apps/streamcloud/scripts/generate-listenbrainz-playlists.sh
+Nice=10
+
+[Install]
+WantedBy=default.target

@@ -4,9 +4,10 @@
 # qBittorrent config (contains credentials/state)
 config/qbit/
 
-# yt-dlp archive files (local state, not portable)
+# yt-dlp archive files and personal library lists (local state, not portable)
 config/sports-archive.txt
 config/music-archive.txt
+config/ytm-library.txt
 
 # Staging area for photo imports
 /srv/media/photos-orig/staging/
