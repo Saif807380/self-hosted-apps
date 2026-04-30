@@ -2,7 +2,7 @@
 
 Self-hosted media stack on a single Arch laptop. Replaces Netflix / Prime / Hotstar / Crunchyroll / YT Music / Google Photos.
 
-Phase 1 (video) is live. Phases 2–4 (sports / music / photos) are planned in `~/.claude/plans/implement-a-plan-for-delegated-salamander.md`.
+Phase 1 (video) and Phase 3 (music) are live. Phases 2 and 4 (sports / photos) are planned in `~/.claude/plans/implement-a-plan-for-delegated-salamander.md`.
 
 ---
 
@@ -13,10 +13,11 @@ All bound to `127.0.0.1` on the laptop. From the phone or another device, replac
 | Service        | URL                       | What it does                                         |
 |----------------|---------------------------|------------------------------------------------------|
 | Jellyfin       | http://localhost:8096     | Watch movies/TV (web UI, also via Jellyfin Media Player / Findroid) |
+| Navidrome      | http://localhost:4533     | Music server (Subsonic API; also via Feishin / Tempo on Android) |
 | qBittorrent    | http://localhost:8080     | Torrent client WebUI (runs inside the VPN namespace) |
 | Sonarr         | http://localhost:8989     | TV show automation                                   |
 | Radarr         | http://localhost:7878     | Movie automation                                     |
-| Prowlarr       | http://localhost:9696     | Indexer manager (feeds Sonarr/Radarr)                |
+| Prowlarr       | http://localhost:9696     | Indexer manager (feeds Sonarr/Radarr and FLAC searches) |
 | Bazarr         | http://localhost:6767     | Subtitle automation                                  |
 | FlareSolverr   | http://localhost:8191     | Cloudflare-bypass proxy (used by Prowlarr only)      |
 
@@ -36,6 +37,7 @@ Default admin user for the *arr apps was set during initial setup; credentials l
 | Tailscale                          | `tailscaled.service`, enabled          |
 | Sonarr / Radarr / Prowlarr / Bazarr| systemd services, enabled              |
 | Jellyfin                           | `jellyfin.service`, enabled            |
+| Navidrome                          | `navidrome.service`, enabled           |
 | gluetun + qBittorrent + FlareSolverr | rootless Podman, see one-time setup ↓ |
 
 ### One-time setup (do this once, then forget)
@@ -192,12 +194,85 @@ streamcloud/
 │   └── qbit/                     # qBittorrent config (gitignored — has creds/state)
 ├── docs/                         # Blog post drafts (see plan)
 ├── quadlets/                     # systemd quadlets (planned migration target)
-├── scripts/                      # Auto-prune scripts (planned)
-├── systemd-user/                 # User-level timers (planned)
+├── scripts/                      # prune-video.sh, ytm-csv-to-list.sh, music-rip-opus.sh
+├── systemd-user/                 # User-level timers (sports-grab, disk-prune)
 ├── .env                          # Secrets — chmod 600, gitignored
 ├── .env.example                  # Template
 └── .gitignore
 ```
+
+---
+
+## Music (replaces YouTube Music)
+
+**Stack:** Navidrome (server) → Feishin (laptop) → PixelPlay (Android, beta).
+
+Default format is **Opus 192k** — transparent for casual listening, ~50 MB/album, fits ~600 albums in the 30 GB pool. FLAC is opt-in for select favourites where bit-perfect matters.
+
+### Adding new music going forward
+
+**One-shot wrapper (preferred):**
+```bash
+./scripts/add-music.sh '<youtube-url>' ['<another-url>' ...]
+```
+Downloads to `~/Music/` as Opus 192k, then prompts to run `beet import` which moves files into `/srv/media/music/<albumartist>/<album>/`. Accepts single tracks, album playlists, or YT Music playlists.
+
+**Batch (large list):** append URLs to `config/ytm-library.txt`, then `./scripts/music-rip-opus.sh`. The archive file deduplicates, so re-runs are safe.
+
+**FLAC for select favourites:** search `Artist Album FLAC` in Prowlarr (`:9696` → Search), send to qBittorrent with category `music`, then move into `/srv/media/music/<artist>/<album>/`. Only worth the manual workflow for genuine "I want bit-perfect" picks.
+
+### Tagging with beets
+
+After any batch import:
+```bash
+beet import /srv/media/music
+```
+beets matches against MusicBrainz, normalises filenames, embeds cover art. Config at `~/.config/beets/config.yaml`.
+
+### Storage budget
+
+30 GB cap on `/srv/media/music`. Rough capacity:
+- Opus 192k: ~50 MB/album → ~600 albums
+- FLAC: ~300 MB/album → ~100 albums
+
+A typical mix is 95% Opus with a handful of FLAC favourites.
+
+### Clients
+
+| Where  | App      | Notes                                                |
+|--------|----------|------------------------------------------------------|
+| Laptop | Feishin  | `feishin` — connect to `http://localhost:4533`       |
+| Pixel  | Tempo    | Play Store — connect to `http://<tailscale-ip>:4533` |
+
+Both clients support downloading albums for offline playback (hit the download icon while the laptop is on; then it works on LTE with the laptop off).
+
+### Smart playlists
+
+Five Navidrome Smart Playlist (`.nsp`) files live in `/srv/media/music/Playlists/` and appear automatically in Feishin/Tempo:
+
+| Playlist        | Rule                                          |
+|-----------------|-----------------------------------------------|
+| Recently Added  | Tracks added in the last 30 days, sorted desc |
+| Top Played      | Top 100 by play count                         |
+| Unplayed        | 50 random tracks with playCount = 0           |
+| Loved           | Anything you've starred / hearted             |
+| Random Mix      | 50 random tracks (refreshes on open)          |
+
+Edit the `.nsp` JSON files directly to tweak rules. Format reference: [Navidrome smart playlists](https://github.com/navidrome/navidrome/blob/master/tests/fixtures/playlists/recently_played.nsp). Field names and operators come from `model/criteria/{fields,operators}.go` in the Navidrome repo.
+
+### Discovery via Last.fm + ListenBrainz
+
+Once you wire credentials into Navidrome (per-user Settings → Personal), every play is scrobbled to both services. After ~2–3 weeks of scrobbles, `troi` generates personalised playlists (Daily Jams, Weekly Exploration). The `scripts/generate-listenbrainz-playlists.sh` runner converts troi's JSPF output to M3U via Navidrome's Subsonic search, dropping `lb-*.m3u` into the Playlists folder. Scheduled daily at 06:00 by `systemd-user/generate-playlists.timer`.
+
+### Verify Navidrome
+
+```bash
+systemctl is-active navidrome                        # active
+curl -sI http://localhost:4533/ | head -1            # HTTP/1.1 ...
+ls /srv/media/music/Playlists/                       # 5 .nsp files + lb-*.m3u once troi runs
+```
+
+For the one-time Google Takeout import flow (already done), see Phase 3 in `~/.claude/plans/implement-a-plan-for-delegated-salamander.md`.
 
 ---
 
