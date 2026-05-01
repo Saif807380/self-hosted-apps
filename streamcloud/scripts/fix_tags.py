@@ -4,8 +4,7 @@ import glob
 from mutagen.oggopus import OggOpus
 
 # The folder where your un-imported yt-dlp files are sitting
-# DIRECTORY = '/srv/media/staging/'
-DIRECTORY = '/home/saifkazi/Music/'
+DIRECTORY = os.path.expanduser('~/Music/')
 
 print("Starting tag update...")
 
@@ -14,17 +13,26 @@ for filepath in glob.glob(os.path.join(DIRECTORY, '*.opus')):
     try:
         audio = OggOpus(filepath)
         
-        # Check if the 'artist' tag exists
-        if 'artist' in audio:
+        force_artist = os.environ.get('FORCE_ARTIST')
+        force_title = os.environ.get('FORCE_TITLE')
+        force_album = os.environ.get('FORCE_ALBUM')
+
+        if force_artist:
+            audio['artist'] = force_artist
+            audio['albumartist'] = force_artist.split(',')[0].strip()
+        elif 'artist' in audio:
             # Grab the artist string, split it by the comma, and take the first item
             artist_string = audio['artist'][0]
-            first_artist = artist_string.split(',')[0].strip()
-            
-            # Write it to the 'albumartist' tag
-            audio['albumartist'] = first_artist
-            audio.save()
-            
-            print(f"✅ Updated: {os.path.basename(filepath)} | Album Artist -> {first_artist}")
+            audio['albumartist'] = artist_string.split(',')[0].strip()
+
+        if force_title:
+            audio['title'] = force_title
+
+        if force_album:
+            audio['album'] = force_album
+
+        audio.save()
+        print(f"✅ Updated: {os.path.basename(filepath)} | Artist -> {audio.get('artist', [''])} | Title -> {audio.get('title', [''])}")
             
     except Exception as e:
         print(f"❌ Error processing {filepath}: {e}")

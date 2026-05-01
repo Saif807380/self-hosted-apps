@@ -27,24 +27,32 @@ trap "rm -rf $TMP_DIR" EXIT
 
 mkdir -p "$PLAYLIST_DIR"
 
-PATCHES=(
-  "daily-jams"
-  "weekly-jams"
-  "weekly-exploration"
-)
+if [[ $# -eq 0 ]]; then
+  echo "Usage: $0 <patch_name> [<patch_name>...]" >&2
+  exit 1
+fi
+
+PATCHES=("$@")
 
 for patch in "${PATCHES[@]}"; do
   jspf="$TMP_DIR/$patch.jspf"
-  m3u="$PLAYLIST_DIR/lb-$patch.m3u"
+  m3u="$PLAYLIST_DIR/$patch.m3u"
 
   echo "→ Running patch: $patch"
-  if troi playlist --print --upload --created-for "$LISTENBRAINZ_USER" \
-       "$patch" --save-to-file "$jspf" >/dev/null 2>&1 || \
-     troi playlist "$patch" --user "$LISTENBRAINZ_USER" --save-jspf "$jspf" >/dev/null 2>&1; then
+  cd "$TMP_DIR" || exit 1
+  rm -f playlist_000.jspf
+
+  if troi playlist -u -c "$LISTENBRAINZ_USER" -s periodic-jams "$LISTENBRAINZ_USER" "$patch" || \
+     troi playlist -s periodic-jams "$LISTENBRAINZ_USER" "$patch"; then
+     
+    if [[ -f "playlist_000.jspf" ]]; then
+      mv "playlist_000.jspf" "$jspf"
+    fi
+
     if [[ -s "$jspf" ]]; then
-      "$SCRIPT_DIR/jspf-to-m3u.py" "$jspf" > "$m3u" 2>>"$TMP_DIR/convert.log" \
+      AUTO_DOWNLOAD=1 "$SCRIPT_DIR/jspf-to-m3u.py" "$jspf" > "$m3u" \
         && echo "  ✓ wrote $m3u" \
-        || echo "  ! converter failed (see /tmp logs)"
+        || echo "  ! converter failed"
     else
       echo "  - empty playlist (insufficient scrobble history?)"
     fi
