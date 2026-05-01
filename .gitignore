@@ -130,3 +130,5 @@ volumes/
 # Project Specific Files
 
 pitwall/config/*.json
+
+*.jspf

@@ -1,0 +1,11 @@
+[Unit]
+Description=Generate ListenBrainz weekly auto-playlists
+
+[Timer]
+# Run every Monday at 6:00 AM
+OnCalendar=Mon *-*-* 06:00:00
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target

@@ -20,6 +20,11 @@ fi
 
 mkdir -p "$DEST"
 
+DL_ARGS=()
+if [[ "${AUTO_IMPORT:-0}" == "1" ]]; then
+  DL_ARGS=(--no-download-archive)
+fi
+
 echo "Downloading $# URL(s) to $DEST"
 
 yt-dlp \
@@ -28,15 +33,25 @@ yt-dlp \
   --embed-metadata --embed-thumbnail \
   --parse-metadata "artist:(?P<album_artist>[^,]+)" \
   --download-archive "$ARCHIVE" \
+  "${DL_ARGS[@]}" \
   -o "$DEST/%(title)s.%(ext)s" \
   --sleep-interval 1 \
   --ignore-errors \
   "$@"
 
 echo ""
-read -r -p "Run 'beet import $DEST' now? [Y/n] " ans
-if [[ -z "$ans" || "$ans" =~ ^[Yy]$ ]]; then
-  beet import -A -s "$DEST"
+echo "Fixing tags..."
+"$SCRIPT_DIR/fix_tags.py"
+
+echo ""
+if [[ "${AUTO_IMPORT:-0}" == "1" ]]; then
+  echo "Auto-importing to beets..."
+  beet import -A -q -s "$DEST"
 else
-  echo "Skipped. Run \`beet import $DEST\` later when ready."
+  read -r -p "Run 'beet import $DEST' now? [Y/n] " ans
+  if [[ -z "$ans" || "$ans" =~ ^[Yy]$ ]]; then
+    beet import -A -s "$DEST"
+  else
+    echo "Skipped. Run \`beet import $DEST\` later when ready."
+  fi
 fi

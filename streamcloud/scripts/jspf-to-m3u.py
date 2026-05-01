@@ -63,6 +63,46 @@ def main():
     data = json.load(sys.stdin if len(sys.argv) < 2 else open(sys.argv[1]))
     tracks = data.get("playlist", {}).get("track", [])
 
+    import subprocess
+    import time
+    
+    # Phase 1: Download any missing tracks
+    downloaded_any = False
+    for t in tracks:
+        artist = t.get("creator", "")
+        title = t.get("title", "")
+        if not artist or not title:
+            continue
+            
+        path = find_song(artist, title)
+        
+        if not path and os.environ.get("AUTO_DOWNLOAD") == "1":
+            print(f"# downloading: {artist} - {title}", file=sys.stderr)
+            script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "add-music.sh")
+            env = os.environ.copy()
+            env["AUTO_IMPORT"] = "1"
+            
+            album = t.get("album", "")
+            if album:
+                env["FORCE_ALBUM"] = album
+            env["FORCE_ARTIST"] = artist
+            env["FORCE_TITLE"] = title
+
+            query = f"ytsearch1:{artist} - {title}"
+            subprocess.run([script, query], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            downloaded_any = True
+
+    # Phase 2: Force Navidrome library scan if new files were added
+    if downloaded_any:
+        print("# triggering Navidrome rescan...", file=sys.stderr)
+        try:
+            subsonic_call("startScan")
+            # Wait for scan to complete (60s to be safe for larger libraries)
+            time.sleep(60) 
+        except Exception as e:
+            print(f"# warning: failed to trigger Navidrome scan: {e}", file=sys.stderr)
+
+    # Phase 3: Resolve all paths and build the M3U
     print("#EXTM3U")
     found = 0
     for t in tracks:
@@ -70,6 +110,7 @@ def main():
         title = t.get("title", "")
         if not artist or not title:
             continue
+            
         path = find_song(artist, title)
         if path:
             print(f"#EXTINF:-1,{artist} - {title}")

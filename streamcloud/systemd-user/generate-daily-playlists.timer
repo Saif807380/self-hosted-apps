@@ -1,5 +1,5 @@
 [Unit]
-Description=Generate ListenBrainz auto-playlists daily
+Description=Generate ListenBrainz daily auto-playlists
 
 [Timer]
 OnCalendar=*-*-* 06:00:00

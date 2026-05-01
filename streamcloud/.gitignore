@@ -13,6 +13,7 @@ config/ytm-library.txt
 /srv/media/photos-orig/staging/
 
 # Downloaded content (not tracked in git)
+*.jspf
 *.ts
 *.mkv
 *.mp4
