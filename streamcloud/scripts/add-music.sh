@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 # Single-command add-to-library wrapper.
 # Usage: add-music.sh <url> [<url>...]
-#
-# Each URL can be a single track, an album playlist, or a YT Music playlist.
-# yt-dlp downloads to ~/Music/ as Opus 192k, then `beet import` is run
-# interactively so you can confirm matches and tags before files move into
-# /srv/media/music/.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -40,18 +35,5 @@ yt-dlp \
   "$@"
 
 echo ""
-echo "Fixing tags..."
-"$SCRIPT_DIR/fix_tags.py"
-
-echo ""
-if [[ "${AUTO_IMPORT:-0}" == "1" ]]; then
-  echo "Auto-importing to beets..."
-  beet import -A -q -s "$DEST"
-else
-  read -r -p "Run 'beet import $DEST' now? [Y/n] " ans
-  if [[ -z "$ans" || "$ans" =~ ^[Yy]$ ]]; then
-    beet import -A -s "$DEST"
-  else
-    echo "Skipped. Run \`beet import $DEST\` later when ready."
-  fi
-fi
+echo "Running full Addition Pipeline (Metadata + Tagging + Move)..."
+python3 "$SCRIPT_DIR/fix_tags.py"

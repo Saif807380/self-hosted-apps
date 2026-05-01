@@ -18,3 +18,4 @@ config/ytm-library.txt
 *.mkv
 *.mp4
 docs
+llm_*

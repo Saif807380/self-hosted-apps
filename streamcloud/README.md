@@ -207,27 +207,31 @@ streamcloud/
 
 **Stack:** Navidrome (server) → Feishin (laptop) → PixelPlay (Android, beta).
 
-Default format is **Opus 192k** — transparent for casual listening, ~50 MB/album, fits ~600 albums in the 30 GB pool. FLAC is opt-in for select favourites where bit-perfect matters.
+Default format is **Opus 192k** — transparent for casual listening, ~50 MB/album, fits ~600 albums in the 30 GB pool.
 
-### Adding new music going forward
+### Adding new music (Autonomous Pipeline)
 
-**One-shot wrapper (preferred):**
+New music is added via a 3-stage autonomous pipeline:
+1. **Download:** `yt-dlp` fetches audio as Opus 192k.
+2. **LLM Correction:** `fix_tags.py` uses Gemini (3-Flash) to research correct metadata, strip junk text (e.g., "[Official Video]"), and normalize "Artist - Title" strings.
+3. **Tag & Move:** Metadata is embedded via Mutagen, and files are moved to `/srv/media/music/Artist/Album/Track.opus`.
+
+**Usage:**
 ```bash
 ./scripts/add-music.sh '<youtube-url>' ['<another-url>' ...]
 ```
-Downloads to `~/Music/` as Opus 192k, then prompts to run `beet import` which moves files into `/srv/media/music/<albumartist>/<album>/`. Accepts single tracks, album playlists, or YT Music playlists.
+The process is fully autonomous (`--approval-mode auto_edit`). Just run the command and the music appears in Navidrome.
 
-**Batch (large list):** append URLs to `config/ytm-library.txt`, then `./scripts/music-rip-opus.sh`. The archive file deduplicates, so re-runs are safe.
+### Maintenance & Deletion
 
-**FLAC for select favourites:** search `Artist Album FLAC` in Prowlarr (`:9696` → Search), send to qBittorrent with category `music`, then move into `/srv/media/music/<artist>/<album>/`. Only worth the manual workflow for genuine "I want bit-perfect" picks.
+| Script | Purpose |
+|--------|---------|
+| `scripts/empty-trash.py` | **UI-based deletion.** Add tracks to the "Trash" playlist in Navidrome/Feishin. This script deletes the files from disk and purges them from the database. |
+| `scripts/bulk_clean/fix_library_inplace.py` | **Fast Sync.** Syncs metadata for existing library files based *only* on their folder structure (`Artist/Album`). High-speed, no LLM required. |
+| `scripts/bulk_clean/clean_lib.py` | **Batch Cleanup.** Uses LLM to clean up metadata for large batches of existing files. |
 
-### Tagging with beets
-
-After any batch import:
-```bash
-beet import /srv/media/music
-```
-beets matches against MusicBrainz, normalises filenames, embeds cover art. Config at `~/.config/beets/config.yaml`.
+**Automatic Cleanup:**
+A systemd user timer (`empty-trash.timer`) runs `empty-trash.py` daily at 10:00 AM. To delete music, simply **add it to the "Trash" playlist** and it will be gone by the next morning.
 
 ### Storage budget
 
@@ -244,14 +248,15 @@ A typical mix is 95% Opus with a handful of FLAC favourites.
 | Laptop | Feishin  | `feishin` — connect to `http://localhost:4533`       |
 | Pixel  | Tempo    | Play Store — connect to `http://<tailscale-ip>:4533` |
 
-Both clients support downloading albums for offline playback (hit the download icon while the laptop is on; then it works on LTE with the laptop off).
+Both clients support downloading albums for offline playback.
 
 ### Smart playlists
 
-Five Navidrome Smart Playlist (`.nsp`) files live in `/srv/media/music/Playlists/` and appear automatically in Feishin/Tempo:
+Navidrome Smart Playlists (`.nsp`) live in `/srv/media/music/Playlists/`:
 
 | Playlist        | Rule                                          |
 |-----------------|-----------------------------------------------|
+| Trash           | **DELETION QUEUE.** Files added here are deleted daily. |
 | Recently Added  | Tracks added in the last 30 days, sorted desc |
 | Top Played      | Top 100 by play count                         |
 | Unplayed        | 50 random tracks with playCount = 0           |
