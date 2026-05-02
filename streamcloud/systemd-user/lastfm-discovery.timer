@@ -1,0 +1,11 @@
+[Unit]
+Description=Streamcloud — Daily Last.fm Discovery Playlist
+
+[Timer]
+# Run every day at 05:00 AM (before ListenBrainz sync)
+OnCalendar=*-*-* 05:00:00
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

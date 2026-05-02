@@ -22,7 +22,7 @@ def load_env():
             for line in f:
                 if "=" in line and not line.startswith("#"):
                     k, v = line.strip().split("=", 1)
-                    os.environ[k] = v
+                    os.environ[k] = v.strip('"\'')
 
 
 load_env()
