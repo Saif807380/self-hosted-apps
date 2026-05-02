@@ -265,9 +265,18 @@ Navidrome Smart Playlists (`.nsp`) live in `/srv/media/music/Playlists/`:
 
 Edit the `.nsp` JSON files directly to tweak rules. Format reference: [Navidrome smart playlists](https://github.com/navidrome/navidrome/blob/master/tests/fixtures/playlists/recently_played.nsp). Field names and operators come from `model/criteria/{fields,operators}.go` in the Navidrome repo.
 
-### Discovery via Last.fm + ListenBrainz
+### Discovery & Playlists
 
-Once you wire credentials into Navidrome (per-user Settings → Personal), every play is scrobbled to both services. After ~2–3 weeks of scrobbles, `troi` generates personalised playlists (Daily Jams, Weekly Exploration). The `scripts/generate-listenbrainz-playlists.sh` runner converts troi's JSPF output to M3U via Navidrome's Subsonic search, dropping `lb-*.m3u` into the Playlists folder. Scheduled daily at 06:00 by `systemd-user/generate-playlists.timer`.
+**1. Last.fm Daily Discovery (New Music)**
+A custom Python script (`scripts/lastfm-discovery.py`) runs daily at 05:00 AM via a systemd timer. It:
+- Fetches your recent Last.fm listening history.
+- Queries Last.fm for similar tracks.
+- Filters out tracks you already have in Navidrome.
+- Autonomously downloads 20 brand new tracks.
+- Adds them to `lastfm-discovery.m3u` in your Playlists folder.
+
+**2. ListenBrainz Auto-Playlists (Existing Library)**
+Once you wire credentials into Navidrome (per-user Settings → Personal), every play is scrobbled to both services. After ~2–3 weeks of scrobbles, `troi` generates personalised playlists (Daily Jams, Weekly Exploration) focusing on rediscovering music already in your library. The `scripts/generate-listenbrainz-playlists.sh` runner drops these into the Playlists folder. Scheduled daily at 06:00 by `systemd-user/generate-daily-playlists.timer`.
 
 ### Verify Navidrome
 
