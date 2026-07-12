@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import secrets
+import ssl
 import sys
 import urllib.parse
 import urllib.request
@@ -31,6 +32,11 @@ NAVIDROME_URL = os.environ.get("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip(
 NAVIDROME_USER = os.environ.get("NAVIDROME_USER")
 NAVIDROME_PASS = os.environ.get("NAVIDROME_PASS", "")
 
+# Navidrome serves HTTPS with a self-signed cert on loopback; skip verification.
+NAVIDROME_SSL = (
+    ssl._create_unverified_context() if NAVIDROME_URL.startswith("https") else None
+)
+
 if not NAVIDROME_USER or not NAVIDROME_PASS:
     print("Error: NAVIDROME_USER or NAVIDROME_PASS not found in .env")
     sys.exit(1)
@@ -50,7 +56,7 @@ def subsonic_call(endpoint: str, **params) -> dict:
     qs = urllib.parse.urlencode({**base, **params})
     url = f"{NAVIDROME_URL}/rest/{endpoint}.view?{qs}"
     try:
-        with urllib.request.urlopen(url, timeout=10) as r:
+        with urllib.request.urlopen(url, timeout=10, context=NAVIDROME_SSL) as r:
             resp = json.loads(r.read())["subsonic-response"]
             if resp.get("status") == "failed":
                 print(f"Subsonic Error: {resp.get('error', {}).get('message')}")
@@ -76,7 +82,7 @@ def navidrome_native_call(method: str, endpoint: str, data: dict = {}) -> dict:
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=10, context=NAVIDROME_SSL) as r:
             token = json.loads(r.read())["token"]
     except Exception as e:
         print(f"Native API Login Failed: {e}")
@@ -94,7 +100,7 @@ def navidrome_native_call(method: str, endpoint: str, data: dict = {}) -> dict:
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=10, context=NAVIDROME_SSL) as r:
             return json.loads(r.read())
     except Exception as e:
         print(f"Native API {method} {endpoint} Failed: {e}")

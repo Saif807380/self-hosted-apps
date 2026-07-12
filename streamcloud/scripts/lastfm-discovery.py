@@ -4,6 +4,7 @@ import json
 import os
 import random
 import secrets
+import ssl
 import subprocess
 import sys
 import time
@@ -39,6 +40,11 @@ LAST_FM_USER = os.environ.get(
 NAVIDROME_URL = os.environ.get("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip("/")
 NAVIDROME_USER = os.environ.get("NAVIDROME_USER")
 NAVIDROME_PASS = os.environ.get("NAVIDROME_PASS", "")
+
+# Navidrome serves HTTPS with a self-signed cert on loopback; skip verification.
+NAVIDROME_SSL = (
+    ssl._create_unverified_context() if NAVIDROME_URL.startswith("https") else None
+)
 
 if not all([LAST_FM_API_KEY, LAST_FM_USER, NAVIDROME_USER, NAVIDROME_PASS]):
     print("Error: Missing required API keys or credentials in .env")
@@ -92,7 +98,7 @@ def subsonic_call(endpoint: str, **params) -> dict:
     qs = urllib.parse.urlencode({**base, **params})
     url = f"{NAVIDROME_URL}/rest/{endpoint}.view?{qs}"
     try:
-        with urllib.request.urlopen(url, timeout=10) as r:
+        with urllib.request.urlopen(url, timeout=10, context=NAVIDROME_SSL) as r:
             resp = json.loads(r.read())["subsonic-response"]
             if resp.get("status") == "failed":
                 print(f"Subsonic Error: {resp.get('error', {}).get('message')}")
@@ -205,7 +211,16 @@ def main():
     try:
         # We call the script with all queries at once to batch the yt-dlp downloads
         # and ensure fix_tags.py (LLM pipeline) only runs exactly once.
-        subprocess.run([str(add_music_script)] + search_queries, env=env, check=False)
+        result = subprocess.run(
+            [str(add_music_script)] + search_queries, env=env, check=False
+        )
+        # Don't hard-fail (playlist generation can still proceed), but never let a
+        # broken pipeline rot silently again — surface the exit code loudly.
+        if result.returncode != 0:
+            print(
+                f"   ⚠️  Addition pipeline exited {result.returncode} — "
+                "downloads may be stranded in ~/Music (check add-music.sh / fix_tags.py)."
+            )
     except Exception as e:
         print(f"   Error running addition pipeline: {e}")
 
@@ -216,7 +231,7 @@ def main():
     time.sleep(30)
 
     PLAYLIST_DIR.mkdir(parents=True, exist_ok=True)
-    m3u_path = PLAYLIST_DIR / "lastfm-discovery.m3u"
+    m3u_path = PLAYLIST_DIR / "Newly Discovered.m3u"
 
     found_count = 0
     with open(m3u_path, "w") as f:

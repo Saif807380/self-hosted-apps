@@ -21,6 +21,10 @@ def main():
 
     files = []
     for file_path in source_path.rglob("*"):
+        # Skip yt-dlp postprocessing leftovers: "X.temp.opus" has suffix ".opus"
+        # and would otherwise be batched as a (0-byte, unparseable) real track.
+        if ".temp." in file_path.name or file_path.name.endswith(".part"):
+            continue
         if file_path.is_file() and file_path.suffix.lower() in AUDIO_EXTENSIONS:
             # We use absolute path so the subsequent tagging script knows exactly where the file is
             files.append({
