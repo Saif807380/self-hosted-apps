@@ -18,6 +18,9 @@ fi
 : "${VIDEO_ROOT:=/srv/media/video}"
 : "${DRY_RUN:=1}"
 
+# Completed downloads land here and are hardlinked into the library by *arr.
+DOWNLOADS_DIR="$VIDEO_ROOT/downloads"
+
 _log() { printf '[%s] %s\n' "$(date -Is)" "$*"; }
 
 _require() {
@@ -25,7 +28,7 @@ _require() {
     command -v "$cmd" >/dev/null || { _log "FATAL: missing command '$cmd'"; exit 1; }
   done
 }
-_require curl jq du awk date flock
+_require curl jq du awk date flock find stat
 
 : "${JELLYFIN_API_KEY:?JELLYFIN_API_KEY missing — fill in $PROJECT_ROOT/.env}"
 : "${SONARR_API_KEY:?SONARR_API_KEY missing — fill in $PROJECT_ROOT/.env}"
@@ -110,14 +113,38 @@ sonarr_delete_file() {
     || { _log "  Sonarr DELETE failed for episodeFile $id"; return 1; }
 }
 
-# Delete one watched item via the appropriate *arr API. Returns 0 on success,
-# 1 if no match (caller should keep going).
+# A library file deleted by *arr is hardlinked to a copy in $DOWNLOADS_DIR, so
+# its data isn't freed until that copy is removed too. This removes it, given the
+# inode of the (now-deleted) library file. Idempotent: if nothing in downloads
+# holds that inode (already gone, or was a plain copy), it does nothing.
+delete_download_hardlink() {
+  local ino="$1" dlfile
+  dlfile=$(find "$DOWNLOADS_DIR" -inum "$ino" -print -quit 2>/dev/null)
+  [[ -z "$dlfile" ]] && return 0
+
+  if [[ "$DRY_RUN" == "1" ]]; then
+    _log "  [dry-run] would delete download copy: $dlfile"
+    return 0
+  fi
+
+  rm -f -- "$dlfile" \
+    && _log "  reclaimed download copy: $dlfile" \
+    || { _log "  failed to delete download copy: $dlfile"; return 1; }
+  # Drop the release folder too if this was its last file.
+  rmdir --ignore-fail-on-non-empty "$(dirname -- "$dlfile")" 2>/dev/null || true
+}
+
+# Delete one watched item via the appropriate *arr API, then remove its
+# hardlinked download copy. Returns 0 on success, 1 if no match (caller should
+# keep going).
 delete_item() {
   local item="$1" rmap="$2" smap="$3"
-  local type path name id
+  local type path name id ino
   type=$(jq -r '.Type' <<<"$item")
   path=$(jq -r '.Path' <<<"$item")
   name=$(jq -r '.Name + (if .SeriesName then " — \(.SeriesName)" else "" end)' <<<"$item")
+  # Capture the inode before deletion so we can find its download hardlink after.
+  ino=$(stat -c %i "$path" 2>/dev/null || true)
 
   case "$type" in
     Movie)
@@ -136,6 +163,9 @@ delete_item() {
       _log "  unknown item type: $type"; return 1
       ;;
   esac
+
+  [[ -n "$ino" ]] && delete_download_hardlink "$ino"
+  return 0
 }
 
 # Integer GiB usage of $VIDEO_ROOT (rounded up by `du -BG`).

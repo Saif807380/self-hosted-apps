@@ -22,6 +22,10 @@ fi
 
 echo "Downloading $# URL(s) to $DEST"
 
+# yt-dlp exits non-zero when any single item fails (unavailable video, thumbnail
+# postprocessing, etc.) even with --ignore-errors. Under `set -e` that would abort
+# the script before the tag/move pipeline runs, stranding good downloads in $DEST.
+# `|| echo ...` swallows the non-zero exit so we always proceed to fix_tags.py.
 yt-dlp \
   --cookies-from-browser firefox \
   -x --audio-format opus --audio-quality 0 \
@@ -32,7 +36,10 @@ yt-dlp \
   -o "$DEST/%(title)s.%(ext)s" \
   --sleep-interval 1 \
   --ignore-errors \
-  "$@"
+  "$@" || echo "yt-dlp reported errors (continuing to tag/move what downloaded)"
+
+# Remove postprocessing leftovers so they never enter the tagging pipeline.
+rm -f "$DEST"/*.temp.* "$DEST"/*.part 2>/dev/null || true
 
 echo ""
 echo "Running full Addition Pipeline (Metadata + Tagging + Move)..."

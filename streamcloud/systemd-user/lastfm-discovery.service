@@ -5,7 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+ExecStartPre=/usr/bin/mkdir -p %h/.local/state/streamcloud
 ExecStart=%h/Projects/self-hosted-apps/streamcloud/scripts/lastfm-discovery.py
+StandardOutput=append:%h/.local/state/streamcloud/lastfm-discovery.log
+StandardError=append:%h/.local/state/streamcloud/lastfm-discovery.log
 Nice=10
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7

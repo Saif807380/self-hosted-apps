@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import secrets
+import ssl
 import sys
 import urllib.parse
 import urllib.request
@@ -27,6 +28,11 @@ NAVIDROME_URL = os.environ.get("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip(
 NAVIDROME_USER = os.environ["NAVIDROME_USER"]
 NAVIDROME_PASS = os.environ["NAVIDROME_PASS"]
 MUSIC_FOLDER = os.environ.get("MUSIC_FOLDER", "/srv/media/music").rstrip("/")
+
+# Navidrome serves HTTPS with a self-signed cert on loopback; skip verification.
+NAVIDROME_SSL = (
+    ssl._create_unverified_context() if NAVIDROME_URL.startswith("https") else None
+)
 
 
 def subsonic_call(endpoint: str, **params) -> dict:
@@ -42,7 +48,7 @@ def subsonic_call(endpoint: str, **params) -> dict:
     }
     qs = urllib.parse.urlencode({**base, **params})
     url = f"{NAVIDROME_URL}/rest/{endpoint}.view?{qs}"
-    with urllib.request.urlopen(url, timeout=10) as r:
+    with urllib.request.urlopen(url, timeout=10, context=NAVIDROME_SSL) as r:
         return json.loads(r.read())["subsonic-response"]
 
 
