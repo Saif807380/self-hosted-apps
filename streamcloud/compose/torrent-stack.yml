@@ -12,6 +12,11 @@ services:
       - VPN_PORT_FORWARDING_PROVIDER=protonvpn
       # Allow LAN + Tailscale to reach qBittorrent WebUI
       - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/16,100.64.0.0/10
+      # ProtonVPN rotates the forwarded port on every reconnect — push it into
+      # qBittorrent, else it stays on a stale port that gluetun firewalls off.
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh /scripts/sync-qbit-port.sh {{PORTS}}
+    volumes:
+      - ${HOME}/Projects/self-hosted-apps/streamcloud/scripts/sync-qbit-port.sh:/scripts/sync-qbit-port.sh:ro
     ports:
       - 8080:8080
     restart: unless-stopped
