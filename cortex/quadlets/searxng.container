@@ -1,0 +1,49 @@
+# SearXNG -- the web-search backend for Open WebUI. Not meant to be browsed
+# directly; it binds to loopback only.
+#
+# Install with cortex/scripts/install-quadlets.sh, which copies this into
+# ~/.config/containers/systemd/ and reloads the user manager.
+
+[Unit]
+Description=SearXNG metasearch (cortex)
+
+# User units cannot order against the system manager's network-online.target.
+# See the note in open-webui.container.
+After=podman-user-wait-network-online.service
+Wants=podman-user-wait-network-online.service
+
+[Container]
+Image=docker.io/searxng/searxng:2026.9.8-3fdc6d753
+ContainerName=cortex-searxng
+
+# Host networking matches the other stacks on this box and lets Open WebUI
+# reach this on 127.0.0.1 without a shared podman network. With Network=host,
+# PublishPort= is invalid -- the container binds the host port directly.
+Network=host
+
+EnvironmentFile=%h/Projects/self-hosted-apps/cortex/.env.searxng
+# This image runs on granian, not uwsgi -- so SEARXNG_BIND_ADDRESS and the
+# UWSGI_* knobs that most SearXNG guides still recommend are silently ignored
+# here, and the image's own default binds to every interface. With Network=host
+# that would put SearXNG on the LAN and the tailnet. GRANIAN_HOST is the one
+# that actually binds. Verify after any image bump: `ss -ltnp | grep 8888`
+# must show 127.0.0.1, not *.
+Environment=GRANIAN_HOST=127.0.0.1
+Environment=SEARXNG_PORT=8888
+Environment=SEARXNG_BASE_URL=http://127.0.0.1:8888/
+
+# One worker is plenty for a single-user instance, and RAM is the scarce
+# resource on this box -- each worker is a full copy of the engine set.
+Environment=GRANIAN_WORKERS=1
+Environment=GRANIAN_BLOCKING_THREADS=4
+
+Volume=%h/.local/share/cortex/searxng/settings.yml:/etc/searxng/settings.yml:ro,Z
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+# Without this the unit generates and starts by hand but never comes back
+# after a reboot. Requirement #6 lives on this line.
+WantedBy=default.target

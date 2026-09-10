@@ -1,0 +1,96 @@
+# Open WebUI -- the chat UI and dashboard.
+#
+# The plain image, deliberately: the :ollama and :cuda variants bundle a second
+# inference stack, and Ollama already runs natively on this host.
+#
+# READ THIS BEFORE EDITING ANY Environment= LINE BELOW.
+# Most of Open WebUI's settings are "PersistentConfig": the environment is read
+# once, on first boot, then written to the SQLite DB and the variable is ignored
+# forever after. Changing one here on an existing install does nothing -- it has
+# to be changed in the UI, or the DB reset. Only UVICORN_WORKERS and the
+# WEBUI_* security vars are re-read every start.
+
+[Unit]
+Description=Open WebUI (cortex)
+
+# These are USER units, so they cannot order against ollama.service or
+# network-online.target -- those live in the system manager, which the user
+# manager cannot see. An `After=ollama.service` line here looks reassuring and
+# does nothing. podman-user-wait-network-online.service is the user-scope
+# equivalent podman ships for exactly this.
+#
+# Ollama itself is not orderable from here at all. Restart=always covers it:
+# if this starts first, the health check fails, systemd retries, and by then
+# ollama is up. The cost is a restart or two at boot -- which is why the reboot
+# check is `NRestarts`, not `is-active`. A non-zero count means this raced
+# something and self-healed, and the ordering deserves another look.
+After=podman-user-wait-network-online.service
+Wants=podman-user-wait-network-online.service
+
+[Container]
+Image=ghcr.io/open-webui/open-webui:v0.11.3
+ContainerName=cortex-open-webui
+
+Network=host
+
+EnvironmentFile=%h/Projects/self-hosted-apps/cortex/.env.open-webui
+
+# Bind loopback only. Reachable from the tailnet via `tailscale serve`, which
+# terminates TLS -- see cortex/scripts/tailscale-serve.sh.
+Environment=HOST=127.0.0.1
+Environment=PORT=8081
+
+Environment=OLLAMA_BASE_URL=http://127.0.0.1:11434
+
+# Defaults to '*', which the app itself warns about on every start. Semicolon
+# separated: the tailnet origin the phone and tablet use, plus loopback for
+# local debugging. Unlike most settings here this one is NOT PersistentConfig --
+# it is re-read from the environment on every start, so it can be changed later
+# without touching the database.
+Environment=CORS_ALLOW_ORIGIN=https://cachyos.tail4f0f0b.ts.net:8443;http://127.0.0.1:8081
+
+# --- RAM tuning. See plans/local-ai-stack.md section 5. ---
+# The single biggest win: without this, Open WebUI loads a sentence-transformers
+# model into its own process (~500 MB+) when Ollama is already sitting there
+# with an embedding model.
+Environment=RAG_EMBEDDING_ENGINE=ollama
+Environment=RAG_EMBEDDING_MODEL=nomic-embed-text
+Environment=RAG_OLLAMA_BASE_URL=http://127.0.0.1:11434
+
+# Each uvicorn worker replicates everything above it.
+Environment=UVICORN_WORKERS=1
+
+# Browser-side speech-to-text instead of a local Whisper model.
+Environment=AUDIO_STT_ENGINE=webapi
+
+Environment=ENABLE_IMAGE_GENERATION=False
+Environment=ENABLE_CODE_INTERPRETER=False
+
+# --- Task-model generations ---
+# These fire extra model calls on top of the reply you are waiting for. On a box
+# with one 4.5 GB model resident and OLLAMA_MAX_LOADED_MODELS=2 they contend
+# directly with it. Titles and tags stay on, pointed at the fast 2B; the two
+# that fire most aggressively are off.
+Environment=ENABLE_AUTOCOMPLETE_GENERATION=False
+Environment=ENABLE_FOLLOW_UP_GENERATION=False
+Environment=ENABLE_TAGS_GENERATION=True
+Environment=ENABLE_TITLE_GENERATION=True
+Environment=TASK_MODEL=cortex-2b:latest
+
+# --- Web search via the SearXNG container ---
+# The <query> placeholder is literal; Open WebUI substitutes it.
+Environment=ENABLE_WEB_SEARCH=True
+Environment=WEB_SEARCH_ENGINE=searxng
+Environment=SEARXNG_QUERY_URL=http://127.0.0.1:8888/search?q=<query>
+Environment=WEB_SEARCH_RESULT_COUNT=4
+Environment=WEB_SEARCH_CONCURRENT_REQUESTS=4
+
+Volume=%h/.local/share/cortex/open-webui:/app/backend/data:Z
+
+[Service]
+Restart=always
+# First boot runs migrations and can be slow on a cold page cache.
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

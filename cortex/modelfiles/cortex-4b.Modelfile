@@ -1,0 +1,26 @@
+# Daily driver: use where misreading a document is expensive.
+#
+# INSTRUCT, not the default tag. `qwen3-vl:4b` resolves to the *thinking*
+# variant (renderer/parser "qwen3-vl-thinking"), which for OCR, screenshots and
+# everyday drafting is pure overhead -- and on small models it does not reliably
+# terminate. Measured on the 2B: 210 s, 16,233 tokens, done_reason=length, and
+# an empty answer, against 4 s and a correct answer from the instruct variant.
+# See plans/local-ai-stack.md.
+#
+# `think: false` does not substitute for this. The behaviour lives in the
+# model's own template and the Modelfile template is `{{ .Prompt }}` -- there is
+# nothing to override. The variant has to change.
+#
+# The context here is the other half of the point. Ollama's API default is
+# num_ctx=4096 on both /api/generate and /api/chat -- NOT the model card's
+# 256K -- so any client that doesn't set it explicitly silently truncates.
+# 16384 is the measured ceiling: beyond it the KV cache leaves VRAM and
+# generation collapses.
+#
+# Build:  ollama create cortex-4b -f cortex-4b.Modelfile
+# Verify: ollama show cortex-4b --parameters   (and that `thinking` is NOT in
+#         `ollama show cortex-4b` capabilities)
+
+FROM qwen3-vl:4b-instruct
+
+PARAMETER num_ctx 16384

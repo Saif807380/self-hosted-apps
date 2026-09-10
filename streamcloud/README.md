@@ -91,6 +91,110 @@ resolvectl query 1337x.to                              # should NOT be 13.127.24
 sudo systemctl restart systemd-resolved
 ```
 
+### If torrents stall at "downloading metadata"
+
+Symptom: Sonarr/Radarr hand a magnet to qBittorrent and it sits at `metaDL` forever, 0 peers, even on a huge swarm.
+
+**Root cause seen in practice:** qBittorrent was bound to *all* interfaces (`Session\Interface` empty), so libtorrent listened on both `tun0` (the VPN) **and** `eth0` (the podman bridge). gluetun's firewall drops everything sourced from `eth0` — outbound UDP there fails instantly with `EPERM`. That kills DHT bootstrap: `dht_nodes` sits at **0** permanently, and with no DHT the client depends entirely on trackers, which is not enough to find peers for a magnet.
+
+qBittorrent **must be pinned to the VPN interface**. This lives in `config/qbit/` (gitignored), so it is not restored by cloning the repo:
+
+```
+qBittorrent → Settings → Advanced → Network Interface → tun0
+```
+
+Or via the WebUI API:
+
+```bash
+curl -s -d 'json={"current_network_interface":"tun0"}' \
+  http://localhost:8080/api/v2/app/setPreferences
+podman restart compose_qbittorrent_1     # libtorrent needs a restart to rebuild DHT
+```
+
+Verify — `dht_nodes` should climb into the hundreds within a minute, and sockets should show **only** `10.2.0.2` (tun0), never `10.89.0.2` (eth0):
+
+```bash
+curl -s http://localhost:8080/api/v2/transfer/info      # dht_nodes > 0
+podman exec compose_gluetun_1 netstat -tuln | grep -v 8080
+```
+
+**Related:** ProtonVPN rotates the forwarded port on every reconnect, but qBittorrent stores a static `Session\Port`. When they drift, inbound peers are firewalled off. `scripts/sync-qbit-port.sh` is wired to gluetun's `VPN_PORT_FORWARDING_UP_COMMAND` to push each new port into qBittorrent automatically.
+
+### If every indexer is "disabled for 24 hours"
+
+Symptom: Sonarr/Radarr show all indexers disabled, health warns *"Indexers unavailable due to failures for more than 6 hours"*, and it never recovers on its own.
+
+**There is usually no single broken indexer.** Two independent backoff ladders amplify ordinary flakiness into a permanent-looking outage:
+
+1. Prowlarr keeps a per-indexer failure ladder that doubles up to a 24h cap. While an indexer is backed off, its Torznab endpoint returns `429` in ~2ms **without trying upstream**.
+2. Sonarr/Radarr read that `429` as "API Request Limit reached" and apply *their own* doubling ladder on top.
+
+Either ladder only resets on a **successful** request, so once both are at the cap nothing retries often enough to recover. Check how long they've actually been failing — `initialFailure` is the honest signal:
+
+```bash
+curl -s -H "X-Api-Key: $KEY" http://localhost:9696/api/v1/indexerstatus
+```
+
+**Root cause seen in practice: IPv6 broke FlareSolverr.** Prowlarr does not use FlareSolverr's solved HTML — it takes the `cf_clearance` cookie and *replays* the request from its own HTTP stack. That cookie is bound to the IP it was issued to. FlareSolverr runs in a rootless podman container with no IPv6, so it egresses via the host's IPv4, while .NET's Happy Eyeballs made Prowlarr replay over IPv6 from a completely different address. Cloudflare answered `403` every time, and every Cloudflare-fronted indexer failed no matter how well FlareSolverr worked.
+
+Replaying one cookie from each address family isolates it:
+
+```
+IPv4: http=200      # same egress as FlareSolverr
+IPv6: http=403      # different address, cookie rejected
+```
+
+Fix — force Prowlarr's outbound onto IPv4 (this does **not** affect the WebUI listener, which stays dual-stack):
+
+```bash
+sudo install -Dm644 systemd/prowlarr.service.d/10-disable-ipv6.conf \
+  /etc/systemd/system/prowlarr.service.d/10-disable-ipv6.conf
+sudo systemctl daemon-reload && sudo systemctl restart prowlarr
+```
+
+Then clear the ladders — a successful **Test** is the only thing that resets them, in Prowlarr *and* again in Sonarr/Radarr. Expect to retry: the ISP resets connections intermittently on both address families (~1/10 for `1337x.to`, ~5/10 for `eztvx.to`), so a single failed test means nothing.
+
+**What this does not fix:** indexers failing for their own reasons. `apibay.org` (The Pirate Bay) serves a Cloudflare *"Rate Limited"* page that reproduces from plain curl, and `nyaa.si` is IPv4-only with no Cloudflare, so FlareSolverr never engages and ISP interference hits it directly. Those recover on their own once the ladders are no longer pinned at 24h.
+
+### If subtitles never appear
+
+Bazarr handles this automatically — it watches Sonarr/Radarr and fetches subtitles for anything that arrives without them. When nothing shows up, check that it can *write* before blaming the providers:
+
+```bash
+id bazarr                                    # must include the media group
+grep -c PermissionError /var/lib/bazarr/log/bazarr.log
+```
+
+**Root cause seen in practice:** the Arch `bazarr` package ships `Group=bazarr`, while `sonarr`/`radarr`/`prowlarr` all ship `Group=media`. `/srv/media` is `drwxrwsr-x … media`, so Bazarr could read the library but every single save failed:
+
+```
+BAZARR Error saving Subtitles file to disk … PermissionError(13, 'Permission denied'):
+'… The Flash (2014) - S01E14 - Fallout Bluray-1080p.en.srt'
+```
+
+This is worse than it looks. Bazarr **downloads a subtitle before it writes it**, so each failed save still spent one OpenSubtitles download. It burned the ~20/day free-tier cap on files it then discarded, tripped `DownloadLimitExceeded`, got throttled 6 hours, and repeated — daily, silently, for weeks. Fix:
+
+```bash
+sudo install -Dm644 systemd/bazarr.service.d/10-media-group.conf \
+  /etc/systemd/system/bazarr.service.d/10-media-group.conf
+sudo systemctl daemon-reload && sudo systemctl restart bazarr
+```
+
+The media directories are setgid, so new subtitles inherit group `media` on their own.
+
+**Backfilling won't work until you clear adaptive search.** After 3 weeks of failed attempts Bazarr drops an item to one retry per week, so the scheduled search skips it — silently, because that log line is DEBUG and `debug` is off. A long-broken library is therefore *fully* adaptive-throttled and a normal search finishes in seconds having done nothing. Turn `adaptive_searching` off for one pass, run both wanted-search tasks, then turn it back on.
+
+Also reset the provider throttles first (**Settings → Providers → Reset**), or providers stay disabled from failures that are already fixed.
+
+**On providers:** the free OpenSubtitles tier is ~20 downloads/day and `yifysubtitles` is movies-only, so TV had exactly one usable source. Also enabled: `gestdown` (Addic7ed mirror, strong on TV), `tvsubtitles`, `subf2m`, and `embeddedsubtitles` (extracts tracks already inside the mkv — no network, no quota).
+
+Two gotchas found the hard way:
+
+- **`subf2m` needs a user-agent set** or it throttles itself for 12 hours with `ConfigurationError('User-agent config missing')`. Its default is an empty string, so enabling the provider is not enough.
+- **`use_embedded_subs: true`** makes Bazarr treat an existing embedded track as "not missing", so the `embeddedsubtitles` provider only fires on files it has already decided it wants.
+
+`subsource` and `subdl` both require a free API key. Bazarr's manual per-episode download API (`PATCH /api/episodes/subtitles`) returns 204 but silently fails when the episode's profile id is falsy — `get_profiles_list` hands back the whole list and `download.py` subscripts it by name. Use the wanted-search tasks instead.
+
 ---
 
 ## Where the VPN is actually used
@@ -111,7 +215,7 @@ qBittorrent    ──► │ gluetun container (ProtonVPN WireGuard) │ ──�
 
 This is intentional — and standard practice for the *arr stack:
 
-- **Indexer search** is just HTTPS API calls to public-ish search sites. They don't care who's asking. Routing them through the VPN slows them down for no security gain.
+- **Indexer search** is just HTTPS API calls to public-ish search sites. They don't care who's asking. Routing them through the VPN slows them down for no security gain — and measurably *hurts*: from the VPN exit, `1337x.to` and `eztvx.to` return an immediate `403` instead of a solvable challenge, and `apibay.org` times out. The one thing it does help is `nyaa.si` (3/10 direct vs 7/8 over VPN), which is not worth moving the stack for.
 - **The actual peer-to-peer torrent traffic** is what your ISP can see and what trackers log. That's the only thing that has to be VPN-hidden, and it is — qBittorrent is `network_mode: "service:gluetun"`, which means it has *no* network of its own and can only talk through the VPN container. If gluetun stops, qBittorrent loses all network. That's the kill-switch.
 - **DNS-over-TLS** to Cloudflare runs at the host level, separate from the VPN. It exists because Airtel poisons DNS for torrent indexer hostnames, not because of any privacy concern.
 
