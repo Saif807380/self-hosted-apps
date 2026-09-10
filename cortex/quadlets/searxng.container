@@ -43,7 +43,18 @@ Volume=%h/.local/share/cortex/searxng/settings.yml:/etc/searxng/settings.yml:ro,
 Restart=always
 TimeoutStartSec=300
 
-[Install]
-# Without this the unit generates and starts by hand but never comes back
-# after a reboot. Requirement #6 lives on this line.
-WantedBy=default.target
+# NOT started on boot, deliberately.
+#
+# There is no [Install] section, so the Quadlet generator creates no
+# default.target.wants symlink and systemd never starts this by itself.
+# Bring the stack up when you want it:
+#
+#     cortex/scripts/cortex.sh up
+#
+# `systemctl --user enable` cannot re-enable this: Quadlet units are generated
+# into /run and systemd refuses to enable a generated unit. Autostart is turned
+# back on by restoring the [Install] section below and re-running
+# cortex/scripts/install-quadlets.sh.
+#
+# [Install]
+# WantedBy=default.target

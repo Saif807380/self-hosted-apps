@@ -138,25 +138,42 @@ ago, because the timer restarts on every message.
 
 ## After a reboot
 
-**Nothing to do.** All three come back on their own — linger is enabled and each
-Quadlet declares `WantedBy=default.target`.
-
-To check, don't use `is-active`:
+**Nothing starts on its own — this is deliberate.** The stack sits idle at zero
+cost until you ask for it:
 
 ```bash
-cortex/scripts/cortex.sh status
+cortex/scripts/cortex.sh up
 ```
 
-Look at **restarts since boot**. `0` is the pass.
+Roughly 21 seconds to healthy. Nothing here needs sudo.
+
+### What was turned off, and how to put it back
+
+| Component | Autostart | Turned off by |
+|---|---|---|
+| `open-webui.service` | off | no `[Install]` section in the Quadlet |
+| `searxng.service` | off | same |
+| `ollama.service` | off | `systemctl disable ollama` |
+
+`systemctl --user enable open-webui` **will not** re-enable the containers —
+Quadlet units are generated into `/run` and systemd refuses to enable a
+generated unit. To bring autostart back, uncomment the `[Install]` block at the
+bottom of each `.container` file and re-run `install-quadlets.sh`. For Ollama
+it's `systemctl enable ollama`.
+
+If you want only Ollama back on boot — so `ollama run` works from a terminal
+without starting the web stack — `systemctl enable ollama` alone does that. The
+idle daemon costs about 43 MB of RAM and holds no VRAM.
+
+### Checking it came up cleanly
+
+When you do start it, look at **restarts since boot** in
+`cortex/scripts/cortex.sh status`. `0` is the pass.
 
 Non-zero doesn't mean it's broken — it means something started before its
-dependencies and `Restart=always` papered over it, and you'd never see that
-from `is-active`. These are *user* units and can't order themselves against
-`ollama.service`, which lives in the system manager. Consistently non-zero is
-worth investigating; the plan's Phase 2 notes explain why the ordering is
-shaped this way.
-
----
+dependencies and `Restart=always` papered over it, which `is-active` would
+never show you. These are *user* units and can't order themselves against
+`ollama.service`, which lives in the system manager.
 
 ## Troubleshooting
 

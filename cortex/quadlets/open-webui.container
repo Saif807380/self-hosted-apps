@@ -92,5 +92,18 @@ Restart=always
 # First boot runs migrations and can be slow on a cold page cache.
 TimeoutStartSec=900
 
-[Install]
-WantedBy=default.target
+# NOT started on boot, deliberately.
+#
+# There is no [Install] section, so the Quadlet generator creates no
+# default.target.wants symlink and systemd never starts this by itself.
+# Bring the stack up when you want it:
+#
+#     cortex/scripts/cortex.sh up
+#
+# `systemctl --user enable` cannot re-enable this: Quadlet units are generated
+# into /run and systemd refuses to enable a generated unit. Autostart is turned
+# back on by restoring the [Install] section below and re-running
+# cortex/scripts/install-quadlets.sh.
+#
+# [Install]
+# WantedBy=default.target

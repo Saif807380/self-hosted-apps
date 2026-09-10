@@ -403,9 +403,19 @@ to Nov 25 2026 — closing the "Tailscale rejects 8443" risk in §8.
 
 **Reboot survival** comes from `WantedBy=default.target` in each Quadlet's
 `[Install]` section — without it the units generate fine and start fine by hand
-but never come back. Verified indirectly by the generator creating
-`default.target.wants/{open-webui,searxng}.service` symlinks, and directly by
-the reboot test below.
+but never come back. Verified by the generator creating
+`default.target.wants/{open-webui,searxng}.service` symlinks.
+
+> **Reversed on request, 2026-09-10.** Autostart is now deliberately *off* for
+> all three components: the `[Install]` sections are commented out and
+> `ollama.service` is disabled. The stack costs nothing at boot and comes up
+> with `cortex/scripts/cortex.sh up`. Requirement #6 ("easy to bring up after
+> restarts, clearly documented") is met by the script and `cortex/README.md`
+> rather than by starting unasked.
+>
+> Note that `systemctl --user enable` cannot undo this — systemd refuses to
+> enable a generated unit. The `[Install]` block has to be restored in the
+> `.container` file and the units reinstalled.
 
 ### Model selection was wrong — the default tags are thinking variants
 
