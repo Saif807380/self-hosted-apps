@@ -1,5 +1,9 @@
 # Bulk work: OCR, screenshots, chat title generation, anything high-volume.
 #
+# INSTRUCT, not the default tag -- see the note in cortex-4b.Modelfile. This is
+# the model the thinking-variant failure was measured on: 210 s and no answer,
+# versus 4 s and a correct one here.
+#
 # The 2B keeps its KV cache in VRAM at this context, so it barely decays as the
 # conversation fills -- roughly 7x the 4B's speed at 8K of real context. That
 # speed, not its quality, is why it exists here.
@@ -7,6 +11,6 @@
 # Build:  ollama create cortex-2b -f cortex-2b.Modelfile
 # Verify: ollama show cortex-2b --parameters
 
-FROM qwen3-vl:2b
+FROM qwen3-vl:2b-instruct
 
 PARAMETER num_ctx 16384
