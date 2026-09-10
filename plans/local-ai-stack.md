@@ -407,6 +407,46 @@ but never come back. Verified indirectly by the generator creating
 `default.target.wants/{open-webui,searxng}.service` symlinks, and directly by
 the reboot test below.
 
+### Model selection was wrong — the default tags are thinking variants
+
+Phase 1 chose `qwen3-vl:4b` and `qwen3-vl:2b` without checking what those tags
+resolve to. Both manifests say:
+
+```
+"renderer": "qwen3-vl-thinking",  "parser": "qwen3-vl-thinking"
+```
+
+They are the **thinking** variants. For the stated use cases — OCR, screenshots,
+private text, everyday chat and drafting, explicitly not coding — reasoning is
+pure overhead, and on a 2B it does not converge.
+
+This surfaced as a user-visible failure: a web-searched weather question that
+retrieved its sources correctly and then returned nothing at all.
+
+Same prompt, same 151-token context, cold GPU, `num_ctx=16384`:
+
+| | `cortex-2b` (thinking) | `qwen3-vl:2b-instruct` |
+|---|---|---|
+| wall time | **210 s** | **4 s** |
+| tokens generated | 16,233 | 63 |
+| `done_reason` | **`length`** | `stop` |
+| thinking output | 41,865 chars | 0 |
+| visible answer | **empty** | correct, 2 lines |
+
+`done_reason=length` is the whole story: it exhausted the generation limit
+mid-reasoning and never reached an answer. Not slow — *non-terminating*. The
+78 tok/s it sustained is irrelevant when none of those tokens reach the user.
+
+`think: false` does not fix it. The behaviour is in the model's own template,
+and the Modelfile template is `{{ .Prompt }}` — there is nothing to override.
+The variant has to change.
+
+`qwen3-vl:2b-instruct` keeps `vision` and `tools`; only `thinking` is gone.
+
+**Superseding the Phase 1 recommendation: use the `-instruct` variants.** The
+task split (4B for documents, 2B for OCR and bulk) still holds — it is the
+thinking/instruct axis that was wrong, not the size axis.
+
 ### Phase 3 — Free cloud escape hatch
 1. Google AI Studio key (free tier, no card) → `.env`.
 2. Add Gemini as an Open WebUI direct connection, alongside the local model in the same dropdown.
