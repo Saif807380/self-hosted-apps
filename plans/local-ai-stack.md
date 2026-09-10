@@ -301,6 +301,85 @@ This also helps Phase 2: the 2B's 2.1 GB leaves both VRAM and system RAM free fo
 
 *Done when:* you can open it on your phone, ask a question, and upload a screenshot.
 
+### Phase 2 results — measured 2026-09-10
+
+Five things about the plan above turned out to be wrong or incomplete.
+
+**1. Context belongs in a Modelfile, not in Open WebUI.** The `num_ctx=4096`
+default found in Phase 1 is best fixed server-side. `cortex/modelfiles/` builds
+two tags — `cortex-4b` and `cortex-2b` — that carry `PARAMETER num_ctx 16384`,
+so *every* client gets the right context without configuring anything. Verified:
+`ollama ps` reports `CONTEXT 16384` for a request that sets no options at all.
+The alternative, Open WebUI's per-model Advanced Params, would have buried the
+single most important setting in an untracked SQLite DB.
+
+They cost a manifest each, not 3.3 GB — `ollama create` reuses the existing
+blobs.
+
+**2. One `.env` was the wrong shape.** Podman hands an `--env-file` to the
+container wholesale, so a single shared file would have put the Phase 3 Gemini
+API key into SearXNG's environment — a service whose entire job is making
+outbound requests to a few dozen third-party search engines. Split into
+`cortex/.env.searxng` and `cortex/.env.open-webui`, both matching the root
+`.gitignore`'s `.env.*` rule (verified with `git check-ignore` before any
+secret was written into them), both mode 600.
+
+**3. SearXNG's shipped image binds to every interface, and the variable that
+guides say fixes it does nothing.** This image runs on **granian**, not uwsgi.
+`SEARXNG_BIND_ADDRESS` and the `UWSGI_*` knobs are silently ignored; only
+`SEARXNG_PORT` is aliased through. Combined with `Network=host` the first start
+put SearXNG on `*:8888` — reachable from the LAN and the whole tailnet.
+`GRANIAN_HOST=127.0.0.1` is the real knob. Now verified in both directions:
+loopback answers, the tailnet IP is refused.
+
+Worth re-checking after any image bump: `ss -ltnp | grep 8888` must show
+`127.0.0.1`, not `*`.
+
+**4. The secret can't be injected the documented way.** The entrypoint's
+`sed` over `ultrasecretkey` only runs when `settings.yml` does *not* already
+exist, and it needs the file writable — which would mean either dropping `:ro`
+or letting a secret be written into a tracked repo file. Instead the tracked
+`cortex/searxng/settings.yml` carries a `@SEARXNG_SECRET@` placeholder, and
+`install-quadlets.sh` renders it to `~/.local/share/cortex/searxng/settings.yml`
+at install time. Mount stays read-only, repo stays clean.
+
+**5. `formats: [html, json]` was the one thing the plan got exactly right.**
+Confirmed working: `?format=json` returns 200 with parsed results, and the
+`limiter: false` setting means Open WebUI's queries aren't rate-limited into
+silence.
+
+**6. `CORS_ALLOW_ORIGIN` defaults to `*`**, which Open WebUI warns about on
+every start. It takes a `;`-separated list, so both the tailnet origin and
+loopback fit. Notably this one is *not* PersistentConfig — it is re-read from
+the environment every start, so unlike the rest of the table it can be changed
+later without touching the database.
+
+#### Measured RAM — the number this phase turned on
+
+| Component | Plan (untuned) | Plan (tuned) | **Measured** |
+|---|---|---|---|
+| Open WebUI | 1.5–2 GB | 600–800 MB | **711.7 MB** |
+| SearXNG | ~250 MB | ~150 MB | **156.1 MB** |
+| **Total added** | ~2.4 GB | ~1.1 GB | **867.8 MB** |
+
+`/proc/pressure/memory` full avg10/60/300 all `0.00` with both containers warm,
+8.3 GiB still available. The tuning worked: this landed under the tuned budget,
+not near the untuned figure.
+
+Verified the persisted config survived a restart rather than being re-seeded,
+which is the failure this table would otherwise hide.
+
+**Sudo was never needed.** The plan flagged `tailscale serve` as the one likely
+root step; the operator is already set to `saifkazi`, so all of Phase 2 ran
+unprivileged. Port 8443 is accepted, and the Let's Encrypt certificate is valid
+to Nov 25 2026 — closing the "Tailscale rejects 8443" risk in §8.
+
+**Reboot survival** comes from `WantedBy=default.target` in each Quadlet's
+`[Install]` section — without it the units generate fine and start fine by hand
+but never come back. Verified indirectly by the generator creating
+`default.target.wants/{open-webui,searxng}.service` symlinks, and directly by
+the reboot test below.
+
 ### Phase 3 — Free cloud escape hatch
 1. Google AI Studio key (free tier, no card) → `.env`.
 2. Add Gemini as an Open WebUI direct connection, alongside the local model in the same dropdown.

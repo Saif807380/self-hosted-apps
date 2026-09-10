@@ -1,0 +1,16 @@
+# Daily driver: use where misreading a document is expensive.
+#
+# The context here is the whole point of this file. Ollama's API default is
+# num_ctx=4096 on both /api/generate and /api/chat -- NOT the model card's
+# 256K -- so any client that doesn't set it explicitly silently truncates.
+# Baking it into a tag fixes it for every client at once.
+#
+# 16384 is the measured ceiling: see plans/local-ai-stack.md section 6. Larger
+# contexts push the KV cache out of the 4 GiB of VRAM and generation collapses.
+#
+# Build:  ollama create cortex-4b -f cortex-4b.Modelfile
+# Verify: ollama show cortex-4b --parameters
+
+FROM qwen3-vl:4b
+
+PARAMETER num_ctx 16384

@@ -1,0 +1,27 @@
+# SearXNG overrides. `use_default_settings` means this file is a patch on top of
+# the image's own settings.yml, not a replacement -- without it, every engine
+# definition would have to be repeated here.
+use_default_settings: true
+
+server:
+  # Read from the SEARXNG_SECRET environment variable, which the Quadlet loads
+  # from cortex/.env. SearXNG refuses to start on the shipped default value.
+  secret_key: "@SEARXNG_SECRET@"
+
+  # The limiter is bot protection for public instances. This one is bound to
+  # 127.0.0.1 and only ever queried by Open WebUI on the same host, so the only
+  # thing it can do here is rate-limit our own searches -- and it fails the same
+  # silent way the missing json format does: web search just returns nothing.
+  limiter: false
+  public_instance: false
+
+search:
+  # THE line this whole file exists for. JSON output is off by default and
+  # Open WebUI speaks only JSON. Omit it and web search silently returns no
+  # results, with no error anywhere.
+  formats:
+    - html
+    - json
+
+  autocomplete: ""
+  safe_search: 0
