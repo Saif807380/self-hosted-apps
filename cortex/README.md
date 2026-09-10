@@ -183,7 +183,35 @@ print(json.loads(chat).get('features', 'no features -- web search was OFF'))"
 No `web_search` key means the toggle was off. **Working looks like sources
 appearing under the reply.**
 
-### Web search is on, but still no sources
+### Web search is on, and still no sources — set Function Calling to Legacy
+
+There are **two** web-search paths, and the default picks the one a small model
+cannot do:
+
+| Function Calling | What happens | Works on a 2B? |
+|---|---|---|
+| **Legacy** | Open WebUI runs the search and injects results into context | **Yes** |
+| Native / Default | Search is skipped; the model must invoke a `search_web` tool | No |
+
+From `utils/middleware.py`:
+
+```python
+# Skip forced RAG web search when native FC is enabled - model can use web_search tool
+if metadata.get('params', {}).get('function_calling') == 'legacy':
+    form_data = await chat_web_search_handler(...)
+```
+
+The setting defaults to `null`, which is not `'legacy'` — so out of the box the
+Web Search toggle hands the job to the model's tool calling and looks broken.
+
+**Fix:** Chat Controls (slider icon, top right) → Advanced Params → Function
+Calling → **Legacy**. It cycles `Default → Native → Legacy`.
+
+Symptom when you have this wrong: a long `<think>` block reasoning about
+whether to call `search_web`, followed by an empty or apologetic answer and no
+sources. `cortex-2b` produced 4,252 characters of that and never made the call.
+
+### Web search is on, Function Calling is Legacy, and still no sources
 
 Now it's worth suspecting the backend. In order of likelihood:
 
