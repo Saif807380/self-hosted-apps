@@ -369,6 +369,33 @@ not near the untuned figure.
 Verified the persisted config survived a restart rather than being re-seeded,
 which is the failure this table would otherwise hide.
 
+**7. `After=ollama.service` in a user unit does nothing.** These are user
+units; `ollama.service` and `network-online.target` live in the system manager,
+which the user manager cannot see. The line looks reassuring and has no effect.
+`podman-user-wait-network-online.service` is the user-scope equivalent podman
+ships. Ollama itself stays unorderable from here — `Restart=always` covers the
+race instead.
+
+This makes the reboot check `NRestarts`, not `is-active`: with `Restart=always`
+a boot-time race self-heals and the end state looks identical to a clean start.
+
+```
+systemctl --user show open-webui searxng -p NRestarts   # 0 is the pass
+```
+
+#### Verified against the tag Open WebUI actually uses
+
+`ollama create` preserves capabilities — `cortex-4b` reports `vision`, `tools`,
+`thinking`, matching `qwen3-vl:4b` exactly — and an OCR test against
+`cortex-4b` (not the base tag) read all three fields off a test invoice
+correctly. Worth checking rather than assuming: had the vision projector not
+carried across, Open WebUI would route uploads through the document pipeline
+instead, and answer plausibly without ever looking at the image.
+
+CORS was verified with an actual `Origin` header, not `curl /health` — a health
+check sends no `Origin` and so never exercises CORS at all. Both configured
+origins are echoed; an unlisted one is not.
+
 **Sudo was never needed.** The plan flagged `tailscale serve` as the one likely
 root step; the operator is already set to `saifkazi`, so all of Phase 2 ran
 unprivileged. Port 8443 is accepted, and the Let's Encrypt certificate is valid

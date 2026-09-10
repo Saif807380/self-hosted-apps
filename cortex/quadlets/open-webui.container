@@ -12,8 +12,20 @@
 
 [Unit]
 Description=Open WebUI (cortex)
-After=network-online.target ollama.service
-Wants=network-online.target
+
+# These are USER units, so they cannot order against ollama.service or
+# network-online.target -- those live in the system manager, which the user
+# manager cannot see. An `After=ollama.service` line here looks reassuring and
+# does nothing. podman-user-wait-network-online.service is the user-scope
+# equivalent podman ships for exactly this.
+#
+# Ollama itself is not orderable from here at all. Restart=always covers it:
+# if this starts first, the health check fails, systemd retries, and by then
+# ollama is up. The cost is a restart or two at boot -- which is why the reboot
+# check is `NRestarts`, not `is-active`. A non-zero count means this raced
+# something and self-healed, and the ordering deserves another look.
+After=podman-user-wait-network-online.service
+Wants=podman-user-wait-network-online.service
 
 [Container]
 Image=ghcr.io/open-webui/open-webui:v0.11.3

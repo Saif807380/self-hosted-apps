@@ -6,8 +6,11 @@
 
 [Unit]
 Description=SearXNG metasearch (cortex)
-After=network-online.target
-Wants=network-online.target
+
+# User units cannot order against the system manager's network-online.target.
+# See the note in open-webui.container.
+After=podman-user-wait-network-online.service
+Wants=podman-user-wait-network-online.service
 
 [Container]
 Image=docker.io/searxng/searxng:2026.9.8-3fdc6d753
