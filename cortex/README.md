@@ -160,10 +160,32 @@ shaped this way.
 
 ## Troubleshooting
 
-### Web search returns no sources
+### The model says it has no access to real-time data
 
-The failure is silent by design — the reply still arrives, just without having
-searched. In order of likelihood:
+**Check the Web Search toggle first — this is almost always the answer.**
+
+Web search is **per-message opt-in**. `ENABLE_WEB_SEARCH=True` makes the feature
+*available*; it does not turn it on for a given message. With the toggle off,
+the model never receives search results and correctly says it can't know —
+which reads exactly like a broken integration but isn't one.
+
+To confirm what actually happened rather than guessing, the request is recorded:
+
+```bash
+python3 -c "
+import sqlite3, os, json
+db = os.path.expanduser('~/.local/share/cortex/open-webui/webui.db')
+c = sqlite3.connect(f'file:{db}?mode=ro', uri=True)
+_, chat = c.execute('select id, chat from chat order by created_at desc limit 1').fetchone()
+print(json.loads(chat).get('features', 'no features -- web search was OFF'))"
+```
+
+No `web_search` key means the toggle was off. **Working looks like sources
+appearing under the reply.**
+
+### Web search is on, but still no sources
+
+Now it's worth suspecting the backend. In order of likelihood:
 
 ```bash
 # 1. Is SearXNG up and answering JSON?
@@ -189,6 +211,15 @@ ollama ps    # PROCESSOR column
 
 `cortex-4b` showing `52%/48% CPU/GPU` is normal and expected. `cortex-2b`
 showing anything other than `100% GPU` is not — something else is holding VRAM.
+
+### A reply contains raw JSON like `{"name": "list_knowledge_bases", ...}`
+
+The model tried to call a tool and got the format wrong, so Open WebUI couldn't
+parse it and passed it through as text. This is `cortex-2b` doing what a 2B
+model does with tool calling.
+
+**Use `cortex-4b` for anything involving tools or web search.** Keep the 2B for
+OCR, transcription and bulk drafting, where nothing needs to be called.
 
 ### It's unreachable from the phone
 
