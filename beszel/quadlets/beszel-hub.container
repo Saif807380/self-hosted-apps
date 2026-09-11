@@ -1,0 +1,52 @@
+# Beszel hub -- the dashboard. PocketBase app, SQLite on disk.
+#
+# Network=host + an explicit loopback bind, rather than a bridge with
+# PublishPort. Two reasons:
+#
+#   1. AUTO_LOGIN (see .env.beszel-hub) authenticates every request as a fixed
+#      user. There is no login screen. Anything that can reach this port IS
+#      logged in, so it must never be on 0.0.0.0. The image's default CMD is
+#      `serve --http=0.0.0.0:8090`; the Exec= below overrides it.
+#   2. The agent listens on 127.0.0.1:45876. On host network the hub reaches it
+#      directly -- no host.containers.internal, no socket bind-mount.
+#
+# Remote access is tailscale serve on :8444 (scripts/tailscale-serve.sh), which
+# terminates TLS and proxies to this loopback port.
+
+[Unit]
+Description=Beszel hub -- monitoring dashboard
+Documentation=https://www.beszel.dev/guide/what-is-beszel
+Wants=podman-user-wait-network-online.service
+After=podman-user-wait-network-online.service
+
+[Container]
+ContainerName=beszel-hub
+Image=docker.io/henrygd/beszel:0.19.0
+
+Network=host
+Exec=serve --http=127.0.0.1:8090
+
+# USER_EMAIL / USER_PASSWORD / AUTO_LOGIN live here -- mode 600, never committed.
+EnvironmentFile=%h/Projects/self-hosted-apps/beszel/.env.beszel-hub
+
+# Every user sees every system. With one user and one system this is a no-op
+# today; it stops a second system from being invisible if one is ever added.
+Environment=SHARE_ALL_SYSTEMS=true
+
+# Container inspect + log viewing in the UI. This is the ONLY thing in Beszel
+# that reads more than metrics -- it is still read-only. There is no restart,
+# stop or start, for containers or for systemd units.
+Environment=CONTAINER_DETAILS=true
+
+# No outbound update pings. Updating is `podman pull` + restart, deliberately.
+Environment=CHECK_UPDATES=false
+
+# :Z relabels for SELinux. Harmless here (no SELinux), consistent with cortex.
+Volume=%h/.local/share/beszel/hub:/beszel_data:Z
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,26 @@
+# Declarative system list. The hub reads this from its data directory on every
+# start (internal/hub/config/config.go: SyncSystems) and reconciles the systems
+# table against it -- so the dashboard comes up populated with no clicking in
+# the UI, and survives a wiped database.
+#
+# ONE system, deliberately. Beszel has no tags and no groups: one agent is one
+# row. Three agents would have produced three rows named streamcloud / trove /
+# cortex, but every one of them reports the SAME host CPU, memory and disk,
+# so the systems table would show identical host stats three times over.
+#
+# The per-app split is done with the filter box in the Containers and Services
+# tabs instead. The container names carry their app as a prefix already:
+#
+#     compose_*    streamcloud (gluetun, qbittorrent, flaresolverr)
+#     infra_*      trove       (postgres, redis, backend, ui)
+#     open-webui   cortex
+#     searxng      cortex
+#
+# @USER_EMAIL@ is substituted by scripts/install.sh.
+
+systems:
+  - name: cachyos
+    host: 127.0.0.1
+    port: 45876
+    users:
+      - "@USER_EMAIL@"

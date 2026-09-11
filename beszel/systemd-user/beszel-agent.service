@@ -1,0 +1,79 @@
+# Beszel agent -- collects the metrics and serves them to the hub.
+#
+# NATIVE, not a container, and running as saifkazi rather than a dedicated
+# `beszel` user. Both of those are deliberate:
+#
+#   * The agent needs Network=host to read interface stats at all, plus the
+#     rootless podman socket and the system D-Bus socket. A container holding
+#     all three isolates nothing -- it is this process with extra failure modes,
+#     the loudest being a silently empty Containers tab.
+#   * Every container on this box is ROOTLESS under uid 1000. The upstream
+#     install script creates a `beszel` system user, which cannot read
+#     /run/user/1000/podman/podman.sock. Running as the owning user is the
+#     configuration upstream's own Podman guide recommends first.
+#   * systemd stats come from the SYSTEM bus (agent/systemd.go calls
+#     dbus.NewSystemConnectionContext). A normal user may call
+#     ListUnitsByPatterns read-only -- verified by hand before writing this.
+#     The corollary: USER units are invisible. Open WebUI and SearXNG are user
+#     Quadlets, so they appear under Containers and never under Services.
+#
+# Binary lives in ~/.local/bin so none of this needs root. Update with
+# `beszel-agent update` (self-update, no sudo), not pacman.
+
+[Unit]
+Description=Beszel agent -- metrics collector
+Documentation=https://www.beszel.dev/guide/agent-installation
+Wants=podman.socket
+After=podman.socket
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/beszel-agent
+
+# KEY (the hub's public key) lives here -- mode 600, never committed.
+EnvironmentFile=%h/Projects/self-hosted-apps/beszel/.env.beszel-agent
+
+# Loopback only. The hub is on host network, so it reaches this directly.
+Environment=LISTEN=127.0.0.1:45876
+
+# Podman speaks the Docker Engine API on this socket; the agent auto-detects
+# Podman from the Server response header. Requires `podman.socket` enabled --
+# it is NOT on by default, and without it the Containers tab is simply empty.
+Environment=DOCKER_HOST=unix://%t/podman/podman.sock
+
+# Without this the agent collects all ~160 system units. Comma-separated globs;
+# ".service" is appended unless the pattern already ends in ".service" or
+# "timer" (agent/systemd.go:getServicePatterns), which is why the trove timer
+# below is spelled out in full.
+Environment=SERVICE_PATTERNS=jellyfin,navidrome,sonarr,radarr,prowlarr,bazarr,ollama,tailscaled,systemd-resolved,proton.VPN,trove-tailscale-cert.timer
+
+# Two GPUs here: Intel Iris Xe and an RTX 3050 Ti. intel_gpu_top needs root or
+# CAP_PERFMON, so auto-detection half-fails; nvidia-smi runs unprivileged and
+# the NVIDIA reading is the one that matters (it is cortex's 4 GB VRAM budget).
+Environment=GPU_COLLECTOR=nvidia-smi
+
+# No SENSORS whitelist, deliberately -- I tried one and took it out.
+#
+# The agent's FIRST reading after a restart enumerates 38 sensors (every
+# coretemp core, dell_ddv and dell_smm reporting the same physical probes under
+# different names, spd5118 DIMMs). Every steady-state reading after that returns
+# exactly four: coretemp_package_id_0, the GPU, nvme_composite, BAT0_temp.
+#
+# So the whitelist was filtering a burst that does not persist -- and measured
+# against the running agent it silently dropped nvme_composite and BAT0_temp,
+# two of the four it was written to keep, for reasons I could not pin down in
+# the matching code. A filter that loses half the data it is meant to preserve
+# is worse than no filter. Unfiltered, the noisy first sample is one wide point
+# on a chart; everything after it is already clean.
+#
+# PRIMARY_SENSOR stays: without it the systems table shows whichever sensor is
+# hottest, which flips between the CPU package and the GPU.
+Environment=PRIMARY_SENSOR=coretemp_package_id_0
+
+Environment=DATA_DIR=%h/.local/share/beszel/agent
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
