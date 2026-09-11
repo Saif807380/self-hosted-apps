@@ -151,7 +151,19 @@ stopping it — but if you want to:
 
 ## After a reboot
 
-**Nothing to do.** Both units come back on their own.
+**Nothing to do** — both units are set to come back on their own.
+
+Stated precisely, because it matters: **this has not been through an actual
+reboot yet.** What has been verified is the machinery, not the event. Next time
+you restart, the honest check is the restart *count*, not `is-active` —
+`Restart=always` will happily paper over a boot race and still show green:
+
+    systemctl --user show -p NRestarts --value beszel-hub.service
+    systemctl --user show -p NRestarts --value beszel-agent.service
+    beszel/scripts/beszel.sh status
+
+Non-zero restarts mean something lost a race at boot even though it looks fine
+now. Same check, and the same reason, as cortex.
 
 | Component | Autostart | Mechanism |
 |---|---|---|
@@ -165,6 +177,12 @@ default on Arch, and Beszel reads container stats over the Docker Engine API
 that this socket serves. Without it the Containers tab is simply empty — no
 error, no warning, just nothing. `beszel.sh status` prints its state for
 exactly this reason.
+
+The boot race that would break this *was* tested, short of rebooting: stopping
+`podman.socket` and then starting the agent brought the socket back up on its
+own and containers collected normally. That is the agent unit's
+`Wants=podman.socket` doing its job, with `After=` guaranteeing the ordering.
+So the ordering is sound; it is the reboot itself that is unobserved.
 
 Note `systemctl --user enable beszel-hub` **will not work** — Quadlet units are
 generated into `/run` and systemd refuses to enable a generated unit. The
@@ -219,6 +237,17 @@ rewrites `.env.beszel-agent` from the hub's current key.
 
 **Dashboard asks for a password.** You are on a `/_/` superuser screen.
 `USER_PASSWORD` in `.env.beszel-hub`.
+
+**...and that password is rejected.** `USER_EMAIL` / `USER_PASSWORD` are read on
+the hub's **first boot only**; after the database exists they are inert. So if
+`.env.beszel-hub` was ever deleted and regenerated while the database survived,
+the file now holds a freshly generated password that the database has never
+heard of. Reset it from inside the running container:
+
+    podman exec -it beszel-hub /beszel superuser update <email> <new-password>
+
+Or wipe `~/.local/share/beszel/hub` and re-run `install.sh` — `config.yml`
+rebuilds the user and the system (verified), at the cost of the metrics history.
 
 **An `Environment=` change in a unit did not take effect.** systemd splits
 unquoted `Environment=` values on whitespace. A value containing a space must

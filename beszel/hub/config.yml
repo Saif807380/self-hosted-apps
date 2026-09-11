@@ -16,6 +16,12 @@
 #     open-webui   cortex
 #     searxng      cortex
 #
+# Verified by deleting the hub's data directory and re-running install.sh: the
+# user is recreated from USER_EMAIL before SyncSystems runs, so the system comes
+# back attached to the right user rather than falling through to the
+# "first user" default. Containers and services were collecting again inside a
+# minute. The metrics history does not survive -- only the configuration does.
+#
 # @USER_EMAIL@ is substituted by scripts/install.sh.
 
 systems:

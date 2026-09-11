@@ -13,7 +13,17 @@ case "${1:-status}" in
     systemctl --user start "${UNITS[@]}"
     echo -n "waiting for hub"
     for _ in $(seq 1 60); do
-      curl -sf --max-time 2 http://127.0.0.1:8090/api/health >/dev/null && { echo " -- ready"; exit 0; }
+      if curl -sf --max-time 2 http://127.0.0.1:8090/api/health >/dev/null; then
+        echo " -- ready"
+        # The hub answering says nothing about the agent: the hub is happy to
+        # serve an empty dashboard. Check the agent separately.
+        if [[ "$(systemctl --user is-active beszel-agent.service)" != "active" ]]; then
+          echo "WARNING: hub is up but the agent is NOT -- the dashboard will be empty." >&2
+          echo "         journalctl --user -u beszel-agent" >&2
+          exit 1
+        fi
+        exit 0
+      fi
       echo -n "."; sleep 1
     done
     echo; echo "WARNING: hub not healthy after 60 s -- journalctl --user -u beszel-hub" >&2
