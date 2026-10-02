@@ -1,8 +1,8 @@
 # streamcloud
 
-Self-hosted media stack on a single Arch laptop. Replaces Netflix / Prime / Hotstar / Crunchyroll / YT Music / Google Photos.
+Self-hosted media stack on a single Arch laptop. Replaces Netflix / Prime / Hotstar / Crunchyroll / Google Photos.
 
-Phase 1 (video) and Phase 3 (music) are live. Phases 2 and 4 (sports / photos) are planned in `~/.claude/plans/implement-a-plan-for-delegated-salamander.md`.
+Phase 1 (video) is live. Phase 3 (music) was **decommissioned on 2026-10-02** — see [Music — decommissioned](#music--decommissioned). Phases 2 and 4 (sports / photos) are planned in `~/.claude/plans/implement-a-plan-for-delegated-salamander.md`.
 
 ---
 
@@ -13,11 +13,10 @@ All bound to `127.0.0.1` on the laptop. From the phone or another device, replac
 | Service        | URL                       | What it does                                         |
 |----------------|---------------------------|------------------------------------------------------|
 | Jellyfin       | http://localhost:8096     | Watch movies/TV (web UI, also via Jellyfin Media Player / Findroid) |
-| Navidrome      | http://localhost:4533     | Music server (Subsonic API; also via Feishin / Tempo on Android) |
 | qBittorrent    | http://localhost:8080     | Torrent client WebUI (runs inside the VPN namespace) |
 | Sonarr         | http://localhost:8989     | TV show automation                                   |
 | Radarr         | http://localhost:7878     | Movie automation                                     |
-| Prowlarr       | http://localhost:9696     | Indexer manager (feeds Sonarr/Radarr and FLAC searches) |
+| Prowlarr       | http://localhost:9696     | Indexer manager (feeds Sonarr/Radarr)                |
 | Bazarr         | http://localhost:6767     | Subtitle automation                                  |
 | FlareSolverr   | http://localhost:8191     | Cloudflare-bypass proxy (used by Prowlarr only)      |
 
@@ -37,7 +36,6 @@ Default admin user for the *arr apps was set during initial setup; credentials l
 | Tailscale                          | `tailscaled.service`, enabled          |
 | Sonarr / Radarr / Prowlarr / Bazarr| systemd services, enabled              |
 | Jellyfin                           | `jellyfin.service`, enabled            |
-| Navidrome                          | `navidrome.service`, enabled           |
 | gluetun + qBittorrent + FlareSolverr | rootless Podman, see one-time setup ↓ |
 
 ### One-time setup (do this once, then forget)
@@ -278,13 +276,14 @@ That's it — there's no daily start-up routine. The stack is "always on" while 
 │   ├── tv/            # Sonarr root folder
 │   ├── anime/         # Sonarr root folder (separate)
 │   └── sports/        # Phase 2 (yt-dlp / streamlink)
-├── music/             # Phase 3 (Navidrome)
 ├── photos/            # Phase 4 (Immich)
 ├── photos-orig/       # Phase 4 staging
 └── downloads/         # qBittorrent landing dir (CoW disabled, hardlinked into above)
 ```
 
 Hardlink imports from `/srv/media/downloads` into `/srv/media/video/...` mean a file lives in both places without using double the disk.
+
+`music/` was a sibling btrfs subvolume until the Phase 3 decom; it and its contents were deleted on 2026-10-02. Each of these is its own subvolume, which draws from one shared free-space pool — subvolumes partition *bookkeeping*, not capacity, so no per-directory size is ever reserved.
 
 ---
 
@@ -307,90 +306,78 @@ streamcloud/
 
 ---
 
-## Music (replaces YouTube Music)
+## Music — decommissioned
 
-**Stack:** Navidrome (server) → Feishin (laptop) → PixelPlay (Android, beta).
+**Phase 3 (Navidrome → Feishin / Tempo) was decommissioned on 2026-10-02.** YouTube Music is no longer self-hosted here. The scaffolding is deliberately left in this repo so the stack can be rebuilt without redoing the design work.
 
-Default format is **Opus 192k** — transparent for casual listening, ~50 MB/album, fits ~600 albums in the 30 GB pool.
+### What was removed
 
-### Adding new music (Autonomous Pipeline)
+| Thing | Detail |
+|-------|--------|
+| Library data | `/srv/media/music` — 3,091 files, 1,206 artist folders, ~23 GB. Subvolume deleted. |
+| `navidrome` | Package, `navidrome.service`, `/var/lib/navidrome` (DB), `/etc/navidrome` (config + its own TLS certs) |
+| `feishin-bin` | Package and `~/.config/feishin` (1.2 GB, almost all Chromium cache) |
+| `troi` | pipx package (ListenBrainz playlist generation) |
+| Timers | `empty-trash`, `lastfm-discovery`, `generate-daily-playlists`, `generate-weekly-playlists` — stopped, disabled, unlinked |
+| Tailscale serve | The `:443` handler that proxied the tailnet root to `127.0.0.1:4533` |
 
-New music is added via a 3-stage autonomous pipeline:
-1. **Download:** `yt-dlp` fetches audio as Opus 192k.
-2. **LLM Correction:** `fix_tags.py` uses Gemini (3-Flash) to research correct metadata, strip junk text (e.g., "[Official Video]"), and normalize "Artist - Title" strings.
-3. **Tag & Move:** Metadata is embedded via Mutagen, and files are moved to `/srv/media/music/Artist/Album/Track.opus`.
+The ~23 GB returned to the shared btrfs pool on `sda2` — it was never a reserved allocation (see [Filesystem layout](#filesystem-layout)). The 30 GB "cap" was a planning budget: the plan created these subvolumes with no qgroup limit (only `chattr +C` on `downloads/`) and enforced its caps through \*arr retention rules, the `disk-prune` timer and Immich's own per-user quota. Confirm with `sudo btrfs qgroup show /srv` — "quotas not enabled" means nothing was ever reserved.
 
-**Usage:**
-```bash
-./scripts/add-music.sh '<youtube-url>' ['<another-url>' ...]
-```
-The process is fully autonomous (`--approval-mode auto_edit`). Just run the command and the music appears in Navidrome.
+Phone clients (Tempo / PixelPlay) must be uninstalled by hand. The `navidrome` system user (uid 948) survives package removal — Arch leaves sysusers accounts behind. It owns nothing and cannot log in; `sudo userdel navidrome` if you want it gone.
 
-### Maintenance & Deletion
+### What survives for a rebuild
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/empty-trash.py` | **UI-based deletion.** Add tracks to the "Trash" playlist in Navidrome/Feishin. This script deletes the files from disk and purges them from the database. |
-| `scripts/bulk_clean/fix_library_inplace.py` | **Fast Sync.** Syncs metadata for existing library files based *only* on their folder structure (`Artist/Album`). High-speed, no LLM required. |
-| `scripts/bulk_clean/clean_lib.py` | **Batch Cleanup.** Uses LLM to clean up metadata for large batches of existing files. |
+Nothing below was deleted. Note which parts are **gitignored and therefore local to this laptop only** — a fresh clone will not have them:
 
-**Automatic Cleanup:**
-A systemd user timer (`empty-trash.timer`) runs `empty-trash.py` daily at 10:00 AM. To delete music, simply **add it to the "Trash" playlist** and it will be gone by the next morning.
+- `scripts/` — `add-music.sh`, `fix_tags.py`, `empty-trash.py`, `lastfm-discovery.py`, `jspf-to-m3u.py`, `generate-listenbrainz-playlists.sh`, `music-rip-opus.sh`, `ytm-*.sh`, `bulk_clean/` *(tracked)*
+- `systemd-user/` — all 12 unit files, including the 8 music ones (4 timers + 4 services) *(tracked)*
+- `.env.example` — documents the `LISTENBRAINZ_*`, `NAVIDROME_*` and `LAST_FM_*` key names *(tracked)*
+- `.env` — the actual keys *(gitignored, local only)*
+- `config/music-archive.txt`, `config/ytm-library.txt` *(gitignored, empty)*
+- `docs/` — the Phase 3 design notes and blog drafts with the full architecture rationale *(gitignored, local only)*
 
-### Storage budget
-
-30 GB cap on `/srv/media/music`. Rough capacity:
-- Opus 192k: ~50 MB/album → ~600 albums
-- FLAC: ~300 MB/album → ~100 albums
-
-A typical mix is 95% Opus with a handful of FLAC favourites.
-
-### Clients
-
-| Where  | App      | Notes                                                |
-|--------|----------|------------------------------------------------------|
-| Laptop | Feishin  | `feishin` — connect to `http://localhost:4533`       |
-| Pixel  | Tempo    | Play Store — connect to `http://<tailscale-ip>:4533` |
-
-Both clients support downloading albums for offline playback.
-
-### Smart playlists
-
-Navidrome Smart Playlists (`.nsp`) live in `/srv/media/music/Playlists/`:
-
-| Playlist        | Rule                                          |
-|-----------------|-----------------------------------------------|
-| Trash           | **DELETION QUEUE.** Files added here are deleted daily. |
-| Recently Added  | Tracks added in the last 30 days, sorted desc |
-| Top Played      | Top 100 by play count                         |
-| Unplayed        | 50 random tracks with playCount = 0           |
-| Loved           | Anything you've starred / hearted             |
-| Random Mix      | 50 random tracks (refreshes on open)          |
-
-Edit the `.nsp` JSON files directly to tweak rules. Format reference: [Navidrome smart playlists](https://github.com/navidrome/navidrome/blob/master/tests/fixtures/playlists/recently_played.nsp). Field names and operators come from `model/criteria/{fields,operators}.go` in the Navidrome repo.
-
-### Discovery & Playlists
-
-**1. Last.fm Daily Discovery (New Music)**
-A custom Python script (`scripts/lastfm-discovery.py`) runs daily at 05:00 AM via a systemd timer. It:
-- Fetches your recent Last.fm listening history.
-- Queries Last.fm for similar tracks.
-- Filters out tracks you already have in Navidrome.
-- Autonomously downloads 20 brand new tracks.
-- Adds them to `lastfm-discovery.m3u` in your Playlists folder.
-
-**2. ListenBrainz Auto-Playlists (Existing Library)**
-Once you wire credentials into Navidrome (per-user Settings → Personal), every play is scrobbled to both services. After ~2–3 weeks of scrobbles, `troi` generates personalised playlists (Daily Jams, Weekly Exploration) focusing on rediscovering music already in your library. The `scripts/generate-listenbrainz-playlists.sh` runner drops these into the Playlists folder. Scheduled daily at 06:00 by `systemd-user/generate-daily-playlists.timer`.
-
-### Verify Navidrome
+### How to rebuild
 
 ```bash
-systemctl is-active navidrome                        # active
-curl -sI http://localhost:4533/ | head -1            # HTTP/1.1 ...
-ls /srv/media/music/Playlists/                       # 5 .nsp files + lb-*.m3u once troi runs
+sudo pacman -S navidrome                    # extra/ -- + optionally beets python-ytmusicapi
+paru -S feishin-bin                         # AUR, not in any sync repo
+pipx install troi
+sudo btrfs subvolume create /srv/media/music
+sudo chown saifkazi:media /srv/media/music && sudo chmod 2775 /srv/media/music
+
+# re-arm the timers (link the .service by absolute path first, then enable the .timer)
+cd ~/Projects/self-hosted-apps/streamcloud/systemd-user
+for u in empty-trash lastfm-discovery generate-daily-playlists generate-weekly-playlists; do
+  systemctl --user link "$PWD/$u.service"
+  systemctl --user enable --now "$PWD/$u.timer"
+done
 ```
 
-For the one-time Google Takeout import flow (already done), see Phase 3 in `~/.claude/plans/implement-a-plan-for-delegated-salamander.md`.
+Navidrome's config was **not** in this repo, so recreate `/etc/navidrome/navidrome.toml` with at minimum:
+
+```toml
+DataFolder           = "/var/lib/navidrome"
+MusicFolder          = "/srv/media/music"
+Scanner.PurgeMissing = "always"
+Address              = "0.0.0.0"          # so Tailscale can reach it
+Port                 = 4533
+LastFM.ApiKey        = "…"                # from .env — LAST_FM_API_KEY
+LastFM.Secret        = "…"                # from .env — LAST_FM_SECRET
+```
+
+The one smart playlist that existed, for reference — `/srv/media/music/Playlists/Trash.nsp`:
+
+```json
+{"name": "Trash", "comment": "Tracks marked for deletion (1-star rating)",
+ "all": [{"is": {"rating": 1}}]}
+```
+
+Two *separate* TLS arrangements existed, and a rebuild should pick one rather than repeating both:
+
+1. `navidrome.toml` set `TLSCert`/`TLSKey` to `/etc/navidrome/certs/`, making Navidrome itself serve HTTPS on 4533.
+2. `tailscale serve --https=443` proxied the tailnet root to `http://127.0.0.1:4533` — a plaintext backend, which is inconsistent with (1).
+
+The minimum toml above drops TLS and leaves Tailscale to terminate it, which is the coherent choice. **Port 443 on the tailnet is now free.** Note trove keeps a *separate* copy of the same Tailscale cert at `trove/infra/certs/`, renewed by `trove-tailscale-cert.timer` — deleting `/etc/navidrome` did not affect it.
 
 ---
 

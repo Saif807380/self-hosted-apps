@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Publish the Beszel hub on the tailnet at https://<host>.<tailnet>.ts.net:8444
 #
-# Port choice: :443 is navidrome and :8443 is Open WebUI, both already claimed
-# on this tailnet. Check with `tailscale serve status` before changing it.
+# Port choice: :8443 is Open WebUI, already claimed on this tailnet. :443 was
+# navidrome until streamcloud Phase 3 was decommissioned (2026-10-02) and is now
+# free. Check with `tailscale serve status` before changing it.
 #
 # This needs no sudo -- the tailscale operator is already this user.
 #

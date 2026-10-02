@@ -2,8 +2,9 @@
 # Publish Open WebUI on the tailnet over HTTPS.
 #
 # This does NOT start a second Tailscale node. `tailscale serve` is config on
-# the daemon already running here; this adds an 8443 listener alongside the
-# existing 443 -> Navidrome mapping.
+# the daemon already running here; this adds an 8443 listener. (It used to sit
+# alongside a 443 -> Navidrome mapping; that was removed with streamcloud
+# Phase 3 on 2026-10-02, so :443 is free.)
 #
 # Why HTTPS rather than plain http://cachyos:8081, which would also work over
 # the tailnet: browsers gate camera, microphone and PWA install behind a secure

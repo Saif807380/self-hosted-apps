@@ -69,13 +69,13 @@ On "move away from paid to free" — that's achievable for these three use cases
 | Ollama | 11434 | free |
 | Open WebUI | 8081 | free |
 | SearXNG | 8888 | free |
-| Tailscale serve | 8443 | 443 is taken by Navidrome at `/` |
+| Tailscale serve | 8443 | 443 was taken by Navidrome at `/` (freed 2026-10-02) |
 
-Verified free: 8081, 8443, 8888, 11434. In use on this box: 3000 (trove nginx), 4533 (Navidrome), 5432, 6379, 6767, 7878, 8080 (qBittorrent), 8096 (Jellyfin), 8191, 8384, 8989, 9696.
+Verified free: 8081, 8443, 8888, 11434. In use on this box at the time: 3000 (trove nginx), 4533 (Navidrome), 5432, 6379, 6767, 7878, 8080 (qBittorrent), 8096 (Jellyfin), 8191, 8384, 8989, 9696. *(4533 and tailnet :443 were freed on 2026-10-02 when streamcloud Phase 3 was decommissioned.)*
 
 Open WebUI misbehaves under a path prefix, so `--set-path /ai` on the existing 443 listener is out; a second HTTPS port is the clean answer. Result: **`https://cachyos.tail4f0f0b.ts.net:8443`**. (Tailscale restricts serve to a small set of HTTPS ports; 8443 is expected to be valid but the docs don't enumerate them, so this gets verified with one command in Phase 2 rather than assumed.)
 
-**This is not a second Tailscale server.** It's the same daemon and the same node you already run — `tailscale serve` is just config on it, adding a listener alongside the existing `443 → 4533` Navidrome mapping.
+**This is not a second Tailscale server.** It's the same daemon and the same node you already run — `tailscale serve` is just config on it, adding a listener alongside what is already there. (At the time of writing that was a `443 → 4533` Navidrome mapping; it was removed on 2026-10-02.)
 
 Worth being explicit about why serve is used at all, since Sonarr/Radarr don't need it: those are reached at plain `http://cachyos:8989` over the tailnet, and the same would work here at `http://cachyos:8081`. The difference is that browsers gate certain APIs behind a **secure context** (real HTTPS). Over plain HTTP, a phone will refuse camera access, microphone, and PWA install. Camera is directly relevant here — point the phone at a document and send it straight to the vision model — so the Let's Encrypt cert that serve provides is worth the extra port.
 
