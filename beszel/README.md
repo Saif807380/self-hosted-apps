@@ -80,7 +80,7 @@ Containers and Services tabs. The names already carry their app:
 | `compose_` | streamcloud's containers — gluetun, qbittorrent, flaresolverr |
 | `infra_` | trove — postgres, redis, backend, ui |
 | `open-webui` / `searxng` | cortex |
-| `jellyfin`, `sonarr`, `radarr`, `prowlarr`, `bazarr`, `navidrome` | streamcloud's services (Services tab) |
+| `jellyfin`, `sonarr`, `radarr`, `prowlarr`, `bazarr` | streamcloud's services (Services tab) |
 
 If you later decide the duplicated host rows are worth it, the three-agent
 version is a copy of `systemd-user/beszel-agent.service` per app with a
@@ -96,9 +96,13 @@ setup: all 7 running containers plus `beszel-hub` itself.
 **Services** — only the ones named in `SERVICE_PATTERNS` in the agent unit.
 Without that list the agent collects all ~160 system units. Currently:
 
-    jellyfin  navidrome  sonarr  radarr  prowlarr  bazarr
+    jellyfin  sonarr  radarr  prowlarr  bazarr
     ollama  tailscaled  systemd-resolved  proton.VPN
     trove-tailscale-cert.timer
+
+`navidrome` is still listed in `SERVICE_PATTERNS` in the agent unit but the service
+no longer exists (streamcloud Phase 3 was decommissioned 2026-10-02). Dropping it
+from the unit needs an agent restart -- see that file.
 
 A service only appears once it has been active at least once this boot. So
 `ollama` is **absent until you run `cortex/scripts/cortex.sh up`** — that is
