@@ -4,6 +4,9 @@
 # qBittorrent config (contains credentials/state)
 config/qbit/
 
+# Seerr config + SQLite DB (contains API keys, user sessions)
+config/seerr/
+
 # yt-dlp archive files and personal library lists (local state, not portable)
 config/sports-archive.txt
 config/music-archive.txt

@@ -13,6 +13,7 @@ All bound to `127.0.0.1` on the laptop. From the phone or another device, replac
 | Service        | URL                       | What it does                                         |
 |----------------|---------------------------|------------------------------------------------------|
 | Jellyfin       | http://localhost:8096     | Watch movies/TV (web UI, also via Jellyfin Media Player / Findroid) |
+| Seerr          | http://localhost:5055     | Browse & request movies/TV — hands requests to Radarr/Sonarr |
 | qBittorrent    | http://localhost:8080     | Torrent client WebUI (runs inside the VPN namespace) |
 | Sonarr         | http://localhost:8989     | TV show automation                                   |
 | Radarr         | http://localhost:7878     | Movie automation                                     |
@@ -36,7 +37,7 @@ Default admin user for the *arr apps was set during initial setup; credentials l
 | Tailscale                          | `tailscaled.service`, enabled          |
 | Sonarr / Radarr / Prowlarr / Bazarr| systemd services, enabled              |
 | Jellyfin                           | `jellyfin.service`, enabled            |
-| gluetun + qBittorrent + FlareSolverr | rootless Podman, see one-time setup ↓ |
+| gluetun + qBittorrent + FlareSolverr + Seerr | rootless Podman, see one-time setup ↓ |
 
 ### One-time setup (do this once, then forget)
 
@@ -47,7 +48,7 @@ loginctl enable-linger $USER                      # already done — verifies wi
 systemctl --user enable podman-restart.service    # makes containers come back after reboot
 ```
 
-After this, `compose_gluetun_1`, `compose_qbittorrent_1`, and `compose_flaresolverr_1` come up automatically when you log in.
+After this, `compose_gluetun_1`, `compose_qbittorrent_1`, `compose_flaresolverr_1`, and `compose_seerr_1` come up automatically when you log in.
 
 ### Verify after a reboot
 
@@ -65,7 +66,7 @@ tailscale status | head -3
 resolvectl status | grep -A1 "DNS Servers"
 
 # *arr apps reachable?
-for p in 8096 8989 7878 9696 6767; do curl -fsS -o /dev/null -w "$p: %{http_code}\n" http://localhost:$p; done
+for p in 8096 5055 8989 7878 9696 6767; do curl -fsS -o /dev/null -w "$p: %{http_code}\n" http://localhost:$p; done
 ```
 
 ### If the torrent stack didn't come up
@@ -73,6 +74,7 @@ for p in 8096 8989 7878 9696 6767; do curl -fsS -o /dev/null -w "$p: %{http_code
 ```bash
 cd ~/Projects/self-hosted-apps/streamcloud/compose
 podman-compose --env-file ../.env -f torrent-stack.yml up -d
+podman-compose -f seerr.yml up -d              # Seerr is its own file
 ```
 
 ### If Radarr/Sonarr can't reach indexers (DNS poisoning)
@@ -195,6 +197,27 @@ Two gotchas found the hard way:
 
 ---
 
+## Requesting with Seerr
+
+Seerr (http://localhost:5055, or `http://<tailscale-ip>:5055` from the phone) is the "Netflix-style" front door: browse/search TMDB, click **Request**, and Seerr adds it to Radarr/Sonarr with search enabled. Everyone signs in with their Jellyfin account.
+
+**First-run wizard** (one time — the answers live in `config/seerr/settings.json`, not in git):
+
+1. **Sign in** → choose *Jellyfin*. URL `http://127.0.0.1:8096`, then your Jellyfin admin user/password. That account becomes the Seerr owner.
+2. **Libraries** → *Sync Libraries*, enable Movies + TV (+ Anime), then *Start Scan* so existing titles show as "Available".
+3. **Services** → add both, using hostname `127.0.0.1` (Seerr is on the host network) and the API key from each app's *Settings → General*:
+
+   | Server | Port | Quality profile | Root folder | Extra |
+   |---|---|---|---|---|
+   | Radarr | 7878 | `4K-favourites` (or `HD-1080p`) | `/srv/media/video/movies` | Minimum availability: *Released* |
+   | Sonarr | 8989 | `HD-1080p` | `/srv/media/video/tv` | Anime root folder: `/srv/media/video/anime`; *Season folders* on |
+
+   Tick **Default Server** on each, *Test*, then *Save*.
+
+**Day to day:** search → *Request* (pick seasons for TV) → it appears under *Requests* and in Radarr/Sonarr → the status flips to *Available* once Jellyfin picks up the import. As admin your own requests are auto-approved; other users' requests wait for you under *Requests* unless you give them *Auto-Approve* in *Users → Edit → Permissions*.
+
+---
+
 ## Where the VPN is actually used
 
 **Only qBittorrent traffic goes through ProtonVPN.** Nothing else.
@@ -292,9 +315,11 @@ Hardlink imports from `/srv/media/downloads` into `/srv/media/video/...` mean a 
 ```
 streamcloud/
 ├── compose/
-│   └── torrent-stack.yml         # gluetun + qBittorrent + FlareSolverr
+│   ├── torrent-stack.yml         # gluetun + qBittorrent + FlareSolverr
+│   └── seerr.yml                 # Seerr (request UI, host network)
 ├── config/
-│   └── qbit/                     # qBittorrent config (gitignored — has creds/state)
+│   ├── qbit/                     # qBittorrent config (gitignored — has creds/state)
+│   └── seerr/                    # Seerr settings + SQLite DB (gitignored — has API keys)
 ├── docs/                         # Blog post drafts (see plan)
 ├── quadlets/                     # systemd quadlets (planned migration target)
 ├── scripts/                      # prune-video.sh, ytm-csv-to-list.sh, music-rip-opus.sh
