@@ -1,0 +1,16 @@
+services:
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    # Host network so Seerr reaches Jellyfin/Sonarr/Radarr at 127.0.0.1, and is
+    # itself reachable on :5055 over Tailscale like the rest of the stack.
+    network_mode: host
+    # Image runs as node (uid 1000) — keep-id makes config/seerr owned by $USER.
+    userns_mode: keep-id
+    environment:
+      - TZ=Asia/Kolkata
+      - LOG_LEVEL=info
+      - PORT=5055
+    volumes:
+      - ${HOME}/Projects/self-hosted-apps/streamcloud/config/seerr:/app/config
+    restart: unless-stopped
