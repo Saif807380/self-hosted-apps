@@ -34,6 +34,9 @@ _require curl jq du awk date flock find stat
 : "${SONARR_API_KEY:?SONARR_API_KEY missing — fill in $PROJECT_ROOT/.env}"
 : "${RADARR_API_KEY:?RADARR_API_KEY missing — fill in $PROJECT_ROOT/.env}"
 
+# Jellyfin 12 dropped the legacy X-Emby-Token header; this is the only accepted form.
+JF_AUTH="Authorization: MediaBrowser Token=\"$JELLYFIN_API_KEY\""
+
 # Single-instance lock shared between both prune scripts.
 acquire_lock() {
   local lockfile="${XDG_RUNTIME_DIR:-/tmp}/streamcloud-prune.lock"
@@ -43,7 +46,7 @@ acquire_lock() {
 
 jf_user_id() {
   local users
-  users=$(curl -fsS "$JELLYFIN_URL/Users" -H "X-Emby-Token: $JELLYFIN_API_KEY")
+  users=$(curl -fsS "$JELLYFIN_URL/Users" -H "$JF_AUTH")
   if [[ -n "$JELLYFIN_USER" ]]; then
     jq -er --arg n "$JELLYFIN_USER" '.[] | select(.Name == $n) | .Id' <<<"$users" \
       || { _log "FATAL: Jellyfin user '$JELLYFIN_USER' not found"; exit 1; }
@@ -63,7 +66,7 @@ jf_watched_items() {
     --data-urlencode "Fields=Path,UserData" \
     --data-urlencode "SortBy=DatePlayed" \
     --data-urlencode "SortOrder=Ascending" \
-    -H "X-Emby-Token: $JELLYFIN_API_KEY" \
+    -H "$JF_AUTH" \
     | jq -c '.Items[] | {
         Path: .Path,
         Type: .Type,
