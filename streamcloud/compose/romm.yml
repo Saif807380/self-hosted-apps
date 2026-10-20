@@ -1,0 +1,55 @@
+services:
+  romm:
+    image: docker.io/rommapp/romm:latest
+    environment:
+      - TZ=Asia/Kolkata
+      - DB_HOST=romm-db
+      - DB_NAME=romm
+      - DB_USER=romm-user
+      - DB_PASSWD=${ROMM_DB_PASSWD}
+      - ROMM_AUTH_SECRET_KEY=${ROMM_AUTH_SECRET_KEY}
+      # Keyless metadata providers; add ScreenScraper/RetroAchievements keys here later.
+      - HASHEOUS_API_ENABLED=true
+      - LAUNCHBOX_API_ENABLED=true
+      - ENABLE_SCHEDULED_UPDATE_LAUNCHBOX_METADATA=true
+      # Games dropped into /srv/media/games show up without a manual scan.
+      - ENABLE_RESCAN_ON_FILESYSTEM_CHANGE=true
+    # Container root maps to $USER under rootless Podman, so everything RomM
+    # writes is owned by us. The image declares /romm as a volume — bind it to
+    # config/romm and nest the library and saves inside, so nothing lands in
+    # anonymous volumes.
+    volumes:
+      - ${HOME}/Projects/self-hosted-apps/streamcloud/config/romm:/romm
+      # Structure A: /romm/library/roms/{gba,nds,psp} — matched case-insensitively,
+      # so the GBA/NDS/PSP folders Moonbase already reads work unchanged.
+      - /srv/media/games:/romm/library/roms
+      # Saves, save states, screenshots synced by Argosy.
+      - /srv/media/game-saves:/romm/assets
+      - romm_redis:/redis-data
+    ports:
+      - 8095:8080
+    restart: unless-stopped
+    depends_on:
+      romm-db:
+        condition: service_healthy
+
+  romm-db:
+    image: docker.io/library/mariadb:11
+    environment:
+      - MARIADB_ROOT_PASSWORD=${ROMM_DB_ROOT_PASSWD}
+      - MARIADB_DATABASE=romm
+      - MARIADB_USER=romm-user
+      - MARIADB_PASSWORD=${ROMM_DB_PASSWD}
+    volumes:
+      - romm_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  romm_db:
+  romm_redis:
