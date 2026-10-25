@@ -7,6 +7,9 @@ config/qbit/
 # Seerr config + SQLite DB (contains API keys, user sessions)
 config/seerr/
 
+# RomM config, artwork cache (DB is a Podman volume, saves live on /srv/media/game-saves)
+config/romm/
+
 # yt-dlp archive files and personal library lists (local state, not portable)
 config/sports-archive.txt
 config/music-archive.txt

@@ -14,6 +14,7 @@ All bound to `127.0.0.1` on the laptop. From the phone or another device, replac
 |----------------|---------------------------|------------------------------------------------------|
 | Jellyfin       | http://localhost:8096     | Watch movies/TV (web UI, also via Jellyfin Media Player / Findroid) |
 | Seerr          | http://localhost:5055     | Browse & request movies/TV — hands requests to Radarr/Sonarr |
+| RomM           | http://localhost:8095     | Retro game library + save sync for Argosy on Android |
 | qBittorrent    | http://localhost:8080     | Torrent client WebUI (runs inside the VPN namespace) |
 | Sonarr         | http://localhost:8989     | TV show automation                                   |
 | Radarr         | http://localhost:7878     | Movie automation                                     |
@@ -37,7 +38,7 @@ Default admin user for the *arr apps was set during initial setup; credentials l
 | Tailscale                          | `tailscaled.service`, enabled          |
 | Sonarr / Radarr / Prowlarr / Bazarr| systemd services, enabled              |
 | Jellyfin                           | `jellyfin.service`, enabled            |
-| gluetun + qBittorrent + FlareSolverr + Seerr | rootless Podman, see one-time setup ↓ |
+| gluetun + qBittorrent + FlareSolverr + Seerr + RomM | rootless Podman, see one-time setup ↓ |
 
 ### One-time setup (do this once, then forget)
 
@@ -48,7 +49,7 @@ loginctl enable-linger $USER                      # already done — verifies wi
 systemctl --user enable podman-restart.service    # makes containers come back after reboot
 ```
 
-After this, `compose_gluetun_1`, `compose_qbittorrent_1`, `compose_flaresolverr_1`, and `compose_seerr_1` come up automatically when you log in.
+After this, `compose_gluetun_1`, `compose_qbittorrent_1`, `compose_flaresolverr_1`, `compose_seerr_1`, `compose_romm_1`, and `compose_romm-db_1` come up automatically when you log in.
 
 ### Verify after a reboot
 
@@ -66,7 +67,7 @@ tailscale status | head -3
 resolvectl status | grep -A1 "DNS Servers"
 
 # *arr apps reachable?
-for p in 8096 5055 8989 7878 9696 6767; do curl -fsS -o /dev/null -w "$p: %{http_code}\n" http://localhost:$p; done
+for p in 8096 5055 8095 8989 7878 9696 6767; do curl -fsS -o /dev/null -w "$p: %{http_code}\n" http://localhost:$p; done
 ```
 
 ### If the torrent stack didn't come up
@@ -75,6 +76,7 @@ for p in 8096 5055 8989 7878 9696 6767; do curl -fsS -o /dev/null -w "$p: %{http
 cd ~/Projects/self-hosted-apps/streamcloud/compose
 podman-compose --env-file ../.env -f torrent-stack.yml up -d
 podman-compose -f seerr.yml up -d              # Seerr is its own file
+podman-compose --env-file ../.env -f romm.yml up -d   # RomM + MariaDB
 ```
 
 ### If Radarr/Sonarr can't reach indexers (DNS poisoning)
@@ -218,6 +220,17 @@ Seerr (http://localhost:5055, or `http://<tailscale-ip>:5055` from the phone) is
 
 ---
 
+## Retro games (RomM + Argosy)
+
+RomM (http://localhost:8095, or `http://<tailscale-ip>:8095`) serves `/srv/media/games` to **Argosy** on Android, which downloads games on demand, launches them in standalone emulators (Pizza Boy GBA, melonDS/DraStic, PPSSPP), and syncs saves back to RomM.
+
+- **Adding games:** drop the file into the right console folder (`GBA/`, `NDS/`, `PSP/` — folder names are matched case-insensitively). RomM watches the folder and picks it up on its own; *Scan* in the UI forces it.
+- **Saves** land in `/srv/media/game-saves` (RomM's assets). They are the only irreplaceable part — back that folder up. The MariaDB volume (`compose_romm_db`) holds accounts and the save↔game links.
+- **Metadata:** Hasheous + LaunchBox, both keyless. For better art or achievements, add `SCREENSCRAPER_USER`/`SCREENSCRAPER_PASSWORD` or `RETROACHIEVEMENTS_API_KEY` to `romm.yml` (values in `.env`) and recreate the container.
+- **Phone setup:** install the emulators, then the Argosy APK from its GitHub releases; in its wizard point it at `http://<tailscale-ip>:8095`, pair with the code RomM shows, and turn on *Settings → Saves → Save Sync*. If Argosy says *"Access blocked — set a custom save path"*, give that emulator a save folder Argosy can read.
+
+---
+
 ## Where the VPN is actually used
 
 **Only qBittorrent traffic goes through ProtonVPN.** Nothing else.
@@ -299,6 +312,8 @@ That's it — there's no daily start-up routine. The stack is "always on" while 
 │   ├── tv/            # Sonarr root folder
 │   ├── anime/         # Sonarr root folder (separate)
 │   └── sports/        # Phase 2 (yt-dlp / streamlink)
+├── games/             # ROMs, one folder per console (GBA/, NDS/, PSP/) — read by RomM and Moonbase
+├── game-saves/        # RomM assets: saves + states synced by Argosy (back this up)
 ├── photos/            # Phase 4 (Immich)
 ├── photos-orig/       # Phase 4 staging
 └── downloads/         # qBittorrent landing dir (CoW disabled, hardlinked into above)
@@ -316,10 +331,12 @@ Hardlink imports from `/srv/media/downloads` into `/srv/media/video/...` mean a 
 streamcloud/
 ├── compose/
 │   ├── torrent-stack.yml         # gluetun + qBittorrent + FlareSolverr
-│   └── seerr.yml                 # Seerr (request UI, host network)
+│   ├── seerr.yml                 # Seerr (request UI, host network)
+│   └── romm.yml                  # RomM + MariaDB (retro games, save sync)
 ├── config/
 │   ├── qbit/                     # qBittorrent config (gitignored — has creds/state)
-│   └── seerr/                    # Seerr settings + SQLite DB (gitignored — has API keys)
+│   ├── seerr/                    # Seerr settings + SQLite DB (gitignored — has API keys)
+│   └── romm/                     # RomM config.yml + artwork cache (gitignored)
 ├── docs/                         # Blog post drafts (see plan)
 ├── quadlets/                     # systemd quadlets (planned migration target)
 ├── scripts/                      # prune-video.sh, ytm-csv-to-list.sh, music-rip-opus.sh
