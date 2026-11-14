@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"connectrpc.com/connect"
@@ -23,9 +24,12 @@ func (h *gameHandler) ListGames(
 	req *connect.Request[gamesv1.ListGamesRequest],
 ) (*connect.Response[gamesv1.ListGamesResponse], error) {
 	msg := req.Msg
-	f := dao.GameFilter{Search: msg.GetSearch()}
+	f := dao.GameFilter{Search: msg.GetSearch(), Status: msg.GetStatus()}
 	if msg.YearPlayed != nil {
 		f.YearPlayed = msg.GetYearPlayed()
+	}
+	if f.Status != "" && !model.GameStatuses[f.Status] {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid game status %q", f.Status))
 	}
 
 	games, err := h.svc.ListGames(ctx, f)
@@ -57,13 +61,24 @@ func (h *gameHandler) CreateGame(
 		return nil, connect.NewError(connect.CodeInvalidArgument, nil)
 	}
 
+	status := msg.GetStatus()
+	if status == "" {
+		status = model.GamePlayed
+	}
+	if err := model.ValidateGameLifecycle(status, msg.Platform, msg.TargetPriceInr); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
 	p := dao.CreateGameParams{
-		Title:       msg.Title,
-		Studio:      msg.Studio,
-		Rating:      int16PtrFromInt32(msg.Rating),
-		Review:      msg.Review,
-		CoverImage:  msg.CoverImage,
-		YearsPlayed: int16SliceFromInt32(msg.YearsPlayed),
+		Title:          msg.Title,
+		Studio:         msg.Studio,
+		Rating:         int16PtrFromInt32(msg.Rating),
+		Review:         msg.Review,
+		CoverImage:     msg.CoverImage,
+		YearsPlayed:    int16SliceFromInt32(msg.YearsPlayed),
+		Status:         status,
+		Platform:       msg.Platform,
+		TargetPriceINR: msg.TargetPriceInr,
 	}
 
 	game, err := h.svc.CreateGame(ctx, p)
@@ -96,6 +111,12 @@ func (h *gameHandler) UpdateGame(
 		CoverImage:  msg.CoverImage,
 		YearsPlayed: int16SliceFromInt32(msg.YearsPlayed),
 	}
+	if msg.Status != nil {
+		if err := model.ValidateGameLifecycle(msg.GetStatus(), msg.Platform, msg.TargetPriceInr); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
+		p.Lifecycle = &dao.GameLifecycle{Status: msg.GetStatus(), Platform: msg.Platform, TargetPriceINR: msg.TargetPriceInr}
+	}
 
 	game, err := h.svc.UpdateGame(ctx, p)
 	if err != nil {
@@ -126,11 +147,14 @@ func mapGames(games []model.VideoGame) []*gamesv1.VideoGame {
 
 func mapGame(g *model.VideoGame) *gamesv1.VideoGame {
 	pb := &gamesv1.VideoGame{
-		Id:          g.ID.String(),
-		Title:       g.Title,
-		YearsPlayed: int32SliceFromInt16(g.YearsPlayed),
-		CreatedAt:   g.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   g.UpdatedAt.Format(time.RFC3339),
+		Id:             g.ID.String(),
+		Title:          g.Title,
+		YearsPlayed:    int32SliceFromInt16(g.YearsPlayed),
+		Status:         g.Status,
+		Platform:       g.Platform,
+		TargetPriceInr: g.TargetPriceINR,
+		CreatedAt:      g.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:      g.UpdatedAt.Format(time.RFC3339),
 	}
 	if g.Studio != nil {
 		pb.Studio = g.Studio

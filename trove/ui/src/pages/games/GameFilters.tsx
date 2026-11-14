@@ -10,6 +10,8 @@ interface GameFiltersProps {
   onAdd: () => void
   onClear: () => void
   hasFilters: boolean
+  /** Year filter and year sorts only apply to played games. */
+  showYears: boolean
 }
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -20,7 +22,7 @@ export default function GameFilters({
   search, onSearch,
   yearPlayed, onYearPlayed,
   sort, onSort,
-  onAdd, onClear, hasFilters,
+  onAdd, onClear, hasFilters, showYears,
 }: GameFiltersProps) {
   return (
     <Stack gap={5} h="full">
@@ -44,26 +46,28 @@ export default function GameFilters({
         />
       </Box>
 
-      <Box>
-        <Text fontSize="xs" fontWeight="600" color="text.secondary" mb={1.5} letterSpacing="0.04em" textTransform="uppercase">
-          Year Played
-        </Text>
-        <NativeSelect.Root size="sm" w="full">
-          <NativeSelect.Field
-            value={yearPlayed ?? ''}
-            onChange={e => onYearPlayed(e.target.value ? Number(e.target.value) : undefined)}
-            bg="bg.surface"
-            borderColor="border.default"
-            borderRadius="7px"
-          >
-            <option value="">All years</option>
-            {YEAR_OPTIONS.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
-      </Box>
+      {showYears && (
+        <Box>
+          <Text fontSize="xs" fontWeight="600" color="text.secondary" mb={1.5} letterSpacing="0.04em" textTransform="uppercase">
+            Year Played
+          </Text>
+          <NativeSelect.Root size="sm" w="full">
+            <NativeSelect.Field
+              value={yearPlayed ?? ''}
+              onChange={e => onYearPlayed(e.target.value ? Number(e.target.value) : undefined)}
+              bg="bg.surface"
+              borderColor="border.default"
+              borderRadius="7px"
+            >
+              <option value="">All years</option>
+              {YEAR_OPTIONS.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Box>
+      )}
 
       <Box>
         <Text fontSize="xs" fontWeight="600" color="text.secondary" mb={1.5} letterSpacing="0.04em" textTransform="uppercase">
@@ -79,8 +83,14 @@ export default function GameFilters({
           >
             <option value="title_asc">Title: A → Z</option>
             <option value="title_desc">Title: Z → A</option>
-            <option value="year_desc">Year: Newest first</option>
-            <option value="year_asc">Year: Oldest first</option>
+            {showYears ? (
+              <>
+                <option value="year_desc">Year: Newest first</option>
+                <option value="year_asc">Year: Oldest first</option>
+              </>
+            ) : (
+              <option value="added_desc">Recently added</option>
+            )}
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>

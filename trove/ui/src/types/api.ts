@@ -31,6 +31,9 @@ export interface BookFormData {
   tagIds: string[]
 }
 
+export type GameStatus = 'wishlist' | 'owned' | 'played' | 'dropped'
+export type GamePlatform = 'pc' | 'ps5' | 'switch2'
+
 export interface VideoGameFormData {
   title: string
   studio?: string
@@ -38,6 +41,9 @@ export interface VideoGameFormData {
   review?: string
   coverImage?: string
   yearsPlayed: number[]
+  status: GameStatus
+  platform?: GamePlatform
+  targetPriceInr?: number
 }
 
 export interface TravelLocationFormData {
@@ -56,6 +62,9 @@ export interface VideoGame {
   review?: string
   coverImage?: string
   yearsPlayed: number[]
+  status: GameStatus
+  platform?: GamePlatform
+  targetPriceInr?: number
   createdAt: string
   updatedAt: string
 }

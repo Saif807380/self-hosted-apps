@@ -5,6 +5,7 @@ import type {
   ExerciseRecord, WorkoutLogRecord,
 } from './db'
 import { rpc } from '@/services/client'
+import type { GameStatus, GamePlatform } from '@/types/api'
 import { pushImages, pullImages } from './image-sync'
 
 const SVC = 'trove.v1.sync.SyncService'
@@ -41,6 +42,7 @@ interface PullCollection { id: string; name: string; updatedAt: string; deleted:
 interface PullVideoGame {
   id: string; title: string; studio?: string; rating?: number; review?: string
   coverImage?: string; yearsPlayed?: number[]; createdAt: string; updatedAt: string; deleted: boolean
+  status?: GameStatus; platform?: GamePlatform; targetPriceInr?: number
 }
 interface PullTravelLocation {
   id: string; city: string; country: string; visitedFrom?: string; visitedTo?: string
@@ -101,6 +103,7 @@ export async function pull(): Promise<string> {
           id: g.id, title: g.title, studio: g.studio, rating: g.rating,
           review: g.review, coverImage: g.coverImage,
           yearsPlayed: g.yearsPlayed ?? [],
+          status: g.status ?? 'played', platform: g.platform, targetPriceInr: g.targetPriceInr,
           createdAt: g.createdAt, updatedAt: g.updatedAt, deleted: g.deleted,
         })))
       }

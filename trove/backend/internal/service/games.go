@@ -20,7 +20,7 @@ type GameService struct {
 }
 
 func (s *GameService) ListGames(ctx context.Context, f dao.GameFilter) ([]model.VideoGame, error) {
-	cacheKey := fmt.Sprintf("trove:games:list:%s:%d", f.Search, f.YearPlayed)
+	cacheKey := fmt.Sprintf("trove:games:list:%s:%d:%s", f.Search, f.YearPlayed, f.Status)
 
 	if cached, err := s.redis.Get(ctx, cacheKey).Bytes(); err == nil {
 		var games []model.VideoGame

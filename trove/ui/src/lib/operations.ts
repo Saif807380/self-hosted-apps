@@ -4,6 +4,7 @@ import type {
   TravelLocationRecord, TouristSpotRecord, WorkoutTypeRecord,
   ExerciseRecord, WorkoutLogRecord,
 } from './db'
+import type { GameStatus, VideoGameFormData } from '@/types/api'
 
 const now = () => new Date().toISOString()
 const uuid = () => crypto.randomUUID()
@@ -103,17 +104,21 @@ export async function removeFromCollection(collectionId: string, bookId: string)
 
 // ── Video Games ──
 
-export async function createGame(data: {
-  title: string; studio?: string; rating?: number; review?: string;
-  coverImage?: string; yearsPlayed: number[]
-}): Promise<VideoGameRecord> {
+type GameData = VideoGameFormData
+
+function gameFields(data: GameData) {
+  return {
+    title: data.title, studio: data.studio,
+    rating: data.rating, review: data.review, coverImage: data.coverImage,
+    yearsPlayed: data.yearsPlayed, status: data.status,
+    platform: data.platform, targetPriceInr: data.targetPriceInr,
+  }
+}
+
+export async function createGame(data: GameData): Promise<VideoGameRecord> {
   const id = uuid()
   const ts = now()
-  const game: VideoGameRecord = {
-    id, title: data.title, studio: data.studio,
-    rating: data.rating, review: data.review, coverImage: data.coverImage,
-    yearsPlayed: data.yearsPlayed, createdAt: ts, updatedAt: ts, deleted: false,
-  }
+  const game: VideoGameRecord = { id, ...gameFields(data), createdAt: ts, updatedAt: ts, deleted: false }
   await db.transaction('rw', [db.videoGames, db.gameYearsPlayed, db.syncOutbox], async () => {
     await db.videoGames.put(game)
     await db.gameYearsPlayed.bulkPut(data.yearsPlayed.map(year => ({ gameId: id, year })))
@@ -122,17 +127,10 @@ export async function createGame(data: {
   return game
 }
 
-export async function updateGame(id: string, data: {
-  title: string; studio?: string; rating?: number; review?: string;
-  coverImage?: string; yearsPlayed: number[]
-}): Promise<VideoGameRecord> {
+export async function updateGame(id: string, data: GameData): Promise<VideoGameRecord> {
   const existing = await db.videoGames.get(id)
   if (!existing) throw new Error('Game not found')
-  const game: VideoGameRecord = {
-    ...existing, title: data.title, studio: data.studio,
-    rating: data.rating, review: data.review, coverImage: data.coverImage,
-    yearsPlayed: data.yearsPlayed, updatedAt: now(), deleted: false,
-  }
+  const game: VideoGameRecord = { ...existing, ...gameFields(data), updatedAt: now(), deleted: false }
   await db.transaction('rw', [db.videoGames, db.gameYearsPlayed, db.syncOutbox], async () => {
     await db.videoGames.put(game)
     await db.gameYearsPlayed.where('gameId').equals(id).delete()
@@ -140,6 +138,18 @@ export async function updateGame(id: string, data: {
     await enqueue('videoGames', id)
   })
   return game
+}
+
+// setGameStatus moves a game through the lifecycle without touching anything
+// else. A target price only means something on the wishlist, so it's cleared
+// once the game leaves it.
+export async function setGameStatus(id: string, status: GameStatus): Promise<void> {
+  await db.transaction('rw', [db.videoGames, db.syncOutbox], async () => {
+    const changes: Partial<VideoGameRecord> = { status, updatedAt: now() }
+    if (status !== 'wishlist') changes.targetPriceInr = undefined
+    await db.videoGames.update(id, changes)
+    await enqueue('videoGames', id)
+  })
 }
 
 export async function deleteGame(id: string): Promise<void> {

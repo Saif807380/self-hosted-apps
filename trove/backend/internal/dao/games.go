@@ -17,6 +17,7 @@ type GameStore struct {
 type GameFilter struct {
 	Search     string
 	YearPlayed int32
+	Status     string // empty means every status
 }
 
 func (s *GameStore) List(ctx context.Context, f GameFilter) ([]model.VideoGame, error) {
@@ -32,9 +33,14 @@ func (s *GameStore) List(ctx context.Context, f GameFilter) ([]model.VideoGame, 
 	if f.YearPlayed != 0 {
 		where += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM game_years_played gyp WHERE gyp.game_id = g.id AND gyp.year = $%d)", idx)
 		args = append(args, f.YearPlayed)
+		idx++
+	}
+	if f.Status != "" {
+		where += fmt.Sprintf(" AND g.status = $%d", idx)
+		args = append(args, f.Status)
 	}
 
-	sql := "SELECT g.id, g.title, g.studio, g.rating, g.review, g.cover_image, g.deleted, g.created_at, g.updated_at FROM video_games g" + where + " ORDER BY g.title"
+	sql := "SELECT " + model.VideoGameColumns + " FROM video_games g" + where + " ORDER BY g.title"
 	rows, err := s.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list games: %w", err)
@@ -58,7 +64,7 @@ func (s *GameStore) List(ctx context.Context, f GameFilter) ([]model.VideoGame, 
 }
 
 func (s *GameStore) Get(ctx context.Context, id uuid.UUID) (*model.VideoGame, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, title, studio, rating, review, cover_image, deleted, created_at, updated_at FROM video_games WHERE id = $1 AND deleted = false", id)
+	rows, err := s.db.Query(ctx, "SELECT "+model.VideoGameColumns+" FROM video_games WHERE id = $1 AND deleted = false", id)
 	if err != nil {
 		return nil, fmt.Errorf("get game: %w", err)
 	}
@@ -75,12 +81,15 @@ func (s *GameStore) Get(ctx context.Context, id uuid.UUID) (*model.VideoGame, er
 }
 
 type CreateGameParams struct {
-	Title       string
-	Studio      *string
-	Rating      *int16
-	Review      *string
-	CoverImage  *string
-	YearsPlayed []int16
+	Title          string
+	Studio         *string
+	Rating         *int16
+	Review         *string
+	CoverImage     *string
+	YearsPlayed    []int16
+	Status         string // required; the service defaults it
+	Platform       *string
+	TargetPriceINR *int32
 }
 
 func (s *GameStore) Create(ctx context.Context, p CreateGameParams) (*model.VideoGame, error) {
@@ -91,8 +100,8 @@ func (s *GameStore) Create(ctx context.Context, p CreateGameParams) (*model.Vide
 	defer tx.Rollback(ctx) //nolint:errcheck
 
 	rows, err := tx.Query(ctx,
-		"INSERT INTO video_games (title, studio, rating, review, cover_image) VALUES ($1, $2, $3, $4, $5) RETURNING id, title, studio, rating, review, cover_image, deleted, created_at, updated_at",
-		p.Title, p.Studio, p.Rating, p.Review, p.CoverImage,
+		"INSERT INTO video_games (title, studio, rating, review, cover_image, status, platform, target_price_inr) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "+model.VideoGameColumns,
+		p.Title, p.Studio, p.Rating, p.Review, p.CoverImage, p.Status, p.Platform, p.TargetPriceINR,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("insert game: %w", err)
@@ -122,6 +131,16 @@ type UpdateGameParams struct {
 	Review      *string
 	CoverImage  *string
 	YearsPlayed []int16
+	// Lifecycle is nil for clients that don't send a status; the stored
+	// status, platform and target price are then left alone.
+	Lifecycle *GameLifecycle
+}
+
+// GameLifecycle is the set of fields that only lifecycle-aware clients send.
+type GameLifecycle struct {
+	Status         string
+	Platform       *string
+	TargetPriceINR *int32
 }
 
 func (s *GameStore) Update(ctx context.Context, p UpdateGameParams) (*model.VideoGame, error) {
@@ -131,9 +150,19 @@ func (s *GameStore) Update(ctx context.Context, p UpdateGameParams) (*model.Vide
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
+	var status, platform, target any
+	if p.Lifecycle != nil {
+		status, platform, target = p.Lifecycle.Status, p.Lifecycle.Platform, p.Lifecycle.TargetPriceINR
+	}
+	// $7 IS NULL marks a client without lifecycle fields: keep what's stored.
 	rows, err := tx.Query(ctx,
-		"UPDATE video_games SET title=$2, studio=$3, rating=$4, review=$5, cover_image=$6, updated_at=now() WHERE id=$1 RETURNING id, title, studio, rating, review, cover_image, deleted, created_at, updated_at",
-		p.ID, p.Title, p.Studio, p.Rating, p.Review, p.CoverImage,
+		`UPDATE video_games SET title=$2, studio=$3, rating=$4, review=$5, cover_image=$6,
+			status = COALESCE($7::text, status),
+			platform = CASE WHEN $7::text IS NULL THEN platform ELSE $8 END,
+			target_price_inr = CASE WHEN $7::text IS NULL THEN target_price_inr ELSE $9 END,
+			updated_at=now()
+		WHERE id=$1 RETURNING `+model.VideoGameColumns,
+		p.ID, p.Title, p.Studio, p.Rating, p.Review, p.CoverImage, status, platform, target,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("update game: %w", err)

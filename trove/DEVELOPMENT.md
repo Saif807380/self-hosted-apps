@@ -33,7 +33,9 @@ Starts Postgres 16 and Redis 7 via podman in host-networking mode.
 
 ### 3. Apply database migrations
 
-Run once on a fresh database (or after adding new migration files):
+Run once on a fresh database. On an existing database, apply only the files
+added since it was last migrated (002 fails if run twice; 003 onwards are safe
+to re-run):
 
 ```bash
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
@@ -41,6 +43,13 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/002_workout_log_unique.sql
+
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/003_sync_schema.sql
+
+# Game lifecycle: status (wishlist/owned/played/dropped), platform, target price
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/004_game_status.sql
 ```
 
 ### 4. Start the backend

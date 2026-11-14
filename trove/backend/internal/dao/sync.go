@@ -54,7 +54,7 @@ func (s *SyncStore) GetChangesSince(ctx context.Context, since time.Time) (*mode
 	}
 
 	cs.VideoGames, err = collectAll[model.VideoGame](ctx, s.db,
-		"SELECT id, title, studio, rating, review, cover_image, deleted, created_at, updated_at FROM video_games WHERE updated_at > $1", since)
+		"SELECT "+model.VideoGameColumns+" FROM video_games WHERE updated_at > $1", since)
 	if err != nil {
 		return nil, fmt.Errorf("sync video_games: %w", err)
 	}
@@ -280,14 +280,22 @@ func upsertBook(ctx context.Context, tx pgx.Tx, b model.Book) error {
 	return err
 }
 
+// upsertVideoGame applies a pushed game. A record with an empty Status comes
+// from a client that predates the game lifecycle: it inserts as played and,
+// on update, keeps the stored status, platform and target price.
 func upsertVideoGame(ctx context.Context, tx pgx.Tx, g model.VideoGame) error {
 	_, err := tx.Exec(ctx, `
-		INSERT INTO video_games (id, title, studio, rating, review, cover_image, deleted, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO video_games (id, title, studio, rating, review, cover_image, deleted, created_at, updated_at,
+			status, platform, target_price_inr)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE(NULLIF($10::text, ''), 'played'), $11, $12)
 		ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, studio = EXCLUDED.studio, rating = EXCLUDED.rating,
-			review = EXCLUDED.review, cover_image = EXCLUDED.cover_image, deleted = EXCLUDED.deleted, updated_at = EXCLUDED.updated_at
+			review = EXCLUDED.review, cover_image = EXCLUDED.cover_image, deleted = EXCLUDED.deleted, updated_at = EXCLUDED.updated_at,
+			status = CASE WHEN $10::text = '' THEN video_games.status ELSE EXCLUDED.status END,
+			platform = CASE WHEN $10::text = '' THEN video_games.platform ELSE EXCLUDED.platform END,
+			target_price_inr = CASE WHEN $10::text = '' THEN video_games.target_price_inr ELSE EXCLUDED.target_price_inr END
 		WHERE EXCLUDED.updated_at > video_games.updated_at`,
-		g.ID, g.Title, g.Studio, g.Rating, g.Review, g.CoverImage, g.Deleted, g.CreatedAt, g.UpdatedAt)
+		g.ID, g.Title, g.Studio, g.Rating, g.Review, g.CoverImage, g.Deleted, g.CreatedAt, g.UpdatedAt,
+		g.Status, g.Platform, g.TargetPriceINR)
 	return err
 }
 

@@ -34,18 +34,41 @@ type Collection struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
 }
 
+// VideoGame is any game you care about: wishlisted, owned, played or dropped.
 type VideoGame struct {
-	ID          uuid.UUID `db:"id"          json:"id"`
-	Title       string    `db:"title"       json:"title"`
-	Studio      *string   `db:"studio"      json:"studio,omitempty"`
-	Rating      *int16    `db:"rating"      json:"rating,omitempty"`
-	Review      *string   `db:"review"      json:"review,omitempty"`
-	CoverImage  *string   `db:"cover_image" json:"coverImage,omitempty"`
-	YearsPlayed []int16   `db:"-"           json:"yearsPlayed"`
-	Deleted     bool      `db:"deleted"     json:"deleted"`
-	CreatedAt   time.Time `db:"created_at"  json:"createdAt"`
-	UpdatedAt   time.Time `db:"updated_at"  json:"updatedAt"`
+	ID             uuid.UUID `db:"id"               json:"id"`
+	Title          string    `db:"title"            json:"title"`
+	Studio         *string   `db:"studio"           json:"studio,omitempty"`
+	Rating         *int16    `db:"rating"           json:"rating,omitempty"`
+	Review         *string   `db:"review"           json:"review,omitempty"`
+	CoverImage     *string   `db:"cover_image"      json:"coverImage,omitempty"`
+	YearsPlayed    []int16   `db:"-"                json:"yearsPlayed"`
+	Status         string    `db:"status"           json:"status"`                   // one of GameStatuses
+	Platform       *string   `db:"platform"         json:"platform,omitempty"`       // one of GamePlatforms
+	TargetPriceINR *int32    `db:"target_price_inr" json:"targetPriceInr,omitempty"` // alert threshold, whole rupees
+	Deleted        bool      `db:"deleted"          json:"deleted"`
+	CreatedAt      time.Time `db:"created_at"       json:"createdAt"`
+	UpdatedAt      time.Time `db:"updated_at"       json:"updatedAt"`
 }
+
+// Game lifecycle statuses. A game starts on the wishlist, becomes owned when
+// bought, and played once finished; dropped is for games you lost interest in.
+const (
+	GameWishlist = "wishlist"
+	GameOwned    = "owned"
+	GamePlayed   = "played"
+	GameDropped  = "dropped"
+)
+
+// GameStatuses and GamePlatforms are the values the database accepts.
+var (
+	GameStatuses  = map[string]bool{GameWishlist: true, GameOwned: true, GamePlayed: true, GameDropped: true}
+	GamePlatforms = map[string]bool{"pc": true, "ps5": true, "switch2": true}
+)
+
+// VideoGameColumns is the column list every query that scans into VideoGame
+// selects, so the struct and the queries can't drift apart.
+const VideoGameColumns = "id, title, studio, rating, review, cover_image, status, platform, target_price_inr, deleted, created_at, updated_at"
 
 type TravelLocation struct {
 	ID                 uuid.UUID     `db:"id"                   json:"id"`

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import type { FormEvent, KeyboardEvent, ChangeEvent } from 'react'
 import {
-  Dialog, Portal, Button, Input, Textarea, Stack, Flex, Box, Text, Spinner, CloseButton,
+  Dialog, Portal, Button, Input, Textarea, Stack, Flex, Box, Text, Spinner, CloseButton, NativeSelect,
 } from '@chakra-ui/react'
-import type { VideoGame, VideoGameFormData } from '@/types/api'
+import type { GamePlatform, GameStatus, VideoGame, VideoGameFormData } from '@/types/api'
+import { PLATFORM_LABELS, STATUS_TABS } from './lifecycle'
 import StarRating from '@/components/StarRating'
 import { uploadFile } from '@/services/upload'
 import { useImageUrl } from '@/hooks/useImageUrl'
@@ -13,6 +14,8 @@ interface GameFormProps {
   onClose: () => void
   onSubmit: (data: VideoGameFormData) => Promise<void>
   editGame?: VideoGame | null
+  /** Status for a new game, normally the tab it's added from. */
+  defaultStatus: GameStatus
 }
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -25,10 +28,16 @@ interface FormState {
   coverImage: string
   yearsPlayed: number[]
   yearInput: string
+  status: GameStatus
+  platform: GamePlatform | ''
+  targetPrice: string
 }
 
-function initState(game?: VideoGame | null): FormState {
+function initState(game: VideoGame | null | undefined, defaultStatus: GameStatus): FormState {
   return {
+    status: game?.status ?? defaultStatus,
+    platform: game?.platform ?? '',
+    targetPrice: game?.targetPriceInr ? String(game.targetPriceInr) : '',
     title: game?.title ?? '',
     studio: game?.studio ?? '',
     rating: game?.rating ?? 0,
@@ -39,10 +48,10 @@ function initState(game?: VideoGame | null): FormState {
   }
 }
 
-const EMPTY_ERRORS = { title: '', yearsPlayed: '' }
+const EMPTY_ERRORS = { title: '', yearsPlayed: '', targetPrice: '' }
 
-export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFormProps) {
-  const [state, setState] = useState<FormState>(() => initState(editGame))
+export default function GameForm({ isOpen, onClose, onSubmit, editGame, defaultStatus }: GameFormProps) {
+  const [state, setState] = useState<FormState>(() => initState(editGame, defaultStatus))
   const [errors, setErrors] = useState(EMPTY_ERRORS)
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -51,12 +60,12 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
 
   useEffect(() => {
     if (isOpen) {
-      setState(initState(editGame))
+      setState(initState(editGame, defaultStatus))
       setErrors(EMPTY_ERRORS)
       setUploading(false)
       setSubmitting(false)
     }
-  }, [isOpen, editGame])
+  }, [isOpen, editGame, defaultStatus])
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setState(prev => ({ ...prev, [key]: value }))
@@ -96,13 +105,19 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
   const removeYear = (year: number) =>
     setState(prev => ({ ...prev, yearsPlayed: prev.yearsPlayed.filter(y => y !== year) }))
 
+  const isPlayed = state.status === 'played'
+  const isWishlist = state.status === 'wishlist'
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (submitting) return
 
+    const targetPrice = state.targetPrice.trim() ? Number(state.targetPrice) : undefined
     const newErrors = {
       title: state.title.trim() ? '' : 'Title is required',
-      yearsPlayed: state.yearsPlayed.length > 0 ? '' : 'At least one year is required',
+      yearsPlayed: !isPlayed || state.yearsPlayed.length > 0 ? '' : 'At least one year is required',
+      targetPrice: !isWishlist || targetPrice === undefined || (Number.isInteger(targetPrice) && targetPrice > 0)
+        ? '' : 'Enter a whole number of rupees',
     }
     if (Object.values(newErrors).some(Boolean)) {
       setErrors(newErrors)
@@ -118,13 +133,17 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
         review: state.review.trim() || undefined,
         coverImage: state.coverImage || undefined,
         yearsPlayed: state.yearsPlayed,
+        status: state.status,
+        platform: state.platform || undefined,
+        // A target only applies while the game is on the wishlist.
+        targetPriceInr: isWishlist ? targetPrice : undefined,
       })
     } finally {
       setSubmitting(false)
     }
   }
 
-  const isEdit = !!editGame
+  const isEdit = !!editGame?.id
 
   return (
     <Dialog.Root
@@ -153,6 +172,24 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
 
               <Dialog.Body py={5}>
                 <Stack gap={5}>
+                  {/* Status */}
+                  <Flex gap={1.5} wrap="wrap" role="radiogroup" aria-label="Status">
+                    {STATUS_TABS.map(t => (
+                      <Button
+                        key={t.status}
+                        type="button"
+                        size="xs"
+                        role="radio"
+                        aria-checked={state.status === t.status}
+                        variant={state.status === t.status ? 'solid' : 'outline'}
+                        borderRadius="7px"
+                        onClick={() => set('status', t.status)}
+                      >
+                        {t.icon} {t.label}
+                      </Button>
+                    ))}
+                  </Flex>
+
                   {/* Cover + title + studio */}
                   <Flex gap={4} align="stretch">
                     <Box
@@ -226,80 +263,127 @@ export default function GameForm({ isOpen, onClose, onSubmit, editGame }: GameFo
                     </Stack>
                   </Flex>
 
-                  {/* Rating */}
-                  <Box>
-                    <Text fontSize="xs" color="text.secondary" mb={1.5} fontWeight="500">
-                      Rating
-                    </Text>
-                    <StarRating value={state.rating} onChange={v => set('rating', v)} size="lg" />
-                  </Box>
-
-                  {/* Years played */}
-                  <Box>
-                    <Text fontSize="xs" color="text.secondary" mb={1.5} fontWeight="500">
-                      Played in <span style={{ color: 'var(--chakra-colors-accent)' }}>*</span>
-                    </Text>
-                    {state.yearsPlayed.length > 0 && (
-                      <Flex gap={1.5} wrap="wrap" mb={2}>
-                        {state.yearsPlayed.map(year => (
-                          <Box
-                            key={year}
-                            display="inline-flex"
-                            alignItems="center"
-                            gap={1}
-                            px={2}
-                            py="3px"
-                            borderRadius="6px"
-                            fontSize="xs"
-                            fontWeight="500"
-                            bg="bg.subtle"
-                            color="text.secondary"
-                          >
-                            {year}
-                            <button
-                              type="button"
-                              onClick={() => removeYear(year)}
-                              style={{
-                                background: 'none', border: 'none', cursor: 'pointer',
-                                padding: 0, lineHeight: 1, color: 'inherit',
-                                opacity: 0.6, fontSize: '1em',
-                              }}
-                              aria-label={`Remove ${year}`}
-                            >
-                              ×
-                            </button>
-                          </Box>
-                        ))}
-                      </Flex>
+                  {/* Platform + target price */}
+                  <Flex gap={3} wrap="wrap">
+                    <Box flex="1" minW="140px">
+                      <Text fontSize="xs" color="text.secondary" mb={1} fontWeight="500">
+                        {isWishlist ? 'Planning to buy on' : 'Platform'}
+                      </Text>
+                      <NativeSelect.Root size="sm">
+                        <NativeSelect.Field
+                          value={state.platform}
+                          onChange={e => set('platform', e.target.value as GamePlatform | '')}
+                          bg="bg.surface"
+                          borderRadius="7px"
+                        >
+                          <option value="">Not decided</option>
+                          {(Object.keys(PLATFORM_LABELS) as GamePlatform[]).map(p => (
+                            <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
+                          ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                      </NativeSelect.Root>
+                    </Box>
+                    {isWishlist && (
+                      <Box flex="1" minW="140px">
+                        <Text fontSize="xs" color="text.secondary" mb={1} fontWeight="500">
+                          Alert me below (₹)
+                        </Text>
+                        <Input
+                          size="sm"
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          value={state.targetPrice}
+                          onChange={e => { set('targetPrice', e.target.value); if (errors.targetPrice) setErrors(prev => ({ ...prev, targetPrice: '' })) }}
+                          placeholder="Any sale"
+                          bg="bg.surface"
+                          borderRadius="7px"
+                          borderColor={errors.targetPrice ? 'red.400' : undefined}
+                        />
+                        {errors.targetPrice && <Text fontSize="xs" color="red.500" mt={1}>{errors.targetPrice}</Text>}
+                      </Box>
                     )}
-                    <Input
-                      size="sm"
-                      type="number"
-                      value={state.yearInput}
-                      onChange={e => { set('yearInput', e.target.value); if (errors.yearsPlayed) setErrors(prev => ({ ...prev, yearsPlayed: '' })) }}
-                      onKeyDown={handleYearKeyDown}
-                      onBlur={addYearFromInput}
-                      placeholder={`e.g. ${CURRENT_YEAR} — press Enter to add`}
-                      min={1970}
-                      max={CURRENT_YEAR + 1}
-                      bg="bg.surface"
-                      borderRadius="7px"
-                      maxW="280px"
-                      borderColor={errors.yearsPlayed ? 'red.400' : undefined}
-                    />
-                    {errors.yearsPlayed && <Text fontSize="xs" color="red.500" mt={1}>{errors.yearsPlayed}</Text>}
-                  </Box>
+                  </Flex>
+
+                  {isPlayed && (
+                    <>
+                      {/* Rating */}
+                      <Box>
+                        <Text fontSize="xs" color="text.secondary" mb={1.5} fontWeight="500">
+                          Rating
+                        </Text>
+                        <StarRating value={state.rating} onChange={v => set('rating', v)} size="lg" />
+                      </Box>
+
+                      {/* Years played */}
+                      <Box>
+                        <Text fontSize="xs" color="text.secondary" mb={1.5} fontWeight="500">
+                          Played in <span style={{ color: 'var(--chakra-colors-accent)' }}>*</span>
+                        </Text>
+                        {state.yearsPlayed.length > 0 && (
+                          <Flex gap={1.5} wrap="wrap" mb={2}>
+                            {state.yearsPlayed.map(year => (
+                              <Box
+                                key={year}
+                                display="inline-flex"
+                                alignItems="center"
+                                gap={1}
+                                px={2}
+                                py="3px"
+                                borderRadius="6px"
+                                fontSize="xs"
+                                fontWeight="500"
+                                bg="bg.subtle"
+                                color="text.secondary"
+                              >
+                                {year}
+                                <button
+                                  type="button"
+                                  onClick={() => removeYear(year)}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    padding: 0, lineHeight: 1, color: 'inherit',
+                                    opacity: 0.6, fontSize: '1em',
+                                  }}
+                                  aria-label={`Remove ${year}`}
+                                >
+                                  ×
+                                </button>
+                              </Box>
+                            ))}
+                          </Flex>
+                        )}
+                        <Input
+                          size="sm"
+                          type="number"
+                          value={state.yearInput}
+                          onChange={e => { set('yearInput', e.target.value); if (errors.yearsPlayed) setErrors(prev => ({ ...prev, yearsPlayed: '' })) }}
+                          onKeyDown={handleYearKeyDown}
+                          onBlur={addYearFromInput}
+                          placeholder={`e.g. ${CURRENT_YEAR} — press Enter to add`}
+                          min={1970}
+                          max={CURRENT_YEAR + 1}
+                          bg="bg.surface"
+                          borderRadius="7px"
+                          maxW="280px"
+                          borderColor={errors.yearsPlayed ? 'red.400' : undefined}
+                        />
+                        {errors.yearsPlayed && <Text fontSize="xs" color="red.500" mt={1}>{errors.yearsPlayed}</Text>}
+                      </Box>
+                    </>
+                  )}
 
                   {/* Review */}
                   <Box>
                     <Text fontSize="xs" color="text.secondary" mb={1.5} fontWeight="500">
-                      Review (optional)
+                      {isPlayed ? 'Review (optional)' : 'Notes (optional)'}
                     </Text>
                     <Textarea
                       size="sm"
                       value={state.review}
                       onChange={e => set('review', e.target.value)}
-                      placeholder="Your thoughts on the game…"
+                      placeholder={isPlayed ? 'Your thoughts on the game…' : 'Why it caught your eye…'}
                       rows={3}
                       bg="bg.surface"
                       borderRadius="7px"
