@@ -159,6 +159,42 @@ message ListDealsResponse {
   double        usd_to_inr = 2; // 0 if not fetched yet
 }
 
+message ListPicksRequest {}
+
+// A game on sale this week that you'd probably like.
+message Pick {
+  string          id           = 1;
+  int64           igdb_id      = 2;
+  string          title        = 3;
+  int32           year         = 4; // 0 when unknown
+  string          cover_url    = 5;
+  string          pitch        = 6; // why you'd like it
+  string          store        = 7; // steam | eshop
+  string          edition      = 8;
+  string          url          = 9;
+  string          currency     = 10;
+  int64           base_minor   = 11;
+  int64           final_minor  = 12;
+  int32           discount_pct = 13;
+  optional string sale_ends_at = 14;
+}
+
+message ListPicksResponse {
+  repeated Pick picks = 1; // best first; ones you acted on or whose sale ended are left out
+  string        week  = 2; // YYYY-MM-DD, the Sunday they were made; empty before the first run
+}
+
+// action: wishlist | own (adds the game to Trove) | dismiss ("not for me",
+// which also counts against similar games in later picks).
+message UpdatePickRequest {
+  string id     = 1;
+  string action = 2;
+}
+
+message UpdatePickResponse {
+  string video_game_id = 1; // the game added, for wishlist and own
+}
+
 service GamingService {
   rpc SearchCatalog   (SearchCatalogRequest)   returns (SearchCatalogResponse);
   rpc LinkGame        (LinkGameRequest)        returns (LinkGameResponse);
@@ -166,6 +202,8 @@ service GamingService {
   rpc SetPsnLink      (SetPsnLinkRequest)      returns (SetPsnLinkResponse);
   rpc GetGameInsights (GetGameInsightsRequest) returns (GetGameInsightsResponse);
   rpc ListDeals       (ListDealsRequest)       returns (ListDealsResponse);
+  rpc ListPicks       (ListPicksRequest)       returns (ListPicksResponse);
+  rpc UpdatePick      (UpdatePickRequest)      returns (UpdatePickResponse);
   rpc GetPushConfig   (GetPushConfigRequest)   returns (GetPushConfigResponse);
   rpc SubscribePush   (SubscribePushRequest)   returns (SubscribePushResponse);
   rpc UnsubscribePush (UnsubscribePushRequest) returns (UnsubscribePushResponse);

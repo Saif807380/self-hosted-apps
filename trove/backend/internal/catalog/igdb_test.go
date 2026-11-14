@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // fakeIGDB serves a token endpoint and a games endpoint backed by a fixture.
@@ -44,7 +45,7 @@ func fakeIGDB(t *testing.T, fixture string, expireFirst bool) (*Client, *atomic.
 		}
 	}))
 	t.Cleanup(srv.Close)
-	return &Client{ClientID: "id", ClientSecret: "secret", BaseURL: srv.URL, TokenURL: srv.URL + "/token"}, &tokens
+	return &Client{ClientID: "id", ClientSecret: "secret", BaseURL: srv.URL, TokenURL: srv.URL + "/token", RequestGap: time.Nanosecond}, &tokens
 }
 
 func TestSearchRanksExactTitleFirst(t *testing.T) {
@@ -122,7 +123,7 @@ func TestEnsureSteamAppID(t *testing.T) {
 		w.Write([]byte(`[{"id":144024,"name":"Final Fantasy VII Remake Intergrade","external_games":[{"external_game_source":1,"uid":"1462040"}]}]`)) //nolint:errcheck
 	}))
 	defer srv.Close()
-	c := &Client{ClientID: "id", ClientSecret: "s", BaseURL: srv.URL, TokenURL: srv.URL + "/token"}
+	c := &Client{ClientID: "id", ClientSecret: "s", BaseURL: srv.URL, TokenURL: srv.URL + "/token", RequestGap: time.Nanosecond}
 
 	g, err := c.EnsureSteamAppID(context.Background(), Game{
 		IGDBID: 11169, Title: "Final Fantasy VII Remake", Platforms: []int{PlatformPS4, PlatformPC}, BundleIDs: []int64{133299, 144024},
@@ -142,6 +143,34 @@ func TestEnsureSteamAppID(t *testing.T) {
 	for _, g := range []Game{{SteamAppID: "1", Platforms: []int{PlatformPC}}, {Platforms: []int{PlatformPS5}}} {
 		if _, err := c.EnsureSteamAppID(context.Background(), g); err != nil || query != "" {
 			t.Errorf("unexpected lookup for %+v: %q", g, query)
+		}
+	}
+}
+
+func TestBySteamAppIDs(t *testing.T) {
+	var query string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			w.Write([]byte(`{"access_token":"tok","expires_in":3600}`)) //nolint:errcheck
+			return
+		}
+		b, _ := io.ReadAll(r.Body)
+		query = string(b)
+		w.Write([]byte(`[{"id":3070,"name":"Euro Truck Simulator 2","summary":"Drive across Europe.","external_games":[{"external_game_source":1,"uid":"227300"}]}]`)) //nolint:errcheck
+	}))
+	defer srv.Close()
+	c := &Client{ClientID: "id", ClientSecret: "s", BaseURL: srv.URL, TokenURL: srv.URL + "/token", RequestGap: time.Nanosecond}
+
+	games, err := c.BySteamAppIDs(context.Background(), []string{"227300", "394360"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(games) != 1 || games[0].SteamAppID != "227300" || games[0].Summary != "Drive across Europe." {
+		t.Fatalf("games = %+v", games)
+	}
+	for _, want := range []string{`external_games.uid = ("227300","394360")`, "external_game_source = 1", "game_type = (0,"} {
+		if !strings.Contains(query, want) {
+			t.Errorf("query lacks %q: %s", want, query)
 		}
 	}
 }

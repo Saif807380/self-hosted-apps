@@ -25,6 +25,11 @@ const (
 	sourceSteam = 1 // external_game_source for Steam
 
 	coverURL = "https://images.igdb.com/igdb/image/upload/t_cover_big/%s.jpg"
+
+	// requestGap keeps requests under IGDB's limit of 4 a second.
+	requestGap = 260 * time.Millisecond
+	// maxPerQuery is the most results IGDB returns for one query.
+	maxPerQuery = 500
 )
 
 // IGDB platform ids for the devices Trove cares about.
@@ -42,7 +47,7 @@ const (
 // and it's the entry that's on Steam.
 const mainGameTypes = "(0,3,4,8,9,10,11)"
 
-const gameFields = `fields name, first_release_date, cover.image_id, platforms,
+const gameFields = `fields name, summary, first_release_date, cover.image_id, platforms,
  involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
  genres.name, themes.name, keywords.name, total_rating, total_rating_count, similar_games,
  external_games.external_game_source, external_games.uid, bundles;`
@@ -51,6 +56,7 @@ const gameFields = `fields name, first_release_date, cover.image_id, platforms,
 type Game struct {
 	IGDBID      int64
 	Title       string
+	Summary     string
 	ReleaseYear int
 	CoverURL    string
 	Platforms   []int
@@ -85,10 +91,15 @@ type Client struct {
 	HTTP         *http.Client
 	BaseURL      string // overridden in tests
 	TokenURL     string // overridden in tests
+	// RequestGap spaces out requests; zero means requestGap (IGDB's limit).
+	RequestGap time.Duration
 
 	mu      sync.Mutex
 	token   string
 	expires time.Time
+
+	gate     sync.Mutex // spaces out requests (requestGap)
+	lastSent time.Time
 }
 
 // searchPool is how many IGDB results Search ranks before truncating. IGDB's
@@ -163,6 +174,28 @@ func joinIDs(ids []int64) string {
 	return strings.Join(parts, ",")
 }
 
+// BySteamAppIDs returns the games (not DLC or other editions) that IGDB
+// links to the given Steam appids. Appids IGDB doesn't know are left out.
+func (c *Client) BySteamAppIDs(ctx context.Context, appids []string) ([]Game, error) {
+	var out []Game
+	for start := 0; start < len(appids); start += maxPerQuery {
+		batch := appids[start:min(start+maxPerQuery, len(appids))]
+		quoted := make([]string, len(batch))
+		for i, id := range batch {
+			quoted[i] = strconv.Quote(id)
+		}
+		body := fmt.Sprintf(`%s where external_games.uid = (%s) & external_games.external_game_source = %d
+			& game_type = %s & version_parent = null; limit %d;`,
+			gameFields, strings.Join(quoted, ","), sourceSteam, mainGameTypes, maxPerQuery)
+		games, err := c.games(ctx, body)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, games...)
+	}
+	return out, nil
+}
+
 // Get fetches games by IGDB id.
 func (c *Client) Get(ctx context.Context, ids []int64) ([]Game, error) {
 	if len(ids) == 0 {
@@ -205,6 +238,9 @@ func (c *Client) query(ctx context.Context, endpoint, body string, out any) erro
 var errUnauthorized = errors.New("igdb: unauthorized")
 
 func (c *Client) post(ctx context.Context, endpoint, body, token string, out any) error {
+	if err := c.wait(ctx); err != nil {
+		return err
+	}
 	base := igdbURL
 	if c.BaseURL != "" {
 		base = c.BaseURL
@@ -228,6 +264,23 @@ func (c *Client) post(ctx context.Context, endpoint, body, token string, out any
 		return fmt.Errorf("igdb %s: HTTP %d: %s", endpoint, resp.StatusCode, msg)
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
+}
+
+// wait holds a request back until the request gap has passed since the last one.
+func (c *Client) wait(ctx context.Context) error {
+	c.gate.Lock()
+	defer c.gate.Unlock()
+	gap := c.RequestGap
+	if gap == 0 {
+		gap = requestGap
+	}
+	select {
+	case <-time.After(time.Until(c.lastSent.Add(gap))):
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	c.lastSent = time.Now()
+	return nil
 }
 
 func (c *Client) accessToken(ctx context.Context) (string, error) {
@@ -292,6 +345,7 @@ type named struct {
 type igdbGame struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
+	Summary  string `json:"summary"`
 	Released int64  `json:"first_release_date"`
 	Cover    *struct {
 		ImageID string `json:"image_id"`
@@ -319,6 +373,7 @@ func (g igdbGame) toGame() Game {
 	out := Game{
 		IGDBID:      g.ID,
 		Title:       g.Name,
+		Summary:     g.Summary,
 		Platforms:   g.Platforms,
 		Genres:      names(g.Genres),
 		Themes:      names(g.Themes),

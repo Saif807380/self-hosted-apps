@@ -1,7 +1,7 @@
 // Command worker runs Trove's price tracking: it links games to IGDB, finds
-// their store listings, checks prices, records sale events and makes device
-// verdicts. It runs as its own container so slow store and model calls never
-// hold up the API.
+// their store listings, checks prices, records sale events, makes device
+// verdicts and chooses the weekly picks. It runs as its own container so
+// slow store and model calls never hold up the API.
 package main
 
 import (
@@ -107,7 +107,11 @@ func (w *worker) link(ctx context.Context) error {
 	if err := w.t.LinkPending(ctx); err != nil {
 		return err
 	}
-	return w.t.Judge(ctx, nil)
+	if err := w.t.Judge(ctx, nil); err != nil {
+		return err
+	}
+	// Weekly: does nothing until Sunday 09:00 IST comes round.
+	return w.t.MakePicksIfDue(ctx)
 }
 
 func (w *worker) prices(ctx context.Context) error {

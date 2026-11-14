@@ -70,6 +70,10 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 # Covers and studios filled in by the worker, replaced when you relink a game
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/009_filled_by_worker.sql
+
+# Weekly picks: games on sale you'd probably like
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/010_picks.sql
 ```
 
 ### Sale alerts (web push)
@@ -129,6 +133,25 @@ Web search goes through SearXNG (`SEARXNG_URL`, default
 verdicts are made without it and marked incomplete, then redone once it's
 reachable (checked every 6 hours). Steam's review endpoint redirects
 requests from this machine, so review sentiment comes from the web search.
+
+### Weekly picks
+
+Every Sunday at 09:00 IST (and on the worker's first run after deploying)
+the worker chooses five games on sale that you'd probably like, shown in the
+**Deals** tab under "Picks for you":
+
+1. Candidates: the 300 best-selling Steam (India) specials and the 120 most
+   popular eShop (US) deals, matched to IGDB (Steam by appid, eShop by
+   title), leaving out games in your library and recent picks.
+2. A taste profile (`internal/picks`) from your linked games: ★5 counts +2
+   down to ★1 −2, recent years more; wishlisted and owned +1, dropped −1.5;
+   picks you dismiss count against their tags. Candidates are scored on
+   shared genres, themes and keywords, IGDB's "similar games" and reviews.
+3. Claude Sonnet 5.5 chooses five from the top 15 and writes a pitch for
+   each (one call, about 1¢); without it, the top scores are used.
+
+Adding a pick to the wishlist or Owned creates the Trove game, linked to
+the picked IGDB game. A run takes about a minute.
 
 ### 4. Start the backend
 

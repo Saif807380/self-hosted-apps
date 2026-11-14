@@ -86,7 +86,7 @@ func newTestTracker(t *testing.T) (*Tracker, *dao.Stores, *fakeServices) {
 	f := newFakeServices(t)
 	return &Tracker{
 		Store: s.Gaming,
-		IGDB:  &catalog.Client{ClientID: "id", ClientSecret: "secret", BaseURL: f.url, TokenURL: f.url + "/token"},
+		IGDB:  &catalog.Client{ClientID: "id", ClientSecret: "secret", BaseURL: f.url, TokenURL: f.url + "/token", RequestGap: time.Nanosecond},
 		Steam: &stores.SteamClient{BaseURL: f.url},
 		Eshop: &stores.EshopClient{PriceURL: f.url, AlgoliaURL: f.url},
 		FX:    &stores.FXClient{BaseURL: f.url},

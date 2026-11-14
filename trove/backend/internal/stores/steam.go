@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,44 @@ func (c *SteamClient) ListingFor(appid, title string) Listing {
 		Region:   "IN",
 		Currency: "INR",
 	}
+}
+
+// steamSpecialsPage is how many results one specials request returns.
+const steamSpecialsPage = 100
+
+// capsuleAppID finds the appid in a Steam capsule image URL
+// (".../steam/apps/227300/.../capsule_sm_120.jpg").
+var capsuleAppID = regexp.MustCompile(`/apps/(\d+)/`)
+
+// Specials returns games on sale in the India store, in Steam's order (its
+// best sellers first), at most limit of them. Quotes prices them.
+func (c *SteamClient) Specials(ctx context.Context, limit int) ([]Listing, error) {
+	var out []Listing
+	for start := 0; len(out) < limit; start += steamSpecialsPage {
+		q := url.Values{
+			"specials": {"1"}, "category1": {"998"}, // 998: games, not DLC or soundtracks
+			"cc": {steamCountry}, "l": {"english"}, "json": {"1"},
+			"count": {strconv.Itoa(steamSpecialsPage)}, "start": {strconv.Itoa(start)},
+		}
+		var resp struct {
+			Items []struct {
+				Name string `json:"name"`
+				Logo string `json:"logo"`
+			} `json:"items"`
+		}
+		if err := getJSON(ctx, orDefault(c.HTTP), c.base()+"/search/results/?"+q.Encode(), &resp); err != nil {
+			return nil, fmt.Errorf("steam specials: %w", err)
+		}
+		for _, it := range resp.Items {
+			if m := capsuleAppID.FindStringSubmatch(it.Logo); m != nil && len(out) < limit {
+				out = append(out, c.ListingFor(m[1], it.Name))
+			}
+		}
+		if len(resp.Items) < steamSpecialsPage {
+			break // last page
+		}
+	}
+	return out, nil
 }
 
 // Search finds Steam apps by name. Used only when IGDB has no Steam appid.

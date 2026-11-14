@@ -49,6 +49,11 @@ const (
 	GamingServiceGetGameInsightsProcedure = "/trove.v1.gaming.GamingService/GetGameInsights"
 	// GamingServiceListDealsProcedure is the fully-qualified name of the GamingService's ListDeals RPC.
 	GamingServiceListDealsProcedure = "/trove.v1.gaming.GamingService/ListDeals"
+	// GamingServiceListPicksProcedure is the fully-qualified name of the GamingService's ListPicks RPC.
+	GamingServiceListPicksProcedure = "/trove.v1.gaming.GamingService/ListPicks"
+	// GamingServiceUpdatePickProcedure is the fully-qualified name of the GamingService's UpdatePick
+	// RPC.
+	GamingServiceUpdatePickProcedure = "/trove.v1.gaming.GamingService/UpdatePick"
 	// GamingServiceGetPushConfigProcedure is the fully-qualified name of the GamingService's
 	// GetPushConfig RPC.
 	GamingServiceGetPushConfigProcedure = "/trove.v1.gaming.GamingService/GetPushConfig"
@@ -71,6 +76,8 @@ type GamingServiceClient interface {
 	SetPsnLink(context.Context, *connect.Request[gaming.SetPsnLinkRequest]) (*connect.Response[gaming.SetPsnLinkResponse], error)
 	GetGameInsights(context.Context, *connect.Request[gaming.GetGameInsightsRequest]) (*connect.Response[gaming.GetGameInsightsResponse], error)
 	ListDeals(context.Context, *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error)
+	ListPicks(context.Context, *connect.Request[gaming.ListPicksRequest]) (*connect.Response[gaming.ListPicksResponse], error)
+	UpdatePick(context.Context, *connect.Request[gaming.UpdatePickRequest]) (*connect.Response[gaming.UpdatePickResponse], error)
 	GetPushConfig(context.Context, *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error)
 	SubscribePush(context.Context, *connect.Request[gaming.SubscribePushRequest]) (*connect.Response[gaming.SubscribePushResponse], error)
 	UnsubscribePush(context.Context, *connect.Request[gaming.UnsubscribePushRequest]) (*connect.Response[gaming.UnsubscribePushResponse], error)
@@ -124,6 +131,18 @@ func NewGamingServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(gamingServiceMethods.ByName("ListDeals")),
 			connect.WithClientOptions(opts...),
 		),
+		listPicks: connect.NewClient[gaming.ListPicksRequest, gaming.ListPicksResponse](
+			httpClient,
+			baseURL+GamingServiceListPicksProcedure,
+			connect.WithSchema(gamingServiceMethods.ByName("ListPicks")),
+			connect.WithClientOptions(opts...),
+		),
+		updatePick: connect.NewClient[gaming.UpdatePickRequest, gaming.UpdatePickResponse](
+			httpClient,
+			baseURL+GamingServiceUpdatePickProcedure,
+			connect.WithSchema(gamingServiceMethods.ByName("UpdatePick")),
+			connect.WithClientOptions(opts...),
+		),
 		getPushConfig: connect.NewClient[gaming.GetPushConfigRequest, gaming.GetPushConfigResponse](
 			httpClient,
 			baseURL+GamingServiceGetPushConfigProcedure,
@@ -159,6 +178,8 @@ type gamingServiceClient struct {
 	setPsnLink      *connect.Client[gaming.SetPsnLinkRequest, gaming.SetPsnLinkResponse]
 	getGameInsights *connect.Client[gaming.GetGameInsightsRequest, gaming.GetGameInsightsResponse]
 	listDeals       *connect.Client[gaming.ListDealsRequest, gaming.ListDealsResponse]
+	listPicks       *connect.Client[gaming.ListPicksRequest, gaming.ListPicksResponse]
+	updatePick      *connect.Client[gaming.UpdatePickRequest, gaming.UpdatePickResponse]
 	getPushConfig   *connect.Client[gaming.GetPushConfigRequest, gaming.GetPushConfigResponse]
 	subscribePush   *connect.Client[gaming.SubscribePushRequest, gaming.SubscribePushResponse]
 	unsubscribePush *connect.Client[gaming.UnsubscribePushRequest, gaming.UnsubscribePushResponse]
@@ -195,6 +216,16 @@ func (c *gamingServiceClient) ListDeals(ctx context.Context, req *connect.Reques
 	return c.listDeals.CallUnary(ctx, req)
 }
 
+// ListPicks calls trove.v1.gaming.GamingService.ListPicks.
+func (c *gamingServiceClient) ListPicks(ctx context.Context, req *connect.Request[gaming.ListPicksRequest]) (*connect.Response[gaming.ListPicksResponse], error) {
+	return c.listPicks.CallUnary(ctx, req)
+}
+
+// UpdatePick calls trove.v1.gaming.GamingService.UpdatePick.
+func (c *gamingServiceClient) UpdatePick(ctx context.Context, req *connect.Request[gaming.UpdatePickRequest]) (*connect.Response[gaming.UpdatePickResponse], error) {
+	return c.updatePick.CallUnary(ctx, req)
+}
+
 // GetPushConfig calls trove.v1.gaming.GamingService.GetPushConfig.
 func (c *gamingServiceClient) GetPushConfig(ctx context.Context, req *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error) {
 	return c.getPushConfig.CallUnary(ctx, req)
@@ -223,6 +254,8 @@ type GamingServiceHandler interface {
 	SetPsnLink(context.Context, *connect.Request[gaming.SetPsnLinkRequest]) (*connect.Response[gaming.SetPsnLinkResponse], error)
 	GetGameInsights(context.Context, *connect.Request[gaming.GetGameInsightsRequest]) (*connect.Response[gaming.GetGameInsightsResponse], error)
 	ListDeals(context.Context, *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error)
+	ListPicks(context.Context, *connect.Request[gaming.ListPicksRequest]) (*connect.Response[gaming.ListPicksResponse], error)
+	UpdatePick(context.Context, *connect.Request[gaming.UpdatePickRequest]) (*connect.Response[gaming.UpdatePickResponse], error)
 	GetPushConfig(context.Context, *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error)
 	SubscribePush(context.Context, *connect.Request[gaming.SubscribePushRequest]) (*connect.Response[gaming.SubscribePushResponse], error)
 	UnsubscribePush(context.Context, *connect.Request[gaming.UnsubscribePushRequest]) (*connect.Response[gaming.UnsubscribePushResponse], error)
@@ -272,6 +305,18 @@ func NewGamingServiceHandler(svc GamingServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(gamingServiceMethods.ByName("ListDeals")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gamingServiceListPicksHandler := connect.NewUnaryHandler(
+		GamingServiceListPicksProcedure,
+		svc.ListPicks,
+		connect.WithSchema(gamingServiceMethods.ByName("ListPicks")),
+		connect.WithHandlerOptions(opts...),
+	)
+	gamingServiceUpdatePickHandler := connect.NewUnaryHandler(
+		GamingServiceUpdatePickProcedure,
+		svc.UpdatePick,
+		connect.WithSchema(gamingServiceMethods.ByName("UpdatePick")),
+		connect.WithHandlerOptions(opts...),
+	)
 	gamingServiceGetPushConfigHandler := connect.NewUnaryHandler(
 		GamingServiceGetPushConfigProcedure,
 		svc.GetPushConfig,
@@ -310,6 +355,10 @@ func NewGamingServiceHandler(svc GamingServiceHandler, opts ...connect.HandlerOp
 			gamingServiceGetGameInsightsHandler.ServeHTTP(w, r)
 		case GamingServiceListDealsProcedure:
 			gamingServiceListDealsHandler.ServeHTTP(w, r)
+		case GamingServiceListPicksProcedure:
+			gamingServiceListPicksHandler.ServeHTTP(w, r)
+		case GamingServiceUpdatePickProcedure:
+			gamingServiceUpdatePickHandler.ServeHTTP(w, r)
 		case GamingServiceGetPushConfigProcedure:
 			gamingServiceGetPushConfigHandler.ServeHTTP(w, r)
 		case GamingServiceSubscribePushProcedure:
@@ -349,6 +398,14 @@ func (UnimplementedGamingServiceHandler) GetGameInsights(context.Context, *conne
 
 func (UnimplementedGamingServiceHandler) ListDeals(context.Context, *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trove.v1.gaming.GamingService.ListDeals is not implemented"))
+}
+
+func (UnimplementedGamingServiceHandler) ListPicks(context.Context, *connect.Request[gaming.ListPicksRequest]) (*connect.Response[gaming.ListPicksResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trove.v1.gaming.GamingService.ListPicks is not implemented"))
+}
+
+func (UnimplementedGamingServiceHandler) UpdatePick(context.Context, *connect.Request[gaming.UpdatePickRequest]) (*connect.Response[gaming.UpdatePickResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trove.v1.gaming.GamingService.UpdatePick is not implemented"))
 }
 
 func (UnimplementedGamingServiceHandler) GetPushConfig(context.Context, *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error) {

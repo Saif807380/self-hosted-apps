@@ -2,8 +2,11 @@ import { Badge, Flex, Text } from '@chakra-ui/react'
 import type { Deal } from '@/services/gaming'
 import { formatDay, listingLabel, shortPrice } from './prices'
 
+/** What DealTag shows: a wishlist deal or a weekly pick's sale. */
+export type SalePrice = Pick<Deal, 'store' | 'edition' | 'finalMinor' | 'currency' | 'discountPct' | 'saleEndsAt' | 'lowest'>
+
 /** "−40%  $19.99 · eShop · Switch 2", with the sale's end when known. */
-export default function DealTag({ deal, size = 'sm' }: { deal: Deal; size?: 'sm' | 'xs' }) {
+export default function DealTag({ deal, size = 'sm' }: { deal: SalePrice; size?: 'sm' | 'xs' }) {
   const fontSize = size === 'sm' ? 'xs' : '10px'
   return (
     <Flex direction="column" gap={0.5} mb={1.5}>
