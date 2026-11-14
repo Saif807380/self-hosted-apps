@@ -19,7 +19,7 @@ const (
 	verdictRetry = 6 * time.Hour
 )
 
-// VerdictTarget is a wishlisted, linked game due a device verdict.
+// VerdictTarget is a linked game due a device verdict.
 type VerdictTarget struct {
 	ID          uuid.UUID `db:"id"`
 	Title       string    `db:"title"`
@@ -44,23 +44,23 @@ func (t VerdictTarget) Game() fit.Game {
 	return g
 }
 
-// GamesNeedingVerdict returns wishlisted, linked games with no verdict, an
-// old one, or an incomplete one due a retry; newest wishlist entries first.
+// GamesNeedingVerdict returns linked games with no verdict, an old one, or
+// an incomplete one due a retry; wishlisted games first, then newest.
 // With id set, only that game is considered and an incomplete verdict is
 // retried straight away.
 func (s *GamingStore) GamesNeedingVerdict(ctx context.Context, id *uuid.UUID, limit int) ([]VerdictTarget, error) {
 	now := time.Now()
 	rows, err := s.db.Query(ctx, `
-		SELECT g.id, m.title, m.release_year, m.genres, m.platforms, m.steam_appid,
+		SELECT g.id, COALESCE(m.title, g.title) AS title, m.release_year, m.genres, m.platforms, m.steam_appid,
 			COALESCE(NOT v.complete, false) AS has_incomplete
 		FROM video_games g
 		JOIN game_meta m ON m.video_game_id = g.id
 		LEFT JOIN device_verdicts v ON v.video_game_id = g.id
-		WHERE g.deleted = false AND g.status = 'wishlist' AND m.match_method <> 'unresolved'
+		WHERE g.deleted = false AND m.match_method <> 'unresolved'
 			AND ($1::uuid IS NULL OR g.id = $1)
 			AND (v.video_game_id IS NULL OR v.created_at < $2
 				OR (NOT v.complete AND ($1::uuid IS NOT NULL OR v.checked_at < $3)))
-		ORDER BY g.created_at DESC
+		ORDER BY (g.status = 'wishlist') DESC, g.created_at DESC
 		LIMIT $4`,
 		id, now.Add(-verdictMaxAge), now.Add(-verdictRetry), limit)
 	if err != nil {

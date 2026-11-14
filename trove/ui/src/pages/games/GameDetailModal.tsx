@@ -199,7 +199,7 @@ export default function GameDetailModal({
                   </Box>
                 )}
 
-                {game.status === 'wishlist' && <PricePanel game={game} />}
+                <PricePanel game={game} />
 
                 {game.review && (
                   <Box pt={3} borderTopWidth="1px" borderColor="border.default">

@@ -160,14 +160,14 @@ func (s *GamingService) SendTestPush(ctx context.Context) (int, error) {
 	})
 }
 
-// enqueueWishlisted asks the worker to start tracking any wishlisted game in
-// the batch, so a game added on the phone gets prices within a minute rather
-// than at the next hourly run. A failure here only delays tracking until that
-// run, so it's ignored.
-func enqueueWishlisted(ctx context.Context, rdb *redis.Client, games []model.VideoGame) {
+// enqueueRefresh asks the worker to look at the games in the batch, so a
+// game added or changed on the phone gets its match, prices and verdict
+// within a minute rather than at the next hourly run. A failure here only
+// delays that until the run, so it's ignored.
+func enqueueRefresh(ctx context.Context, rdb *redis.Client, games []model.VideoGame) {
 	var ids []uuid.UUID
 	for _, g := range games {
-		if g.Status == model.GameWishlist && !g.Deleted {
+		if !g.Deleted {
 			ids = append(ids, g.ID)
 		}
 	}

@@ -65,11 +65,7 @@ func TestJudge(t *testing.T) {
 	tr.LLM = fake
 
 	id := addGame(t, s, "Elden Ring", model.GameWishlist, nil)
-	played := addGame(t, s, "Elden Ring", model.GamePlayed, nil)
 	if err := tr.Refresh(ctx, id); err != nil {
-		t.Fatal(err)
-	}
-	if err := tr.LinkPending(ctx); err != nil { // links the played copy too
 		t.Fatal(err)
 	}
 
@@ -80,9 +76,6 @@ func TestJudge(t *testing.T) {
 	}
 	if v.Complete || v.Verdict.Devices[0].Device != fit.PC || v.Model != llm.Model {
 		t.Errorf("verdict = %+v", v)
-	}
-	if _, err := s.Gaming.GetVerdict(ctx, played); err == nil {
-		t.Error("played game got a verdict")
 	}
 
 	// Still down: the incomplete verdict stands, with no new model call.
@@ -147,5 +140,25 @@ func TestJudgeSavesAPlaceholderOnRefusal(t *testing.T) {
 	}
 	if fake.calls != 1 {
 		t.Errorf("model calls = %d, want 1 (no retry after a refusal)", fake.calls)
+	}
+}
+
+func TestPlayedGamesGetVerdicts(t *testing.T) {
+	tr, s, _ := newTestTracker(t)
+	ctx := context.Background()
+	srv := httptest.NewServer(&searx{up: true})
+	t.Cleanup(srv.Close)
+	tr.Fit = &fit.Gatherer{SearxURL: srv.URL, SteamURL: srv.URL, ProtonURL: srv.URL, AntiCheatURL: srv.URL + "/anticheat.json"}
+	tr.LLM = &fakeLLM{}
+
+	played := addGame(t, s, "Elden Ring", model.GamePlayed, nil)
+	if err := tr.LinkPending(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := tr.Judge(ctx, &played); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Gaming.GetVerdict(ctx, played); err != nil {
+		t.Errorf("played game has no verdict: %v", err)
 	}
 }

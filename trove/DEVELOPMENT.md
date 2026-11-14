@@ -59,13 +59,17 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/006_push.sql
 
-# Device verdicts: which device to play each wishlisted game on
+# Device verdicts: which device to play each game on
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/007_device_verdicts.sql
 
 # One-off: games linked to IGDB automatically take IGDB's title
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/008_igdb_titles.sql
+
+# Covers and studios filled in by the worker, replaced when you relink a game
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/009_filled_by_worker.sql
 ```
 
 ### Sale alerts (web push)
@@ -94,7 +98,8 @@ work.
 ### Price tracking worker
 
 `backend/cmd/worker` links games to IGDB, fills missing covers and studios,
-and checks Steam / eShop prices for wishlisted games. It needs
+and checks Steam / eShop prices for every game (only wishlisted games raise
+sale alerts). It needs
 `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` (a free Twitch developer app) in
 `infra/.env`. In production it runs as the `worker` service in
 `podman-compose.yml`; locally:
@@ -111,7 +116,8 @@ matched to IGDB.
 ### Device verdicts
 
 With `ANTHROPIC_API_KEY` in `infra/.env`, the worker also decides which
-device (the G15, PS5 or Switch 2) to play each wishlisted game on. It
+device (the G15, PS5 or Switch 2) to play each game on, wishlisted games
+first and at most 10 a run. It
 gathers the platforms (IGDB), Steam's PC requirements and Metacritic score,
 ProtonDB, the Steam Deck rating, AreWeAntiCheatYet and web search results,
 then asks Claude Sonnet 5.5 (`internal/llm`) for a ranked verdict, about

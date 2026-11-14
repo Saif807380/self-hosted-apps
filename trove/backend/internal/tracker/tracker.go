@@ -53,12 +53,14 @@ func (t *Tracker) Refresh(ctx context.Context, id uuid.UUID) error {
 	if err != nil {
 		return err
 	}
-	if _, err := t.Store.GetMeta(ctx, id); errors.Is(err, pgx.ErrNoRows) {
+	meta, err := t.Store.GetMeta(ctx, id)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if meta == nil || NeedsRelink(*meta, ref.Title) {
 		if err := t.Link(ctx, ref); err != nil {
 			return err
 		}
-	} else if err != nil {
-		return err
 	}
 	if err := t.FillBlanks(ctx, &id); err != nil {
 		return err
@@ -102,6 +104,9 @@ func (t *Tracker) Link(ctx context.Context, ref dao.GameRef) error {
 	if ref.Studio != nil {
 		studio = *ref.Studio
 	}
+	if ref.Status == model.GameWishlist || ref.Status == model.GameOwned {
+		candidates = onYourDevices(candidates)
+	}
 	if g, ok := catalog.ChooseMatch(ref.Title, studio, candidates); ok {
 		if g, err = t.IGDB.EnsureSteamAppID(ctx, g); err != nil {
 			t.Log.Warn("steam id lookup failed", "game", g.Title, "err", err)
@@ -121,8 +126,8 @@ func (t *Tracker) Link(ctx context.Context, ref dao.GameRef) error {
 	return t.Store.SaveMeta(ctx, UnresolvedMeta(ref.ID, ref.Title, candidates))
 }
 
-// FindListings looks up store listings for wishlisted games that need it
-// (or just the given one).
+// FindListings looks up store listings for games that need it (or just the
+// given one).
 func (t *Tracker) FindListings(ctx context.Context, id *uuid.UUID) error {
 	targets, err := t.Store.GamesNeedingListings(ctx, id)
 	if err != nil {
@@ -168,8 +173,9 @@ func (t *Tracker) listingsFor(ctx context.Context, target dao.ListingTarget) ([]
 	return out, nil
 }
 
-// CheckPrices quotes the Steam and eShop listings of wishlisted games (or
-// just the given one), records the prices and raises sale events.
+// CheckPrices quotes the Steam and eShop listings of every game (or
+// just the given one), records the prices and raises sale events for
+// wishlisted games.
 func (t *Tracker) CheckPrices(ctx context.Context, id *uuid.UUID) error {
 	listings, err := t.Store.ListingsToPrice(ctx, id)
 	if err != nil || len(listings) == 0 {
@@ -212,6 +218,9 @@ func (t *Tracker) record(ctx context.Context, l dao.PricedListing, q stores.Quot
 	prev, lowest, err := t.Store.RecordQuote(ctx, l.ID, q)
 	if err != nil {
 		return err
+	}
+	if !l.Wishlisted {
+		return nil // priced for its history; alerts are for the wishlist
 	}
 	check := alerts.Check{New: q, Previous: prev, LowestMinor: lowest, TargetINR: l.TargetINR}
 	if _, ok := ToINRMinor(0, q.Currency, usdToINR); ok {
@@ -306,7 +315,34 @@ func UnresolvedMeta(id uuid.UUID, title string, candidates []catalog.Game) model
 	for _, c := range ranked[:min(maxCandidates, len(ranked))] {
 		options = append(options, model.MatchCandidate{IGDBID: c.IGDBID, Title: c.Title, Year: c.ReleaseYear, CoverURL: c.CoverURL})
 	}
-	return model.GameMeta{VideoGameID: id, MatchMethod: model.MatchUnresolved, Candidates: options}
+	// Title is the one searched for, so a corrected title is searched again.
+	return model.GameMeta{VideoGameID: id, MatchMethod: model.MatchUnresolved, Title: &title, Candidates: options}
+}
+
+// NeedsRelink reports whether a game waiting for you to pick a match has
+// been renamed since it was searched for, so it's worth searching again.
+func NeedsRelink(meta model.GameMeta, title string) bool {
+	return meta.MatchMethod == model.MatchUnresolved && (meta.Title == nil || *meta.Title != title)
+}
+
+// yourPlatforms are the IGDB platforms your devices play: the G15, PS5 (and
+// PS4 games) and Switch 2 (and Switch games).
+var yourPlatforms = []int{catalog.PlatformPC, catalog.PlatformPS4, catalog.PlatformPS5, catalog.PlatformSwitch, catalog.PlatformSwitch2}
+
+// onYourDevices keeps the candidates released for one of your devices, when
+// there are any. A game you mean to buy or own must be one of those, so the
+// 1998 N64 Ocarina of Time doesn't beat its Switch 2 remake on popularity.
+func onYourDevices(candidates []catalog.Game) []catalog.Game {
+	var out []catalog.Game
+	for _, c := range candidates {
+		if c.HasPlatform(yourPlatforms...) {
+			out = append(out, c)
+		}
+	}
+	if len(out) == 0 {
+		return candidates
+	}
+	return out
 }
 
 func hasStore(listings []model.StoreListing, store string) bool {

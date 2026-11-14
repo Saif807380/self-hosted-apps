@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button, Flex, Spinner, Text } from '@chakra-ui/react'
 
-// Small pieces shared by the sections of a wishlisted game's detail view.
+// Small pieces shared by the sections of a game's detail view.
 
 export function LinkButton({ href, children }: { href: string; children: ReactNode }) {
   return (

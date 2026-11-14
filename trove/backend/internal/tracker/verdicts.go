@@ -13,7 +13,7 @@ import (
 // verdictBatch caps model calls per run (about 1–2¢ each).
 const verdictBatch = 10
 
-// Judge makes device verdicts for wishlisted games that need one (or just
+// Judge makes device verdicts for games that need one (or just
 // the given game). An incomplete verdict is only redone once its missing
 // evidence can be reached, so a source that's down doesn't cost a model
 // call every few hours.

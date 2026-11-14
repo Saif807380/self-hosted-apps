@@ -8,7 +8,8 @@ import VerdictSection from './VerdictSection'
 import { LinkButton, Loading, Note, SectionTitle } from './panel'
 import { useIsDark } from '@/hooks/useIsDark'
 import {
-  buildChart, currentRun, formatDay, formatPrice, isPriced, listingLabel, platPricesUrl, seriesColor,
+  buildChart, currentRun, formatDay, formatPrice, isPriced, lineColor, listingLabel, platPricesUrl,
+  type ChartSeries,
 } from './prices'
 
 // While the worker is still looking a game up, re-fetch on this interval,
@@ -16,7 +17,7 @@ import {
 const POLL_MS = 8000
 const POLL_LIMIT = 15
 
-/** Prices, price history, device verdict and the IGDB match for a wishlisted game. */
+/** Prices, price history, device verdict and the IGDB match for a game. */
 export default function PricePanel({ game }: { game: VideoGame }) {
   const [insights, setInsights] = useState<GameInsights | null>(null)
   const [error, setError] = useState('')
@@ -93,7 +94,7 @@ function PriceSection({ game, insights, pending, onChanged }: {
     <Stack gap={3}>
       <SectionTitle>Prices</SectionTitle>
       <Stack gap={2}>
-        {listings.map(l => <ListingRow key={l.id} listing={l} usdToInr={usdToInr} gameId={game.id} onChanged={onChanged} />)}
+        {listings.map(l => <ListingRow key={l.id} listing={l} series={series} usdToInr={usdToInr} gameId={game.id} onChanged={onChanged} />)}
       </Stack>
       {rows.length > 0 && <PriceChart series={series} rows={rows} targetRupees={game.targetPriceInr} />}
       <Flex justify="space-between" align="center">
@@ -106,8 +107,8 @@ function PriceSection({ game, insights, pending, onChanged }: {
   )
 }
 
-function ListingRow({ listing, usdToInr, gameId, onChanged }: {
-  listing: Listing; usdToInr: number; gameId: string; onChanged: () => Promise<void>
+function ListingRow({ listing, series, usdToInr, gameId, onChanged }: {
+  listing: Listing; series: ChartSeries[]; usdToInr: number; gameId: string; onChanged: () => Promise<void>
 }) {
   const isDark = useIsDark()
   const run = currentRun(listing)
@@ -120,7 +121,7 @@ function ListingRow({ listing, usdToInr, gameId, onChanged }: {
         <Flex align="center" gap={2} minW={0}>
           {isPriced(listing) && (
             // Same colour as this store's line in the chart below.
-            <Box w="8px" h="8px" borderRadius="full" flexShrink={0} style={{ background: seriesColor(listing, isDark) }} />
+            <Box w="8px" h="8px" borderRadius="full" flexShrink={0} style={{ background: lineColor(listing, series, isDark) }} />
           )}
           <Text fontSize="sm" fontWeight="600" color="text.primary" truncate>{listingLabel(listing)}</Text>
         </Flex>
