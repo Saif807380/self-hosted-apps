@@ -186,6 +186,12 @@ class TroveDB extends Dexie {
     }).upgrade(tx => tx.table('videoGames').toCollection().modify(g => {
       if (!g.status) g.status = 'played'
     }))
+    // Pull everything again. A device that opened Trove for the first time
+    // since v3 ran its old cached app first, which pulled new wishlist games
+    // and dropped their status; v3 then marked them played, and the sync
+    // cursor kept them from being pulled again. A full pull lets the server's
+    // values win. Any version that adds server-owned fields should do this.
+    this.version(4).stores({}).upgrade(tx => tx.table('syncMeta').delete('lastSync'))
   }
 }
 
