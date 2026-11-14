@@ -11,11 +11,13 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/saifkazi/trove/backend/internal/catalog"
 	"github.com/saifkazi/trove/backend/internal/dao"
 	"github.com/saifkazi/trove/backend/internal/model"
+	"github.com/saifkazi/trove/backend/internal/push"
 	"github.com/saifkazi/trove/backend/internal/stores"
 )
 
@@ -265,5 +267,83 @@ func TestStudioFor(t *testing.T) {
 	}
 	if got := StudioFor(nil, nil); got != "" {
 		t.Errorf("nothing: got %q", got)
+	}
+}
+
+type fakeNotifier struct {
+	devices int // how many browsers "accept" each notification
+	sent    []push.Notification
+}
+
+func (f *fakeNotifier) Enabled() bool { return true }
+func (f *fakeNotifier) Send(_ context.Context, n push.Notification) (int, error) {
+	f.sent = append(f.sent, n)
+	return f.devices, nil
+}
+
+func TestDeliverSales(t *testing.T) {
+	ctx := context.Background()
+	tr, s, _ := newTestTracker(t)
+	notifier := &fakeNotifier{}
+	tr.Notify = notifier
+
+	// sale records a sale event on a fresh Steam listing for the game.
+	sale := func(gameID uuid.UUID, ref string) int64 {
+		t.Helper()
+		if err := s.Gaming.SaveListings(ctx, gameID, []stores.Listing{tr.Steam.ListingFor(ref, "x")}); err != nil {
+			t.Fatal(err)
+		}
+		listings, _ := s.Gaming.Listings(ctx, gameID)
+		q := stores.Quote{BaseMinor: 130000, FinalMinor: 91000, DiscountPct: 30}
+		if _, err := s.Gaming.AddSaleEvent(ctx, listings[0].ID, "910:open", []string{"sale"}, q); err != nil {
+			t.Fatal(err)
+		}
+		var id int64
+		s.DB.QueryRow(ctx, "SELECT id FROM sale_events WHERE listing_id = $1", listings[0].ID).Scan(&id) //nolint:errcheck
+		return id
+	}
+	notified := func(id int64) bool {
+		var at *time.Time
+		s.DB.QueryRow(ctx, "SELECT notified_at FROM sale_events WHERE id = $1", id).Scan(&at) //nolint:errcheck
+		return at != nil
+	}
+
+	wanted := addGame(t, s, "Wanted "+uuid.NewString(), model.GameWishlist, nil)
+	fresh := sale(wanted, "1")
+	bought := addGame(t, s, "Bought "+uuid.NewString(), model.GameOwned, nil)
+	boughtSale := sale(bought, "2")
+	stale := addGame(t, s, "Stale "+uuid.NewString(), model.GameWishlist, nil)
+	staleSale := sale(stale, "3")
+	s.DB.Exec(ctx, "UPDATE sale_events SET created_at = now() - interval '4 days' WHERE id = $1", staleSale) //nolint:errcheck
+
+	// No device subscribed: the wanted sale stays pending, the others close.
+	if err := tr.DeliverSales(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if notified(fresh) || !notified(boughtSale) || !notified(staleSale) {
+		t.Fatalf("after no-device run: fresh=%t bought=%t stale=%t", notified(fresh), notified(boughtSale), notified(staleSale))
+	}
+
+	// A phone subscribes: the pending sale is delivered once.
+	notifier.devices, notifier.sent = 1, nil
+	if err := tr.DeliverSales(ctx); err != nil {
+		t.Fatal(err)
+	}
+	// Other tests share the database and may leave sales pending, so only
+	// count notifications for this test's game.
+	forWanted := func() int {
+		n := 0
+		for _, sent := range notifier.sent {
+			if strings.HasSuffix(sent.URL, wanted.String()) {
+				n++
+			}
+		}
+		return n
+	}
+	if !notified(fresh) || forWanted() != 1 {
+		t.Fatalf("delivery: notified=%t sent=%+v", notified(fresh), notifier.sent)
+	}
+	if err := tr.DeliverSales(ctx); err != nil || forWanted() != 1 {
+		t.Fatalf("sale delivered twice: %v %d", err, forWanted())
 	}
 }

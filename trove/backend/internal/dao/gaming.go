@@ -279,10 +279,11 @@ func sameRun(r model.PriceRun, q stores.Quote) bool {
 
 // AddSaleEvent records a sale for the push sender. It reports false when the
 // same sale (listing + key) was already recorded.
-func (s *GamingStore) AddSaleEvent(ctx context.Context, listingID uuid.UUID, saleKey string, reasons []string, finalMinor int64) (bool, error) {
+func (s *GamingStore) AddSaleEvent(ctx context.Context, listingID uuid.UUID, saleKey string, reasons []string, q stores.Quote) (bool, error) {
 	tag, err := s.db.Exec(ctx, `
-		INSERT INTO sale_events (listing_id, sale_key, reasons, final_minor) VALUES ($1, $2, $3, $4)
-		ON CONFLICT (listing_id, sale_key) DO NOTHING`, listingID, saleKey, reasons, finalMinor)
+		INSERT INTO sale_events (listing_id, sale_key, reasons, final_minor, base_minor, discount_pct)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT (listing_id, sale_key) DO NOTHING`, listingID, saleKey, reasons, q.FinalMinor, q.BaseMinor, q.DiscountPct)
 	if err != nil {
 		return false, fmt.Errorf("add sale event: %w", err)
 	}
@@ -370,7 +371,8 @@ func (s *GamingStore) GamesMissingCover(ctx context.Context, id *uuid.UUID) ([]C
 // reaches your devices on their next sync. It reports whether it was set.
 //
 // It and SetStudioIfEmpty are the worker's only writes to video_games: both
-// fill a blank field and never overwrite one.
+// fill a blank field and never overwrite one. (SetTitle is the API's, when
+// you pick a match.)
 func (s *GamingStore) SetCoverIfEmpty(ctx context.Context, id uuid.UUID, path string) (bool, error) {
 	tag, err := s.db.Exec(ctx, `
 		UPDATE video_games SET cover_image = $2, updated_at = now()
@@ -379,6 +381,16 @@ func (s *GamingStore) SetCoverIfEmpty(ctx context.Context, id uuid.UUID, path st
 		return false, fmt.Errorf("set cover: %w", err)
 	}
 	return tag.RowsAffected() == 1, nil
+}
+
+// SetTitle renames a game, e.g. to the IGDB title you picked. It bumps
+// updated_at so the new name reaches your devices on their next sync.
+func (s *GamingStore) SetTitle(ctx context.Context, id uuid.UUID, title string) error {
+	_, err := s.db.Exec(ctx, "UPDATE video_games SET title = $2, updated_at = now() WHERE id = $1 AND deleted = false", id, title)
+	if err != nil {
+		return fmt.Errorf("set title: %w", err)
+	}
+	return nil
 }
 
 // StudioTarget is a game with no studio whose IGDB match names its makers.
@@ -409,6 +421,104 @@ func (s *GamingStore) SetStudioIfEmpty(ctx context.Context, id uuid.UUID, studio
 		WHERE id = $1 AND coalesce(btrim(studio), '') = '' AND deleted = false`, id, studio)
 	if err != nil {
 		return fmt.Errorf("set studio: %w", err)
+	}
+	return nil
+}
+
+// PushSubscription is a browser that turned on sale alerts.
+type PushSubscription struct {
+	Endpoint string `db:"endpoint"`
+	P256dh   string `db:"p256dh"`
+	Auth     string `db:"auth"`
+}
+
+// SavePushSubscription stores (or refreshes) a browser's subscription.
+func (s *GamingStore) SavePushSubscription(ctx context.Context, sub PushSubscription, userAgent string) error {
+	_, err := s.db.Exec(ctx, `
+		INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_agent) VALUES ($1, $2, $3, NULLIF($4, ''))
+		ON CONFLICT (endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, user_agent = EXCLUDED.user_agent`,
+		sub.Endpoint, sub.P256dh, sub.Auth, truncate(userAgent, 500))
+	if err != nil {
+		return fmt.Errorf("save push subscription: %w", err)
+	}
+	return nil
+}
+
+// DeletePushSubscription forgets a browser's subscription.
+func (s *GamingStore) DeletePushSubscription(ctx context.Context, endpoint string) error {
+	if _, err := s.db.Exec(ctx, "DELETE FROM push_subscriptions WHERE endpoint = $1", endpoint); err != nil {
+		return fmt.Errorf("delete push subscription: %w", err)
+	}
+	return nil
+}
+
+// PushSubscriptions returns every subscribed browser.
+func (s *GamingStore) PushSubscriptions(ctx context.Context) ([]PushSubscription, error) {
+	rows, err := s.db.Query(ctx, "SELECT endpoint, p256dh, auth FROM push_subscriptions")
+	if err != nil {
+		return nil, fmt.Errorf("push subscriptions: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[PushSubscription])
+}
+
+// MarkPushOK records a successful delivery to a subscription.
+func (s *GamingStore) MarkPushOK(ctx context.Context, endpoint string) error {
+	_, err := s.db.Exec(ctx, "UPDATE push_subscriptions SET last_ok_at = now() WHERE endpoint = $1", endpoint)
+	if err != nil {
+		return fmt.Errorf("mark push ok: %w", err)
+	}
+	return nil
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n]
+}
+
+// PendingSale is an undelivered sale event with what the notification says.
+type PendingSale struct {
+	ID          int64     `db:"id"`
+	GameID      uuid.UUID `db:"video_game_id"`
+	GameTitle   string    `db:"game_title"`
+	CoverImage  *string   `db:"cover_image"`
+	TargetINR   *int32    `db:"target_price_inr"`
+	StillWanted bool      `db:"still_wanted"` // wishlisted and not deleted
+	Store       string    `db:"store"`
+	Edition     string    `db:"edition"`
+	Currency    string    `db:"currency"`
+	Reasons     []string  `db:"reasons"`
+	FinalMinor  int64     `db:"final_minor"`
+	BaseMinor   *int64    `db:"base_minor"`
+	DiscountPct *int16    `db:"discount_pct"`
+	CreatedAt   time.Time `db:"created_at"`
+}
+
+// PendingSales returns sale events not yet delivered, oldest first.
+func (s *GamingStore) PendingSales(ctx context.Context) ([]PendingSale, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT e.id, l.video_game_id, g.title AS game_title, g.cover_image, g.target_price_inr,
+			(g.status = 'wishlist' AND NOT g.deleted) AS still_wanted,
+			l.store, l.edition, l.currency, e.reasons, e.final_minor, e.base_minor, e.discount_pct, e.created_at
+		FROM sale_events e
+		JOIN store_listings l ON l.id = e.listing_id
+		JOIN video_games g ON g.id = l.video_game_id
+		WHERE e.notified_at IS NULL
+		ORDER BY e.created_at`)
+	if err != nil {
+		return nil, fmt.Errorf("pending sales: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[PendingSale])
+}
+
+// MarkSalesNotified closes sale events, delivered or deliberately skipped.
+func (s *GamingStore) MarkSalesNotified(ctx context.Context, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if _, err := s.db.Exec(ctx, "UPDATE sale_events SET notified_at = now() WHERE id = ANY($1)", ids); err != nil {
+		return fmt.Errorf("mark sales notified: %w", err)
 	}
 	return nil
 }

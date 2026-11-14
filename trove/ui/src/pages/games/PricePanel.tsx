@@ -6,7 +6,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import PriceChart from './PriceChart'
 import { useIsDark } from '@/hooks/useIsDark'
 import {
-  buildChart, currentRun, formatDay, formatPrice, isPriced, listingLabel, seriesColor,
+  buildChart, currentRun, formatDay, formatPrice, isPriced, listingLabel, platPricesUrl, seriesColor,
 } from './prices'
 
 // While the worker is still looking a game up, re-fetch on this interval,
@@ -116,14 +116,10 @@ function ListingRow({ listing, usdToInr, gameId, onChanged }: {
           )}
           <Text fontSize="sm" fontWeight="600" color="text.primary" truncate>{listingLabel(listing)}</Text>
         </Flex>
-        <Button
-          asChild size="xs" variant="outline" borderRadius="6px" flexShrink={0}
-          bg="bg.surface" borderColor="text.muted" _hover={{ borderColor: 'text.secondary' }}
-        >
-          <a href={listing.url} target="_blank" rel="noreferrer">
-            {listing.store === 'psn' ? 'Open in PS Store' : 'Open'}
-          </a>
-        </Button>
+        <Flex gap={1.5} flexShrink={0}>
+          {listing.store === 'psn' && <LinkButton href={platPricesUrl(listing.title)}>PlatPrices</LinkButton>}
+          <LinkButton href={listing.url}>{listing.store === 'psn' ? 'PS Store' : 'Open'}</LinkButton>
+        </Flex>
       </Flex>
 
       {isPriced(listing) && (run ? (
@@ -184,7 +180,8 @@ function PSNLinkEditor({ listing, gameId, onChanged }: {
   if (!editing) {
     return (
       <Text mt={1} fontSize="xs" color="text.secondary">
-        {listing.isSearchLink ? 'Opens a search; prices show via your PlatPrices extension. ' : 'Links to the game page. '}
+        {listing.isSearchLink ? 'PS Store opens a search. ' : 'PS Store opens the game page. '}
+        PlatPrices shows its prices and history.{' '}
         <button type="button" onClick={() => setEditing(true)} style={linkStyle}>
           {listing.isSearchLink ? 'Paste game page link' : 'Change'}
         </button>
@@ -282,6 +279,17 @@ function LinkPicker({ game, candidates, onCancel, onLinked }: {
       />
       {onCancel && <Button size="xs" variant="ghost" alignSelf="flex-start" onClick={onCancel}>Cancel</Button>}
     </Stack>
+  )
+}
+
+function LinkButton({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Button
+      asChild size="xs" variant="outline" borderRadius="6px"
+      bg="bg.surface" borderColor="text.muted" _hover={{ borderColor: 'text.secondary' }}
+    >
+      <a href={href} target="_blank" rel="noreferrer">{children}</a>
+    </Button>
   )
 }
 

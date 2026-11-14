@@ -20,6 +20,13 @@ const SERIES_COLORS = {
   switch: { light: '#1baf7a', dark: '#199e70' },
 }
 
+/**
+ * A PlatPrices search for the game: PS Store prices and history in any
+ * browser, without the extension. PlatPrices remembers the region itself.
+ */
+export const platPricesUrl = (title: string) =>
+  `https://platprices.com/search?${new URLSearchParams({ q: title })}`
+
 /** The chart colour for a listing, as hex (Recharts can't use CSS vars). */
 export function seriesColor(l: Listing, isDark: boolean): string {
   const key = l.store === 'eshop' ? (l.edition === 'Switch' ? 'switch' : 'switch2') : 'steam'

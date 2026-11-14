@@ -82,10 +82,45 @@ message GetGameInsightsResponse {
   optional string      listings_checked_at = 6;
 }
 
+// The VAPID public key a browser needs to subscribe. enabled is false when
+// the server has no keys, in which case alerts can't be turned on.
+message GetPushConfigRequest {}
+
+message GetPushConfigResponse {
+  bool   enabled    = 1;
+  string public_key = 2;
+}
+
+// A browser's PushSubscription (endpoint and keys from toJSON()).
+message SubscribePushRequest {
+  string endpoint = 1;
+  string p256dh   = 2;
+  string auth     = 3;
+}
+
+message SubscribePushResponse {}
+
+message UnsubscribePushRequest {
+  string endpoint = 1;
+}
+
+message UnsubscribePushResponse {}
+
+// Sends a test notification to every subscribed browser.
+message SendTestPushRequest {}
+
+message SendTestPushResponse {
+  int32 delivered = 1;
+}
+
 service GamingService {
   rpc SearchCatalog   (SearchCatalogRequest)   returns (SearchCatalogResponse);
   rpc LinkGame        (LinkGameRequest)        returns (LinkGameResponse);
   rpc RefreshGame     (RefreshGameRequest)     returns (RefreshGameResponse);
   rpc SetPsnLink      (SetPsnLinkRequest)      returns (SetPsnLinkResponse);
   rpc GetGameInsights (GetGameInsightsRequest) returns (GetGameInsightsResponse);
+  rpc GetPushConfig   (GetPushConfigRequest)   returns (GetPushConfigResponse);
+  rpc SubscribePush   (SubscribePushRequest)   returns (SubscribePushResponse);
+  rpc UnsubscribePush (UnsubscribePushRequest) returns (UnsubscribePushResponse);
+  rpc SendTestPush    (SendTestPushRequest)    returns (SendTestPushResponse);
 }

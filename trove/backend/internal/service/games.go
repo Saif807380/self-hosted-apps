@@ -82,10 +82,15 @@ func (s *GameService) DeleteGame(ctx context.Context, id string) error {
 }
 
 func (s *GameService) invalidateCache(ctx context.Context) {
+	invalidateGameLists(ctx, s.redis)
+}
+
+// invalidateGameLists drops cached ListGames results after a game changes.
+func invalidateGameLists(ctx context.Context, rdb *redis.Client) {
 	// TODO: use SCAN cursor for larger keyspaces
-	keys, err := s.redis.Keys(ctx, "trove:games:list:*").Result()
+	keys, err := rdb.Keys(ctx, "trove:games:list:*").Result()
 	if err != nil || len(keys) == 0 {
 		return
 	}
-	s.redis.Del(ctx, keys...) //nolint:errcheck
+	rdb.Del(ctx, keys...) //nolint:errcheck
 }

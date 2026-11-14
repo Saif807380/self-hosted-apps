@@ -769,6 +769,354 @@ func (x *GetGameInsightsResponse) GetListingsCheckedAt() string {
 	return ""
 }
 
+// The VAPID public key a browser needs to subscribe. enabled is false when
+// the server has no keys, in which case alerts can't be turned on.
+type GetPushConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPushConfigRequest) Reset() {
+	*x = GetPushConfigRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPushConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPushConfigRequest) ProtoMessage() {}
+
+func (x *GetPushConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPushConfigRequest.ProtoReflect.Descriptor instead.
+func (*GetPushConfigRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{13}
+}
+
+type GetPushConfigResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Enabled       bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	PublicKey     string                 `protobuf:"bytes,2,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPushConfigResponse) Reset() {
+	*x = GetPushConfigResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPushConfigResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPushConfigResponse) ProtoMessage() {}
+
+func (x *GetPushConfigResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPushConfigResponse.ProtoReflect.Descriptor instead.
+func (*GetPushConfigResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetPushConfigResponse) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *GetPushConfigResponse) GetPublicKey() string {
+	if x != nil {
+		return x.PublicKey
+	}
+	return ""
+}
+
+// A browser's PushSubscription (endpoint and keys from toJSON()).
+type SubscribePushRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Endpoint      string                 `protobuf:"bytes,1,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	P256Dh        string                 `protobuf:"bytes,2,opt,name=p256dh,proto3" json:"p256dh,omitempty"`
+	Auth          string                 `protobuf:"bytes,3,opt,name=auth,proto3" json:"auth,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribePushRequest) Reset() {
+	*x = SubscribePushRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribePushRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribePushRequest) ProtoMessage() {}
+
+func (x *SubscribePushRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribePushRequest.ProtoReflect.Descriptor instead.
+func (*SubscribePushRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SubscribePushRequest) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
+func (x *SubscribePushRequest) GetP256Dh() string {
+	if x != nil {
+		return x.P256Dh
+	}
+	return ""
+}
+
+func (x *SubscribePushRequest) GetAuth() string {
+	if x != nil {
+		return x.Auth
+	}
+	return ""
+}
+
+type SubscribePushResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribePushResponse) Reset() {
+	*x = SubscribePushResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribePushResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribePushResponse) ProtoMessage() {}
+
+func (x *SubscribePushResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribePushResponse.ProtoReflect.Descriptor instead.
+func (*SubscribePushResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{16}
+}
+
+type UnsubscribePushRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Endpoint      string                 `protobuf:"bytes,1,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnsubscribePushRequest) Reset() {
+	*x = UnsubscribePushRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnsubscribePushRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnsubscribePushRequest) ProtoMessage() {}
+
+func (x *UnsubscribePushRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnsubscribePushRequest.ProtoReflect.Descriptor instead.
+func (*UnsubscribePushRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UnsubscribePushRequest) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
+type UnsubscribePushResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnsubscribePushResponse) Reset() {
+	*x = UnsubscribePushResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnsubscribePushResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnsubscribePushResponse) ProtoMessage() {}
+
+func (x *UnsubscribePushResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnsubscribePushResponse.ProtoReflect.Descriptor instead.
+func (*UnsubscribePushResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{18}
+}
+
+// Sends a test notification to every subscribed browser.
+type SendTestPushRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTestPushRequest) Reset() {
+	*x = SendTestPushRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTestPushRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTestPushRequest) ProtoMessage() {}
+
+func (x *SendTestPushRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTestPushRequest.ProtoReflect.Descriptor instead.
+func (*SendTestPushRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{19}
+}
+
+type SendTestPushResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Delivered     int32                  `protobuf:"varint,1,opt,name=delivered,proto3" json:"delivered,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendTestPushResponse) Reset() {
+	*x = SendTestPushResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendTestPushResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendTestPushResponse) ProtoMessage() {}
+
+func (x *SendTestPushResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendTestPushResponse.ProtoReflect.Descriptor instead.
+func (*SendTestPushResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *SendTestPushResponse) GetDelivered() int32 {
+	if x != nil {
+		return x.Delivered
+	}
+	return 0
+}
+
 var File_trove_v1_gaming_gaming_proto protoreflect.FileDescriptor
 
 const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
@@ -830,14 +1178,34 @@ const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
 	"usd_to_inr\x18\x05 \x01(\x01R\busdToInr\x123\n" +
 	"\x13listings_checked_at\x18\x06 \x01(\tH\x01R\x11listingsCheckedAt\x88\x01\x01B\b\n" +
 	"\x06_matchB\x16\n" +
-	"\x14_listings_checked_at2\xd7\x03\n" +
+	"\x14_listings_checked_at\"\x16\n" +
+	"\x14GetPushConfigRequest\"P\n" +
+	"\x15GetPushConfigResponse\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x1d\n" +
+	"\n" +
+	"public_key\x18\x02 \x01(\tR\tpublicKey\"^\n" +
+	"\x14SubscribePushRequest\x12\x1a\n" +
+	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x16\n" +
+	"\x06p256dh\x18\x02 \x01(\tR\x06p256dh\x12\x12\n" +
+	"\x04auth\x18\x03 \x01(\tR\x04auth\"\x17\n" +
+	"\x15SubscribePushResponse\"4\n" +
+	"\x16UnsubscribePushRequest\x12\x1a\n" +
+	"\bendpoint\x18\x01 \x01(\tR\bendpoint\"\x19\n" +
+	"\x17UnsubscribePushResponse\"\x15\n" +
+	"\x13SendTestPushRequest\"4\n" +
+	"\x14SendTestPushResponse\x12\x1c\n" +
+	"\tdelivered\x18\x01 \x01(\x05R\tdelivered2\xda\x06\n" +
 	"\rGamingService\x12^\n" +
 	"\rSearchCatalog\x12%.trove.v1.gaming.SearchCatalogRequest\x1a&.trove.v1.gaming.SearchCatalogResponse\x12O\n" +
 	"\bLinkGame\x12 .trove.v1.gaming.LinkGameRequest\x1a!.trove.v1.gaming.LinkGameResponse\x12X\n" +
 	"\vRefreshGame\x12#.trove.v1.gaming.RefreshGameRequest\x1a$.trove.v1.gaming.RefreshGameResponse\x12U\n" +
 	"\n" +
 	"SetPsnLink\x12\".trove.v1.gaming.SetPsnLinkRequest\x1a#.trove.v1.gaming.SetPsnLinkResponse\x12d\n" +
-	"\x0fGetGameInsights\x12'.trove.v1.gaming.GetGameInsightsRequest\x1a(.trove.v1.gaming.GetGameInsightsResponseB@Z>github.com/saifkazi/trove/backend/gen/trove/v1/gaming;gamingv1b\x06proto3"
+	"\x0fGetGameInsights\x12'.trove.v1.gaming.GetGameInsightsRequest\x1a(.trove.v1.gaming.GetGameInsightsResponse\x12^\n" +
+	"\rGetPushConfig\x12%.trove.v1.gaming.GetPushConfigRequest\x1a&.trove.v1.gaming.GetPushConfigResponse\x12^\n" +
+	"\rSubscribePush\x12%.trove.v1.gaming.SubscribePushRequest\x1a&.trove.v1.gaming.SubscribePushResponse\x12d\n" +
+	"\x0fUnsubscribePush\x12'.trove.v1.gaming.UnsubscribePushRequest\x1a(.trove.v1.gaming.UnsubscribePushResponse\x12[\n" +
+	"\fSendTestPush\x12$.trove.v1.gaming.SendTestPushRequest\x1a%.trove.v1.gaming.SendTestPushResponseB@Z>github.com/saifkazi/trove/backend/gen/trove/v1/gaming;gamingv1b\x06proto3"
 
 var (
 	file_trove_v1_gaming_gaming_proto_rawDescOnce sync.Once
@@ -851,7 +1219,7 @@ func file_trove_v1_gaming_gaming_proto_rawDescGZIP() []byte {
 	return file_trove_v1_gaming_gaming_proto_rawDescData
 }
 
-var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*CatalogGame)(nil),             // 0: trove.v1.gaming.CatalogGame
 	(*SearchCatalogRequest)(nil),    // 1: trove.v1.gaming.SearchCatalogRequest
@@ -866,6 +1234,14 @@ var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*PriceRun)(nil),                // 10: trove.v1.gaming.PriceRun
 	(*Listing)(nil),                 // 11: trove.v1.gaming.Listing
 	(*GetGameInsightsResponse)(nil), // 12: trove.v1.gaming.GetGameInsightsResponse
+	(*GetPushConfigRequest)(nil),    // 13: trove.v1.gaming.GetPushConfigRequest
+	(*GetPushConfigResponse)(nil),   // 14: trove.v1.gaming.GetPushConfigResponse
+	(*SubscribePushRequest)(nil),    // 15: trove.v1.gaming.SubscribePushRequest
+	(*SubscribePushResponse)(nil),   // 16: trove.v1.gaming.SubscribePushResponse
+	(*UnsubscribePushRequest)(nil),  // 17: trove.v1.gaming.UnsubscribePushRequest
+	(*UnsubscribePushResponse)(nil), // 18: trove.v1.gaming.UnsubscribePushResponse
+	(*SendTestPushRequest)(nil),     // 19: trove.v1.gaming.SendTestPushRequest
+	(*SendTestPushResponse)(nil),    // 20: trove.v1.gaming.SendTestPushResponse
 }
 var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	0,  // 0: trove.v1.gaming.SearchCatalogResponse.games:type_name -> trove.v1.gaming.CatalogGame
@@ -878,13 +1254,21 @@ var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	5,  // 7: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
 	7,  // 8: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
 	9,  // 9: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
-	2,  // 10: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
-	4,  // 11: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
-	6,  // 12: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
-	8,  // 13: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
-	12, // 14: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
-	10, // [10:15] is the sub-list for method output_type
-	5,  // [5:10] is the sub-list for method input_type
+	13, // 10: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
+	15, // 11: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
+	17, // 12: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
+	19, // 13: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
+	2,  // 14: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
+	4,  // 15: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
+	6,  // 16: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
+	8,  // 17: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
+	12, // 18: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
+	14, // 19: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
+	16, // 20: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
+	18, // 21: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
+	20, // 22: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
+	14, // [14:23] is the sub-list for method output_type
+	5,  // [5:14] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name
@@ -904,7 +1288,7 @@ func file_trove_v1_gaming_gaming_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trove_v1_gaming_gaming_proto_rawDesc), len(file_trove_v1_gaming_gaming_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

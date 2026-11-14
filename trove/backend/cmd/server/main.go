@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"github.com/saifkazi/trove/backend/internal/config"
 	"github.com/saifkazi/trove/backend/internal/controller"
 	"github.com/saifkazi/trove/backend/internal/dao"
+	"github.com/saifkazi/trove/backend/internal/push"
 	"github.com/saifkazi/trove/backend/internal/service"
 )
 
@@ -31,7 +33,11 @@ func main() {
 
 	stores := dao.NewStores(db)
 	igdb := &catalog.Client{ClientID: cfg.IGDBClientID, ClientSecret: cfg.IGDBClientSecret}
-	services := service.NewServices(stores, redisClient, igdb)
+	sender := &push.Sender{
+		Store: stores.Gaming, PublicKey: cfg.VAPIDPublicKey, PrivateKey: cfg.VAPIDPrivateKey,
+		Subject: cfg.VAPIDSubject, Log: slog.Default(),
+	}
+	services := service.NewServices(stores, redisClient, igdb, sender)
 	mux := controller.NewRouter(services, cfg.UploadsDir, cfg.TLSEnabled())
 
 	srv := &http.Server{

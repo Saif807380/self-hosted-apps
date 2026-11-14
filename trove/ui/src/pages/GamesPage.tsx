@@ -11,6 +11,7 @@ import GameListItem from './games/GameListItem'
 import GameFilters from './games/GameFilters'
 import GameForm from './games/GameForm'
 import GameDetailModal from './games/GameDetailModal'
+import SaleAlertsButton from './games/SaleAlertsButton'
 import EmptyState from '@/components/EmptyState'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import ViewToggle from '@/components/ViewToggle'
@@ -136,7 +137,10 @@ export default function GamesPage() {
             </Text>
           )}
         </Box>
-        <ViewToggle view={view} onChange={setView} />
+        <Flex gap={2} align="center">
+          <SaleAlertsButton compact={isMobile} />
+          <ViewToggle view={view} onChange={setView} />
+        </Flex>
       </Flex>
 
       <Flex gap={1.5} mb={5} wrap="wrap" role="tablist" aria-label="Game lists">

@@ -56,3 +56,17 @@ func TestStudioMatches(t *testing.T) {
 		}
 	}
 }
+
+func TestPickRelatedSteam(t *testing.T) {
+	related := []Game{
+		{Title: "Final Fantasy VII Remake: Deluxe Edition"},                       // not on Steam
+		{Title: "Final Fantasy Collection", SteamAppID: "999", RatingCount: 5000}, // unrelated title
+		{Title: "Final Fantasy VII Remake Intergrade", SteamAppID: "1462040", RatingCount: 300},
+	}
+	if got := PickRelatedSteam("Final Fantasy VII Remake", related); got != "1462040" {
+		t.Errorf("got %q, want the Intergrade bundle", got)
+	}
+	if got := PickRelatedSteam("Elden Ring", []Game{{Title: "Elden Ring Deluxe"}}); got != "" {
+		t.Errorf("got %q, want none", got)
+	}
+}

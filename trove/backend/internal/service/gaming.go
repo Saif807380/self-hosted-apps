@@ -12,6 +12,7 @@ import (
 	"github.com/saifkazi/trove/backend/internal/dao"
 	"github.com/saifkazi/trove/backend/internal/jobs"
 	"github.com/saifkazi/trove/backend/internal/model"
+	"github.com/saifkazi/trove/backend/internal/push"
 	"github.com/saifkazi/trove/backend/internal/stores"
 	"github.com/saifkazi/trove/backend/internal/tracker"
 )
@@ -27,6 +28,7 @@ type GamingService struct {
 	store *dao.GamingStore
 	igdb  *catalog.Client
 	redis *redis.Client
+	push  *push.Sender
 }
 
 // GameInsights is everything the game detail view shows about prices.
@@ -54,9 +56,19 @@ func (s *GamingService) LinkGame(ctx context.Context, gameID uuid.UUID, igdbID i
 	if len(games) == 0 {
 		return fmt.Errorf("igdb game %d: %w", igdbID, pgx.ErrNoRows)
 	}
-	if err := s.store.SaveMeta(ctx, tracker.MetaFromGame(gameID, games[0], model.MatchPicked)); err != nil {
+	g, err := s.igdb.EnsureSteamAppID(ctx, games[0])
+	if err != nil {
 		return err
 	}
+	if err := s.store.SaveMeta(ctx, tracker.MetaFromGame(gameID, g, model.MatchPicked)); err != nil {
+		return err
+	}
+	// You chose this game, so take its proper name too. Automatic matches
+	// leave your title alone.
+	if err := s.store.SetTitle(ctx, gameID, g.Title); err != nil {
+		return err
+	}
+	invalidateGameLists(ctx, s.redis)
 	return jobs.EnqueueRefresh(ctx, s.redis, gameID)
 }
 
@@ -110,6 +122,31 @@ func (s *GamingService) GetGameInsights(ctx context.Context, gameID uuid.UUID) (
 		out.USDToINR = rate
 	}
 	return out, nil
+}
+
+// PushConfig returns whether alerts can be turned on, and the public key a
+// browser subscribes with.
+func (s *GamingService) PushConfig() (enabled bool, publicKey string) {
+	return s.push.Enabled(), s.push.PublicKey
+}
+
+func (s *GamingService) SubscribePush(ctx context.Context, sub dao.PushSubscription, userAgent string) error {
+	return s.store.SavePushSubscription(ctx, sub, userAgent)
+}
+
+func (s *GamingService) UnsubscribePush(ctx context.Context, endpoint string) error {
+	return s.store.DeletePushSubscription(ctx, endpoint)
+}
+
+// SendTestPush checks the whole path to your devices.
+func (s *GamingService) SendTestPush(ctx context.Context) (int, error) {
+	return s.push.Send(ctx, push.Notification{
+		Title: "Sale alerts are on",
+		Body:  "Trove will tell you here when a wishlisted game goes on sale.",
+		URL:   "/games?tab=wishlist",
+		Icon:  "/icon-192.png",
+		Tag:   "trove-test",
+	})
 }
 
 // enqueueWishlisted asks the worker to start tracking any wishlisted game in

@@ -34,6 +34,8 @@ type Tracker struct {
 	Log   *slog.Logger
 	// UploadsDir is where covers are saved; empty disables cover filling.
 	UploadsDir string
+	// Notify sends sale alerts; nil disables them.
+	Notify Notifier
 }
 
 // Refresh runs the whole pipeline for one game: link it if it never was,
@@ -59,7 +61,10 @@ func (t *Tracker) Refresh(ctx context.Context, id uuid.UUID) error {
 	if err := t.FindListings(ctx, &id); err != nil {
 		return err
 	}
-	return t.CheckPrices(ctx, &id)
+	if err := t.CheckPrices(ctx, &id); err != nil {
+		return err
+	}
+	return t.DeliverSales(ctx)
 }
 
 // LinkPending links games that have never been looked up in IGDB.
@@ -88,6 +93,9 @@ func (t *Tracker) Link(ctx context.Context, ref dao.GameRef) error {
 		studio = *ref.Studio
 	}
 	if g, ok := catalog.ChooseMatch(ref.Title, studio, candidates); ok {
+		if g, err = t.IGDB.EnsureSteamAppID(ctx, g); err != nil {
+			t.Log.Warn("steam id lookup failed", "game", g.Title, "err", err)
+		}
 		t.Log.Info("linked", "game", ref.Title, "igdb", g.Title, "year", g.ReleaseYear)
 		return t.Store.SaveMeta(ctx, MetaFromGame(ref.ID, g, model.MatchAuto))
 	}
@@ -195,7 +203,7 @@ func (t *Tracker) record(ctx context.Context, l dao.PricedListing, q stores.Quot
 	if len(reasons) == 0 {
 		return nil
 	}
-	added, err := t.Store.AddSaleEvent(ctx, l.ID, key, reasons, q.FinalMinor)
+	added, err := t.Store.AddSaleEvent(ctx, l.ID, key, reasons, q)
 	if added {
 		t.Log.Info("sale event", "listing", l.ID, "store", l.Store, "reasons", reasons, "final", q.FinalMinor)
 	}
