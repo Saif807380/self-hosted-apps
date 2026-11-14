@@ -9,7 +9,7 @@ import (
 )
 
 // Rank orders search results so the game the user most likely meant comes
-// first: an exact title match beats a title that merely starts with the
+// first: an exact title match beats a title that starts or ends with the
 // query, which beats everything else; ties go to the more-rated game.
 func Rank(query string, games []Game) []Game {
 	want := stores.NormalizeTitle(query)
@@ -28,7 +28,7 @@ func titleScore(want, title string) int {
 	switch {
 	case got == want:
 		return 2
-	case strings.HasPrefix(got, want+" "):
+	case strings.HasPrefix(got, want+" "), strings.HasSuffix(got, " "+want):
 		return 1
 	default:
 		return 0

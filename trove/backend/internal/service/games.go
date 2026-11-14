@@ -55,6 +55,7 @@ func (s *GameService) CreateGame(ctx context.Context, p dao.CreateGameParams) (*
 		return nil, err
 	}
 	s.invalidateCache(ctx)
+	enqueueWishlisted(ctx, s.redis, []model.VideoGame{*game})
 	return game, nil
 }
 
@@ -64,6 +65,7 @@ func (s *GameService) UpdateGame(ctx context.Context, p dao.UpdateGameParams) (*
 		return nil, err
 	}
 	s.invalidateCache(ctx)
+	enqueueWishlisted(ctx, s.redis, []model.VideoGame{*game})
 	return game, nil
 }
 

@@ -40,6 +40,26 @@ services:
       - postgres
       - redis
 
+  # Price tracking: links games to IGDB, checks Steam and eShop prices and
+  # records sale events. Same image as the backend, different binary.
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Containerfile.backend
+    command: ["/app/worker"]
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      UPLOADS_DIR: ${UPLOADS_DIR}
+    volumes:
+      - ../uploads:/uploads # IGDB covers for games without one
+    depends_on:
+      - postgres
+      - redis
+
   ui:
     build:
       context: ..

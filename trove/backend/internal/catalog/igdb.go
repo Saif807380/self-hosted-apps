@@ -39,7 +39,7 @@ const (
 const mainGameTypes = "(0,4,8,9,10)"
 
 const gameFields = `fields name, first_release_date, cover.image_id, platforms,
- involved_companies.company.name, involved_companies.developer,
+ involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
  genres.name, themes.name, keywords.name, total_rating, total_rating_count, similar_games,
  external_games.external_game_source, external_games.uid;`
 
@@ -51,6 +51,7 @@ type Game struct {
 	CoverURL    string
 	Platforms   []int
 	Developers  []string
+	Publishers  []string
 	Genres      []string
 	Themes      []string
 	Keywords    []string
@@ -245,6 +246,7 @@ type igdbGame struct {
 	Companies []struct {
 		Company   named `json:"company"`
 		Developer bool  `json:"developer"`
+		Publisher bool  `json:"publisher"`
 	} `json:"involved_companies"`
 	Genres      []named `json:"genres"`
 	Themes      []named `json:"themes"`
@@ -279,6 +281,9 @@ func (g igdbGame) toGame() Game {
 	for _, c := range g.Companies {
 		if c.Developer {
 			out.Developers = append(out.Developers, c.Company.Name)
+		}
+		if c.Publisher {
+			out.Publishers = append(out.Publishers, c.Company.Name)
 		}
 	}
 	for _, e := range g.External {

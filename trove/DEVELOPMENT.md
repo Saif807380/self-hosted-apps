@@ -50,7 +50,28 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 # Game lifecycle: status (wishlist/owned/played/dropped), platform, target price
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/004_game_status.sql
+
+# Price tracking: IGDB metadata, store listings, price history, sale events
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/005_price_tracking.sql
 ```
+
+### Price tracking worker
+
+`backend/cmd/worker` links games to IGDB, fills missing covers and studios,
+and checks Steam / eShop prices for wishlisted games. It needs
+`IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` (a free Twitch developer app) in
+`infra/.env`. In production it runs as the `worker` service in
+`podman-compose.yml`; locally:
+
+```bash
+cd backend && set -a && . ../infra/.env && set +a && \
+  UPLOADS_DIR=../uploads go run ./cmd/worker
+```
+
+`go run ./cmd/storeprobe "Hades II"` checks the store lookups by hand, and
+`go run ./cmd/storeprobe -match "Title|Studio"` shows how a game would be
+matched to IGDB.
 
 ### 4. Start the backend
 

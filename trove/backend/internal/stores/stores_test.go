@@ -28,16 +28,40 @@ func serveFixture(t *testing.T, name string) *httptest.Server {
 
 func TestNormalizeTitle(t *testing.T) {
 	cases := map[string]string{
-		"Mario Kart™ World":                     "mario kart world",
-		"Hollow Knight: Silksong":               "hollow knight silksong",
-		"Hades II – Nintendo Switch™ 2 Edition": "hades ii",
-		"Pokémon Black Version":                 "pokemon black version",
-		"Ratchet & Clank":                       "ratchet & clank",
-		"Hades II – Nintendo Switch™ 2 Edition": "hades ii",
+		"Mario Kart™ World":                          "mario kart world",
+		"Hollow Knight: Silksong":                    "hollow knight silksong",
+		"Hades II – Nintendo Switch™ 2 Edition":      "hades 2",
+		"Hades II –\u00a0Nintendo Switch™ 2 Edition": "hades 2",
+		"Pokémon Black Version":                      "pokemon black version",
+		"Ratchet & Clank":                            "ratchet and clank",
+		"Ratchet And Clank":                          "ratchet and clank",
+		"Assassin's Creed II":                        "assassins creed 2",
+		"Assassins Creed II":                         "assassins creed 2",
+		"Marvel’s Spider-Man 2":                      "marvels spider man 2",
+		"The Witcher III: Wild Hunt":                 "the witcher 3 wild hunt",
+		"Final Fantasy X":                            "final fantasy 10",
+		"Grand Theft Auto V":                         "grand theft auto 5",
+		"I Am Bread":                                 "i am bread",
+		"Game PS4 & PS5":                             "game",
 	}
 	for in, want := range cases {
 		if got := NormalizeTitle(in); got != want {
 			t.Errorf("NormalizeTitle(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestBaseTitle(t *testing.T) {
+	cases := map[string]string{
+		"Control Ultimate Edition":          "control",
+		"Batman: Arkham City GOTY":          "batman arkham city",
+		"Celeste Game of the Year Edition":  "celeste",
+		"The Last of Us Remastered Edition": "the last of us remastered edition",
+		"Elden Ring":                        "elden ring",
+	}
+	for in, want := range cases {
+		if got := BaseTitle(NormalizeTitle(in)); got != want {
+			t.Errorf("BaseTitle(%q) = %q, want %q", in, got, want)
 		}
 	}
 }
@@ -47,17 +71,17 @@ func TestMatchScore(t *testing.T) {
 		want, got string
 		score     int
 	}{
-		{"elden ring", "elden ring", 2},
-		{"elden ring", "elden ring tarnished edition", 1},
-		{"stellar blade", "stellar blade complete edition", 1},
-		{"celeste", "celeste game of the year edition", 1},
-		{"hades", "hades ii", 0},
-		{"hades", "hades ii deluxe edition", 0},
-		{"hades", "hades uprising", 0},
-		{"elden ring", "elden ring nightreign", 0},
+		{"Elden Ring", "ELDEN RING", 2},
+		{"Elden Ring", "ELDEN RING Tarnished Edition", 1},
+		{"Stellar Blade", "Stellar Blade™ Complete Edition", 1},
+		{"Celeste", "Celeste Game of the Year Edition", 1},
+		{"Hades", "Hades II", 0},
+		{"Hades", "Hades II Deluxe Edition", 0},
+		{"Hades", "Hades Uprising", 0},
+		{"Elden Ring", "Elden Ring Nightreign", 0},
 	}
 	for _, c := range cases {
-		if got := MatchScore(c.want, c.got); got != c.score {
+		if got := MatchScore(NormalizeTitle(c.want), NormalizeTitle(c.got)); got != c.score {
 			t.Errorf("MatchScore(%q, %q) = %d, want %d", c.want, c.got, got, c.score)
 		}
 	}
