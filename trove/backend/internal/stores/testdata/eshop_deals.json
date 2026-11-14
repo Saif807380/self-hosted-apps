@@ -1,0 +1,213 @@
+{
+ "results": [
+  {
+   "hits": [
+    {
+     "title": "Wobbly Life",
+     "nsuid": "70010000080994",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/wobbly-life-switch/",
+     "popularityRank": 83,
+     "price": {
+      "finalPrice": 19.99,
+      "regPrice": 24.99,
+      "discounted": true,
+      "salePrice": 19.99,
+      "amountOff": 5,
+      "percentOff": 20.01
+     }
+    },
+    {
+     "title": "Boomerang Fu",
+     "nsuid": "70010000021921",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/boomerang-fu-switch/",
+     "popularityRank": 86,
+     "price": {
+      "finalPrice": 7.49,
+      "regPrice": 14.99,
+      "discounted": true,
+      "salePrice": 7.49,
+      "amountOff": 7.5,
+      "percentOff": 50.03
+     }
+    },
+    {
+     "title": "PICO PARK 2",
+     "nsuid": "70010000077279",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/pico-park-2-switch/",
+     "popularityRank": 122,
+     "price": {
+      "finalPrice": 6.29,
+      "regPrice": 8.99,
+      "discounted": true,
+      "salePrice": 6.29,
+      "amountOff": 2.7,
+      "percentOff": 30.03
+     }
+    },
+    {
+     "title": "The Adventures of Elliot: The Millennium Tales",
+     "nsuid": "70010000116884",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/the-adventures-of-elliot-the-millennium-tales-switch-2/",
+     "popularityRank": 123,
+     "price": {
+      "finalPrice": 41.99,
+      "regPrice": 59.99,
+      "discounted": true,
+      "salePrice": 41.99,
+      "amountOff": 18,
+      "percentOff": 30.01
+     }
+    },
+    {
+     "title": "PICO PARK",
+     "nsuid": "70010000019266",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/pico-park-switch/",
+     "popularityRank": 129,
+     "price": {
+      "finalPrice": 3.49,
+      "regPrice": 4.99,
+      "discounted": true,
+      "salePrice": 3.49,
+      "amountOff": 1.5,
+      "percentOff": 30.06
+     }
+    },
+    {
+     "title": "FINAL FANTASY VII REMAKE INTERGRADE",
+     "nsuid": "70010000101698",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/final-fantasy-vii-remake-intergrade-switch-2/",
+     "popularityRank": 134,
+     "price": {
+      "finalPrice": 7.99,
+      "regPrice": 39.99,
+      "discounted": true,
+      "salePrice": 7.99,
+      "amountOff": 32,
+      "percentOff": 80.02
+     }
+    },
+    {
+     "title": "Untitled Goose Game",
+     "nsuid": "70010000014141",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/untitled-goose-game-switch/",
+     "popularityRank": 141,
+     "price": {
+      "finalPrice": 7.99,
+      "regPrice": 19.99,
+      "discounted": true,
+      "salePrice": 7.99,
+      "amountOff": 12,
+      "percentOff": 60.03
+     }
+    },
+    {
+     "title": "Gang Beasts",
+     "nsuid": "70010000033942",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/gang-beasts-switch/",
+     "popularityRank": 142,
+     "price": {
+      "finalPrice": 11.99,
+      "regPrice": 29.99,
+      "discounted": true,
+      "salePrice": 11.99,
+      "amountOff": 18,
+      "percentOff": 60.02
+     }
+    },
+    {
+     "title": "MARVEL Cosmic Invasion",
+     "nsuid": "70010000110541",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/marvel-cosmic-invasion-switch-2/",
+     "popularityRank": 150,
+     "price": {
+      "finalPrice": 22.49,
+      "regPrice": 29.99,
+      "discounted": true,
+      "salePrice": 22.49,
+      "amountOff": 7.5,
+      "percentOff": 25.01
+     }
+    },
+    {
+     "title": "DRAGON QUEST VII Reimagined",
+     "nsuid": "70010000098990",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/dragon-quest-vii-reimagined-switch-2/",
+     "popularityRank": 160,
+     "price": {
+      "finalPrice": 38.99,
+      "regPrice": 59.99,
+      "discounted": true,
+      "salePrice": 38.99,
+      "amountOff": 21,
+      "percentOff": 35.01
+     }
+    },
+    {
+     "title": "FINAL FANTASY VII REBIRTH",
+     "nsuid": "70010000112477",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/final-fantasy-vii-rebirth-switch-2/",
+     "popularityRank": 162,
+     "price": {
+      "finalPrice": 7.49,
+      "regPrice": 49.99,
+      "discounted": true,
+      "salePrice": 7.49,
+      "amountOff": 42.5,
+      "percentOff": 85.02
+     }
+    },
+    {
+     "title": "OCTOPATH TRAVELER 0",
+     "nsuid": "70010000097827",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/octopath-traveler-0-switch-2/",
+     "popularityRank": 173,
+     "price": {
+      "finalPrice": 24.99,
+      "regPrice": 49.99,
+      "discounted": true,
+      "salePrice": 24.99,
+      "amountOff": 25,
+      "percentOff": 50.01
+     }
+    }
+   ],
+   "nbHits": 4261
+  }
+ ]
+}

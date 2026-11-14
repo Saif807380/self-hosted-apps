@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -19,6 +20,9 @@ import (
 
 const catalogSearchLimit = 8
 
+// ErrInvalidPickAction is returned for an UpdatePick action it doesn't know.
+var ErrInvalidPickAction = errors.New("action must be wishlist, own or dismiss")
+
 // ErrInvalidLink is returned for a PS Store URL that isn't a product page.
 var ErrInvalidLink = errors.New("not a PS Store product or concept page")
 
@@ -26,6 +30,7 @@ var ErrInvalidLink = errors.New("not a PS Store product or concept page")
 // you correct what it got wrong (the IGDB match, the PS Store link).
 type GamingService struct {
 	store *dao.GamingStore
+	games *dao.GameStore // to add a game you pick from the weekly picks
 	igdb  *catalog.Client
 	redis *redis.Client
 	push  *push.Sender
@@ -147,6 +152,62 @@ func (s *GamingService) ListDeals(ctx context.Context) ([]dao.Deal, float64, err
 		return nil, 0, err
 	}
 	return deals, rate, nil
+}
+
+// ListPicks returns this week's picks you haven't acted on, and the week
+// they're for (zero before the first run).
+func (s *GamingService) ListPicks(ctx context.Context) ([]dao.Pick, time.Time, error) {
+	picks, err := s.store.CurrentPicks(ctx)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	week, err := s.store.LastPickRun(ctx)
+	return picks, week, err
+}
+
+// UpdatePick acts on a pick: "dismiss" turns it down; "wishlist" and "own"
+// add the game to Trove with that status, linked to the picked IGDB game,
+// and return its id. Each pick can be acted on once (dao.ErrPickTaken).
+func (s *GamingService) UpdatePick(ctx context.Context, id uuid.UUID, action string) (*uuid.UUID, error) {
+	status, state := "", ""
+	switch action {
+	case "dismiss":
+		return nil, s.store.ClaimPick(ctx, id, dao.PickDismissed)
+	case "wishlist":
+		status, state = model.GameWishlist, dao.PickWishlisted
+	case "own":
+		status, state = model.GameOwned, dao.PickOwned
+	default:
+		return nil, ErrInvalidPickAction
+	}
+	pick, err := s.store.GetPick(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.store.ClaimPick(ctx, id, state); err != nil {
+		return nil, err
+	}
+	gameID, err := s.addPickedGame(ctx, pick, status)
+	if err != nil {
+		if undo := s.store.UnclaimPick(ctx, id); undo != nil {
+			err = errors.Join(err, undo)
+		}
+		return nil, err
+	}
+	return &gameID, s.store.SetPickGame(ctx, id, gameID)
+}
+
+// addPickedGame adds a pick to your library and links it to its IGDB game,
+// which names it, fills in its cover and starts tracking it.
+func (s *GamingService) addPickedGame(ctx context.Context, pick *dao.Pick, status string) (uuid.UUID, error) {
+	game, err := s.games.Create(ctx, dao.CreateGameParams{Title: pick.Title, Status: status, YearsPlayed: []int16{}})
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if err := s.LinkGame(ctx, game.ID, pick.IGDBID); err != nil {
+		return uuid.Nil, fmt.Errorf("link picked game: %w", err)
+	}
+	return game.ID, nil
 }
 
 // PushConfig returns whether alerts can be turned on, and the public key a

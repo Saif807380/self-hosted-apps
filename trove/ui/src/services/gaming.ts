@@ -72,6 +72,26 @@ export interface Deal {
   lowest?: boolean // the lowest price Trove has seen for it
 }
 
+/** A game on sale this week that you'd probably like. */
+export interface GamePick {
+  id: string
+  igdbId: string
+  title: string
+  year?: number
+  coverUrl?: string
+  pitch: string
+  store: StoreName
+  edition?: string
+  url: string
+  currency: string
+  baseMinor: string
+  finalMinor: string
+  discountPct?: number
+  saleEndsAt?: string
+}
+
+export type PickAction = 'wishlist' | 'own' | 'dismiss'
+
 export interface GameInsights {
   matchStatus: MatchStatus
   match?: CatalogGame
@@ -89,6 +109,12 @@ export const gamingApi = {
 
   deals: () =>
     rpc<{ deals?: Deal[]; usdToInr?: number }>(SVC, 'ListDeals', {}),
+
+  picks: () =>
+    rpc<{ picks?: GamePick[]; week?: string }>(SVC, 'ListPicks', {}),
+
+  updatePick: (id: string, action: PickAction) =>
+    rpc<{ videoGameId?: string }>(SVC, 'UpdatePick', { id, action }),
 
   search: (query: string) =>
     rpc<{ games?: CatalogGame[] }>(SVC, 'SearchCatalog', { query }).then(r => r.games ?? []),

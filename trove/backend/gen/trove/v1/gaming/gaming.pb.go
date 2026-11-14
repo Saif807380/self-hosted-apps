@@ -1544,6 +1544,341 @@ func (x *ListDealsResponse) GetUsdToInr() float64 {
 	return 0
 }
 
+type ListPicksRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPicksRequest) Reset() {
+	*x = ListPicksRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPicksRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPicksRequest) ProtoMessage() {}
+
+func (x *ListPicksRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPicksRequest.ProtoReflect.Descriptor instead.
+func (*ListPicksRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{27}
+}
+
+// A game on sale this week that you'd probably like.
+type Pick struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	IgdbId        int64                  `protobuf:"varint,2,opt,name=igdb_id,json=igdbId,proto3" json:"igdb_id,omitempty"`
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Year          int32                  `protobuf:"varint,4,opt,name=year,proto3" json:"year,omitempty"` // 0 when unknown
+	CoverUrl      string                 `protobuf:"bytes,5,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url,omitempty"`
+	Pitch         string                 `protobuf:"bytes,6,opt,name=pitch,proto3" json:"pitch,omitempty"` // why you'd like it
+	Store         string                 `protobuf:"bytes,7,opt,name=store,proto3" json:"store,omitempty"` // steam | eshop
+	Edition       string                 `protobuf:"bytes,8,opt,name=edition,proto3" json:"edition,omitempty"`
+	Url           string                 `protobuf:"bytes,9,opt,name=url,proto3" json:"url,omitempty"`
+	Currency      string                 `protobuf:"bytes,10,opt,name=currency,proto3" json:"currency,omitempty"`
+	BaseMinor     int64                  `protobuf:"varint,11,opt,name=base_minor,json=baseMinor,proto3" json:"base_minor,omitempty"`
+	FinalMinor    int64                  `protobuf:"varint,12,opt,name=final_minor,json=finalMinor,proto3" json:"final_minor,omitempty"`
+	DiscountPct   int32                  `protobuf:"varint,13,opt,name=discount_pct,json=discountPct,proto3" json:"discount_pct,omitempty"`
+	SaleEndsAt    *string                `protobuf:"bytes,14,opt,name=sale_ends_at,json=saleEndsAt,proto3,oneof" json:"sale_ends_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pick) Reset() {
+	*x = Pick{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pick) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pick) ProtoMessage() {}
+
+func (x *Pick) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pick.ProtoReflect.Descriptor instead.
+func (*Pick) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *Pick) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Pick) GetIgdbId() int64 {
+	if x != nil {
+		return x.IgdbId
+	}
+	return 0
+}
+
+func (x *Pick) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Pick) GetYear() int32 {
+	if x != nil {
+		return x.Year
+	}
+	return 0
+}
+
+func (x *Pick) GetCoverUrl() string {
+	if x != nil {
+		return x.CoverUrl
+	}
+	return ""
+}
+
+func (x *Pick) GetPitch() string {
+	if x != nil {
+		return x.Pitch
+	}
+	return ""
+}
+
+func (x *Pick) GetStore() string {
+	if x != nil {
+		return x.Store
+	}
+	return ""
+}
+
+func (x *Pick) GetEdition() string {
+	if x != nil {
+		return x.Edition
+	}
+	return ""
+}
+
+func (x *Pick) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *Pick) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *Pick) GetBaseMinor() int64 {
+	if x != nil {
+		return x.BaseMinor
+	}
+	return 0
+}
+
+func (x *Pick) GetFinalMinor() int64 {
+	if x != nil {
+		return x.FinalMinor
+	}
+	return 0
+}
+
+func (x *Pick) GetDiscountPct() int32 {
+	if x != nil {
+		return x.DiscountPct
+	}
+	return 0
+}
+
+func (x *Pick) GetSaleEndsAt() string {
+	if x != nil && x.SaleEndsAt != nil {
+		return *x.SaleEndsAt
+	}
+	return ""
+}
+
+type ListPicksResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Picks         []*Pick                `protobuf:"bytes,1,rep,name=picks,proto3" json:"picks,omitempty"` // best first; ones you acted on or whose sale ended are left out
+	Week          string                 `protobuf:"bytes,2,opt,name=week,proto3" json:"week,omitempty"`   // YYYY-MM-DD, the Sunday they were made; empty before the first run
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPicksResponse) Reset() {
+	*x = ListPicksResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPicksResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPicksResponse) ProtoMessage() {}
+
+func (x *ListPicksResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPicksResponse.ProtoReflect.Descriptor instead.
+func (*ListPicksResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *ListPicksResponse) GetPicks() []*Pick {
+	if x != nil {
+		return x.Picks
+	}
+	return nil
+}
+
+func (x *ListPicksResponse) GetWeek() string {
+	if x != nil {
+		return x.Week
+	}
+	return ""
+}
+
+// action: wishlist | own (adds the game to Trove) | dismiss ("not for me",
+// which also counts against similar games in later picks).
+type UpdatePickRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Action        string                 `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePickRequest) Reset() {
+	*x = UpdatePickRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePickRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePickRequest) ProtoMessage() {}
+
+func (x *UpdatePickRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePickRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePickRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *UpdatePickRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdatePickRequest) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+type UpdatePickResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VideoGameId   string                 `protobuf:"bytes,1,opt,name=video_game_id,json=videoGameId,proto3" json:"video_game_id,omitempty"` // the game added, for wishlist and own
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePickResponse) Reset() {
+	*x = UpdatePickResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePickResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePickResponse) ProtoMessage() {}
+
+func (x *UpdatePickResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePickResponse.ProtoReflect.Descriptor instead.
+func (*UpdatePickResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *UpdatePickResponse) GetVideoGameId() string {
+	if x != nil {
+		return x.VideoGameId
+	}
+	return ""
+}
+
 var File_trove_v1_gaming_gaming_proto protoreflect.FileDescriptor
 
 const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
@@ -1662,7 +1997,36 @@ const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
 	"\x11ListDealsResponse\x12+\n" +
 	"\x05deals\x18\x01 \x03(\v2\x15.trove.v1.gaming.DealR\x05deals\x12\x1c\n" +
 	"\n" +
-	"usd_to_inr\x18\x02 \x01(\x01R\busdToInr2\xae\a\n" +
+	"usd_to_inr\x18\x02 \x01(\x01R\busdToInr\"\x12\n" +
+	"\x10ListPicksRequest\"\x85\x03\n" +
+	"\x04Pick\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\aigdb_id\x18\x02 \x01(\x03R\x06igdbId\x12\x14\n" +
+	"\x05title\x18\x03 \x01(\tR\x05title\x12\x12\n" +
+	"\x04year\x18\x04 \x01(\x05R\x04year\x12\x1b\n" +
+	"\tcover_url\x18\x05 \x01(\tR\bcoverUrl\x12\x14\n" +
+	"\x05pitch\x18\x06 \x01(\tR\x05pitch\x12\x14\n" +
+	"\x05store\x18\a \x01(\tR\x05store\x12\x18\n" +
+	"\aedition\x18\b \x01(\tR\aedition\x12\x10\n" +
+	"\x03url\x18\t \x01(\tR\x03url\x12\x1a\n" +
+	"\bcurrency\x18\n" +
+	" \x01(\tR\bcurrency\x12\x1d\n" +
+	"\n" +
+	"base_minor\x18\v \x01(\x03R\tbaseMinor\x12\x1f\n" +
+	"\vfinal_minor\x18\f \x01(\x03R\n" +
+	"finalMinor\x12!\n" +
+	"\fdiscount_pct\x18\r \x01(\x05R\vdiscountPct\x12%\n" +
+	"\fsale_ends_at\x18\x0e \x01(\tH\x00R\n" +
+	"saleEndsAt\x88\x01\x01B\x0f\n" +
+	"\r_sale_ends_at\"T\n" +
+	"\x11ListPicksResponse\x12+\n" +
+	"\x05picks\x18\x01 \x03(\v2\x15.trove.v1.gaming.PickR\x05picks\x12\x12\n" +
+	"\x04week\x18\x02 \x01(\tR\x04week\";\n" +
+	"\x11UpdatePickRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
+	"\x06action\x18\x02 \x01(\tR\x06action\"8\n" +
+	"\x12UpdatePickResponse\x12\"\n" +
+	"\rvideo_game_id\x18\x01 \x01(\tR\vvideoGameId2\xd9\b\n" +
 	"\rGamingService\x12^\n" +
 	"\rSearchCatalog\x12%.trove.v1.gaming.SearchCatalogRequest\x1a&.trove.v1.gaming.SearchCatalogResponse\x12O\n" +
 	"\bLinkGame\x12 .trove.v1.gaming.LinkGameRequest\x1a!.trove.v1.gaming.LinkGameResponse\x12X\n" +
@@ -1670,7 +2034,10 @@ const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
 	"\n" +
 	"SetPsnLink\x12\".trove.v1.gaming.SetPsnLinkRequest\x1a#.trove.v1.gaming.SetPsnLinkResponse\x12d\n" +
 	"\x0fGetGameInsights\x12'.trove.v1.gaming.GetGameInsightsRequest\x1a(.trove.v1.gaming.GetGameInsightsResponse\x12R\n" +
-	"\tListDeals\x12!.trove.v1.gaming.ListDealsRequest\x1a\".trove.v1.gaming.ListDealsResponse\x12^\n" +
+	"\tListDeals\x12!.trove.v1.gaming.ListDealsRequest\x1a\".trove.v1.gaming.ListDealsResponse\x12R\n" +
+	"\tListPicks\x12!.trove.v1.gaming.ListPicksRequest\x1a\".trove.v1.gaming.ListPicksResponse\x12U\n" +
+	"\n" +
+	"UpdatePick\x12\".trove.v1.gaming.UpdatePickRequest\x1a#.trove.v1.gaming.UpdatePickResponse\x12^\n" +
 	"\rGetPushConfig\x12%.trove.v1.gaming.GetPushConfigRequest\x1a&.trove.v1.gaming.GetPushConfigResponse\x12^\n" +
 	"\rSubscribePush\x12%.trove.v1.gaming.SubscribePushRequest\x1a&.trove.v1.gaming.SubscribePushResponse\x12d\n" +
 	"\x0fUnsubscribePush\x12'.trove.v1.gaming.UnsubscribePushRequest\x1a(.trove.v1.gaming.UnsubscribePushResponse\x12[\n" +
@@ -1688,7 +2055,7 @@ func file_trove_v1_gaming_gaming_proto_rawDescGZIP() []byte {
 	return file_trove_v1_gaming_gaming_proto_rawDescData
 }
 
-var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*CatalogGame)(nil),             // 0: trove.v1.gaming.CatalogGame
 	(*SearchCatalogRequest)(nil),    // 1: trove.v1.gaming.SearchCatalogRequest
@@ -1717,6 +2084,11 @@ var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*ListDealsRequest)(nil),        // 24: trove.v1.gaming.ListDealsRequest
 	(*Deal)(nil),                    // 25: trove.v1.gaming.Deal
 	(*ListDealsResponse)(nil),       // 26: trove.v1.gaming.ListDealsResponse
+	(*ListPicksRequest)(nil),        // 27: trove.v1.gaming.ListPicksRequest
+	(*Pick)(nil),                    // 28: trove.v1.gaming.Pick
+	(*ListPicksResponse)(nil),       // 29: trove.v1.gaming.ListPicksResponse
+	(*UpdatePickRequest)(nil),       // 30: trove.v1.gaming.UpdatePickRequest
+	(*UpdatePickResponse)(nil),      // 31: trove.v1.gaming.UpdatePickResponse
 }
 var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	0,  // 0: trove.v1.gaming.SearchCatalogResponse.games:type_name -> trove.v1.gaming.CatalogGame
@@ -1728,31 +2100,36 @@ var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	14, // 6: trove.v1.gaming.DeviceVerdict.devices:type_name -> trove.v1.gaming.DeviceRating
 	15, // 7: trove.v1.gaming.DeviceVerdict.sources:type_name -> trove.v1.gaming.Source
 	25, // 8: trove.v1.gaming.ListDealsResponse.deals:type_name -> trove.v1.gaming.Deal
-	1,  // 9: trove.v1.gaming.GamingService.SearchCatalog:input_type -> trove.v1.gaming.SearchCatalogRequest
-	3,  // 10: trove.v1.gaming.GamingService.LinkGame:input_type -> trove.v1.gaming.LinkGameRequest
-	5,  // 11: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
-	7,  // 12: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
-	9,  // 13: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
-	24, // 14: trove.v1.gaming.GamingService.ListDeals:input_type -> trove.v1.gaming.ListDealsRequest
-	16, // 15: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
-	18, // 16: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
-	20, // 17: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
-	22, // 18: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
-	2,  // 19: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
-	4,  // 20: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
-	6,  // 21: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
-	8,  // 22: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
-	12, // 23: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
-	26, // 24: trove.v1.gaming.GamingService.ListDeals:output_type -> trove.v1.gaming.ListDealsResponse
-	17, // 25: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
-	19, // 26: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
-	21, // 27: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
-	23, // 28: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
-	19, // [19:29] is the sub-list for method output_type
-	9,  // [9:19] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	28, // 9: trove.v1.gaming.ListPicksResponse.picks:type_name -> trove.v1.gaming.Pick
+	1,  // 10: trove.v1.gaming.GamingService.SearchCatalog:input_type -> trove.v1.gaming.SearchCatalogRequest
+	3,  // 11: trove.v1.gaming.GamingService.LinkGame:input_type -> trove.v1.gaming.LinkGameRequest
+	5,  // 12: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
+	7,  // 13: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
+	9,  // 14: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
+	24, // 15: trove.v1.gaming.GamingService.ListDeals:input_type -> trove.v1.gaming.ListDealsRequest
+	27, // 16: trove.v1.gaming.GamingService.ListPicks:input_type -> trove.v1.gaming.ListPicksRequest
+	30, // 17: trove.v1.gaming.GamingService.UpdatePick:input_type -> trove.v1.gaming.UpdatePickRequest
+	16, // 18: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
+	18, // 19: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
+	20, // 20: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
+	22, // 21: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
+	2,  // 22: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
+	4,  // 23: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
+	6,  // 24: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
+	8,  // 25: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
+	12, // 26: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
+	26, // 27: trove.v1.gaming.GamingService.ListDeals:output_type -> trove.v1.gaming.ListDealsResponse
+	29, // 28: trove.v1.gaming.GamingService.ListPicks:output_type -> trove.v1.gaming.ListPicksResponse
+	31, // 29: trove.v1.gaming.GamingService.UpdatePick:output_type -> trove.v1.gaming.UpdatePickResponse
+	17, // 30: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
+	19, // 31: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
+	21, // 32: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
+	23, // 33: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
+	22, // [22:34] is the sub-list for method output_type
+	10, // [10:22] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_trove_v1_gaming_gaming_proto_init() }
@@ -1764,13 +2141,14 @@ func file_trove_v1_gaming_gaming_proto_init() {
 	file_trove_v1_gaming_gaming_proto_msgTypes[11].OneofWrappers = []any{}
 	file_trove_v1_gaming_gaming_proto_msgTypes[12].OneofWrappers = []any{}
 	file_trove_v1_gaming_gaming_proto_msgTypes[25].OneofWrappers = []any{}
+	file_trove_v1_gaming_gaming_proto_msgTypes[28].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trove_v1_gaming_gaming_proto_rawDesc), len(file_trove_v1_gaming_gaming_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   27,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -229,5 +230,35 @@ func TestFX(t *testing.T) {
 	rate, err := (&FXClient{BaseURL: srv.URL}).USDToINR(context.Background())
 	if err != nil || rate != 94.25 {
 		t.Errorf("rate = %v, %v", rate, err)
+	}
+}
+
+func TestSteamSpecials(t *testing.T) {
+	srv := serveFixture(t, "steam_specials.json")
+	got, err := (&SteamClient{BaseURL: srv.URL}).Specials(context.Background(), 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The fixture page is short, so it's also the last one.
+	if len(got) != 3 || got[0].Ref != "227300" || got[0].Title != "Euro Truck Simulator 2" || got[0].Store != Steam {
+		t.Fatalf("specials = %+v", got)
+	}
+}
+
+func TestEshopDeals(t *testing.T) {
+	srv := serveFixture(t, "eshop_deals.json")
+	got, err := (&EshopClient{AlgoliaURL: srv.URL}).Deals(context.Background(), 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 5 {
+		t.Fatalf("deals = %d, want 5", len(got))
+	}
+	// Most popular first, with the Switch generation as the edition.
+	if got[0].Title != "Wobbly Life" || got[0].Edition != "Switch" || got[3].Edition != "Switch 2" {
+		t.Errorf("deals = %+v", got)
+	}
+	if !strings.HasPrefix(got[0].URL, "https://www.nintendo.com/us/store/products/") || got[0].Currency != "USD" {
+		t.Errorf("listing = %+v", got[0])
 	}
 }

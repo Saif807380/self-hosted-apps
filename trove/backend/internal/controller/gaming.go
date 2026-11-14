@@ -127,6 +127,60 @@ func (h *gamingHandler) ListDeals(
 	return connect.NewResponse(out), nil
 }
 
+func (h *gamingHandler) ListPicks(
+	ctx context.Context,
+	_ *connect.Request[gamingv1.ListPicksRequest],
+) (*connect.Response[gamingv1.ListPicksResponse], error) {
+	picks, week, err := h.svc.ListPicks(ctx)
+	if err != nil {
+		return nil, connectErr(err)
+	}
+	out := &gamingv1.ListPicksResponse{}
+	if !week.IsZero() {
+		out.Week = week.Format(time.DateOnly)
+	}
+	for _, p := range picks {
+		pb := &gamingv1.Pick{
+			Id: p.ID.String(), IgdbId: p.IGDBID, Title: p.Title, CoverUrl: deref(p.CoverURL), Pitch: p.Pitch,
+			Store: p.Store, Edition: p.Edition, Url: p.URL, Currency: p.Currency,
+			BaseMinor: p.BaseMinor, FinalMinor: p.FinalMinor, DiscountPct: int32(p.DiscountPct),
+		}
+		if p.Year != nil {
+			pb.Year = int32(*p.Year)
+		}
+		if p.SaleEndsAt != nil {
+			end := p.SaleEndsAt.Format(time.RFC3339)
+			pb.SaleEndsAt = &end
+		}
+		out.Picks = append(out.Picks, pb)
+	}
+	return connect.NewResponse(out), nil
+}
+
+func (h *gamingHandler) UpdatePick(
+	ctx context.Context,
+	req *connect.Request[gamingv1.UpdatePickRequest],
+) (*connect.Response[gamingv1.UpdatePickResponse], error) {
+	id, err := parseUUID(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+	gameID, err := h.svc.UpdatePick(ctx, id, req.Msg.Action)
+	switch {
+	case errors.Is(err, service.ErrInvalidPickAction):
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	case errors.Is(err, dao.ErrPickTaken):
+		return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+	case err != nil:
+		return nil, connectErr(err)
+	}
+	out := &gamingv1.UpdatePickResponse{}
+	if gameID != nil {
+		out.VideoGameId = gameID.String()
+	}
+	return connect.NewResponse(out), nil
+}
+
 func (h *gamingHandler) GetPushConfig(
 	_ context.Context,
 	_ *connect.Request[gamingv1.GetPushConfigRequest],

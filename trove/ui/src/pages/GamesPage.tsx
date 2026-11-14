@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Box, Button, Flex, Heading, SimpleGrid, Text, Spinner } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, SimpleGrid, Stack, Text, Spinner } from '@chakra-ui/react'
 import { useGames } from '@/hooks/useGames'
 import { useDeals } from '@/hooks/useDeals'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -13,6 +13,8 @@ import GameFilters from './games/GameFilters'
 import GameForm from './games/GameForm'
 import GameDetailModal from './games/GameDetailModal'
 import SaleAlertsButton from './games/SaleAlertsButton'
+import PicksSection from './games/PicksSection'
+import { SectionTitle } from './games/panel'
 import EmptyState from '@/components/EmptyState'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import ViewToggle from '@/components/ViewToggle'
@@ -20,7 +22,8 @@ import { STATUS_LABELS, STATUS_TABS, isGameStatus } from './games/lifecycle'
 
 const SIDEBAR_WIDTH = 240
 
-// The lists are your game statuses, plus Deals: wishlisted games on sale.
+// The lists are your game statuses, plus Deals: wishlisted games on sale
+// and the weekly picks.
 type Tab = GameStatus | 'deals'
 
 const defaultSort = (tab: Tab) => {
@@ -137,6 +140,32 @@ export default function GamesPage() {
     setSort(defaultSort(tab))
   }
 
+  const gameList = loading ? (
+    <Flex justify="center" py={24}><Spinner color="accent" size="lg" /></Flex>
+  ) : error ? (
+    <Flex justify="center" py={16}><Text color="red.500" fontSize="sm">{error}</Text></Flex>
+  ) : sortedGames.length === 0 ? (
+    tab === 'deals' ? (
+      <DealsNote>
+        {hasFilters ? 'No deals match your search.' : 'None of your wishlisted games is on sale right now. Trove checks prices every 6 hours.'}
+      </DealsNote>
+    ) : (
+      <EmptyState noun="game" icon="🎮" hasFilters={hasFilters} onAdd={handleOpenAdd} onClear={handleClearFilters} />
+    )
+  ) : view === 'grid' ? (
+    <SimpleGrid columns={{ base: 2, sm: 3, md: sidebarOpen ? 4 : 5, lg: sidebarOpen ? 5 : 6, xl: sidebarOpen ? 6 : 7 }} gap={{ base: 3, md: 6 }}>
+      {sortedGames.map(game => (
+        <GameCard key={game.id} game={game} deal={deals.get(game.id)} onClick={setViewGame} />
+      ))}
+    </SimpleGrid>
+  ) : (
+    <Flex direction="column" gap={2}>
+      {sortedGames.map(game => (
+        <GameListItem key={game.id} game={game} deal={deals.get(game.id)} onClick={setViewGame} />
+      ))}
+    </Flex>
+  )
+
   return (
     <Box>
       <Flex align="center" justify="space-between" mb={5}>
@@ -247,37 +276,17 @@ export default function GamesPage() {
         </Box>
 
         <Box flex={1} minW={0} w={isMobile ? '100%' : 'auto'}>
-          {tab === 'deals' && dealsStatus !== 'ready' ? (
-            dealsStatus === 'loading'
-              ? <Flex justify="center" py={24}><Spinner color="accent" size="lg" /></Flex>
-              : <DealsNote>{dealsStatus === 'offline' ? 'Deals need a connection.' : "Deals aren't available right now."}</DealsNote>
-          ) : tab === 'deals' && !loading && sortedGames.length === 0 && !hasFilters ? (
-            <DealsNote>None of your wishlisted games is on sale right now. Trove checks prices every 6 hours.</DealsNote>
-          ) : loading ? (
-            <Flex justify="center" py={24}><Spinner color="accent" size="lg" /></Flex>
-          ) : error ? (
-            <Flex justify="center" py={16}><Text color="red.500" fontSize="sm">{error}</Text></Flex>
-          ) : sortedGames.length === 0 ? (
-            <EmptyState
-              noun="game"
-              icon="🎮"
-              hasFilters={hasFilters}
-              onAdd={handleOpenAdd}
-              onClear={handleClearFilters}
-            />
-          ) : view === 'grid' ? (
-            <SimpleGrid columns={{ base: 2, sm: 3, md: sidebarOpen ? 4 : 5, lg: sidebarOpen ? 5 : 6, xl: sidebarOpen ? 6 : 7 }} gap={{ base: 3, md: 6 }}>
-              {sortedGames.map(game => (
-                <GameCard key={game.id} game={game} deal={deals.get(game.id)} onClick={setViewGame} />
-              ))}
-            </SimpleGrid>
-          ) : (
-            <Flex direction="column" gap={2}>
-              {sortedGames.map(game => (
-                <GameListItem key={game.id} game={game} deal={deals.get(game.id)} onClick={setViewGame} />
-              ))}
-            </Flex>
-          )}
+          {tab === 'deals' ? (
+            <Stack gap={8}>
+              <Stack gap={3}>
+                <SectionTitle>From your wishlist</SectionTitle>
+                {dealsStatus === 'ready' ? gameList : dealsStatus === 'loading'
+                  ? <Flex justify="center" py={12}><Spinner color="accent" /></Flex>
+                  : <DealsNote>{dealsStatus === 'offline' ? 'Deals need a connection.' : "Deals aren't available right now."}</DealsNote>}
+              </Stack>
+              <PicksSection />
+            </Stack>
+          ) : gameList}
         </Box>
       </Flex>
 
@@ -311,5 +320,5 @@ export default function GamesPage() {
 }
 
 function DealsNote({ children }: { children: string }) {
-  return <Flex justify="center" py={16} px={4}><Text color="text.muted" fontSize="sm" textAlign="center">{children}</Text></Flex>
+  return <Text color="text.muted" fontSize="sm" py={4}>{children}</Text>
 }

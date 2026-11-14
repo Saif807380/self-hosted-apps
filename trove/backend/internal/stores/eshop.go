@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -46,11 +48,52 @@ type EshopHit struct {
 	Category     string `json:"topLevelCategoryCode"`
 	IsUpgrade    bool   `json:"isUpgrade"`
 	URL          string `json:"url"`
+	// PopularityRank is nintendo.com's ranking, 1 = most popular; 0 when unranked.
+	PopularityRank int `json:"popularityRank"`
 }
 
 // Search returns raw eShop search hits for a title.
 func (c *EshopClient) Search(ctx context.Context, title string) ([]EshopHit, error) {
-	params := url.Values{"query": {title}, "hitsPerPage": {"20"}}
+	return c.query(ctx, url.Values{"query": {title}, "hitsPerPage": {"20"}})
+}
+
+// eshopDealsPage is as many hits as one Algolia query returns here.
+const eshopDealsPage = "500"
+
+// Deals returns games on sale in the eShop, most popular first, at most
+// limit of them. DLC and upgrade packs are left out; Quotes prices them.
+func (c *EshopClient) Deals(ctx context.Context, limit int) ([]Listing, error) {
+	hits, err := c.query(ctx, url.Values{
+		"query": {""}, "hitsPerPage": {eshopDealsPage}, "filters": {`topLevelFilters:"Deals"`},
+	})
+	if err != nil {
+		return nil, err
+	}
+	rank := func(h EshopHit) int {
+		if h.PopularityRank == 0 {
+			return math.MaxInt
+		}
+		return h.PopularityRank
+	}
+	slices.SortStableFunc(hits, func(a, b EshopHit) int { return rank(a) - rank(b) })
+	var out []Listing
+	for _, h := range hits {
+		edition, ok := eshopEditions[h.PlatformCode]
+		if !ok || h.IsUpgrade || h.Category != "GAMES" || h.NSUID == "" {
+			continue
+		}
+		out = append(out, Listing{
+			Store: Eshop, Ref: h.NSUID, Title: h.Title, Edition: edition,
+			URL: "https://www.nintendo.com" + h.URL, Region: eshopCountry, Currency: "USD",
+		})
+		if len(out) == limit {
+			break
+		}
+	}
+	return out, nil
+}
+
+func (c *EshopClient) query(ctx context.Context, params url.Values) ([]EshopHit, error) {
 	body, _ := json.Marshal(map[string]any{
 		"requests": []map[string]string{{"indexName": eshopAlgoliaIndex, "params": params.Encode()}},
 	})

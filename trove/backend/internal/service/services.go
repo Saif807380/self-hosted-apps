@@ -25,6 +25,6 @@ func NewServices(stores *dao.Stores, redisClient *redis.Client, igdb *catalog.Cl
 		Travel:   &TravelService{store: stores.Travel},
 		Workouts: &WorkoutService{store: stores.Workouts},
 		Sync:     &SyncService{store: stores.Sync, redis: redisClient},
-		Gaming:   &GamingService{store: stores.Gaming, igdb: igdb, redis: redisClient, push: sender, verdicts: verdictsEnabled},
+		Gaming:   &GamingService{store: stores.Gaming, games: stores.Games, igdb: igdb, redis: redisClient, push: sender, verdicts: verdictsEnabled},
 	}
 }
