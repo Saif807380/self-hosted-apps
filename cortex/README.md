@@ -138,8 +138,8 @@ ago, because the timer restarts on every message.
 
 ## After a reboot
 
-**Nothing starts on its own — this is deliberate.** The stack sits idle at zero
-cost until you ask for it:
+**Only SearXNG starts on its own** (Trove's worker searches it); the rest of
+the stack — Open WebUI and Ollama — sits idle at zero cost until you ask for it:
 
 ```bash
 cortex/scripts/cortex.sh up
@@ -147,12 +147,12 @@ cortex/scripts/cortex.sh up
 
 Roughly 21 seconds to healthy. Nothing here needs sudo.
 
-### What was turned off, and how to put it back
+### What starts on boot, and how to change it
 
 | Component | Autostart | Turned off by |
 |---|---|---|
 | `open-webui.service` | off | no `[Install]` section in the Quadlet |
-| `searxng.service` | off | same |
+| `searxng.service` | **on**, for Trove's worker | `[Install]` section in the Quadlet |
 | `ollama.service` | off | `systemctl disable ollama` |
 
 `systemctl --user enable open-webui` **will not** re-enable the containers —
