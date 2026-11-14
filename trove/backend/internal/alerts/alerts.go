@@ -35,7 +35,10 @@ func Evaluate(c Check) (reasons []string, saleKey string) {
 	if c.Previous != nil && c.Previous.FinalMinor == c.New.FinalMinor {
 		return nil, ""
 	}
-	if c.New.OnSale() {
+	// A sale only counts as news when it starts or gets deeper; a sale that
+	// becomes less generous is a price rise.
+	startedOrDeeper := c.Previous == nil || !c.Previous.OnSale() || c.New.FinalMinor < c.Previous.FinalMinor
+	if c.New.OnSale() && startedOrDeeper {
 		reasons = append(reasons, ReasonSale)
 	}
 	if c.TargetINR != nil && c.ToINRMinor != nil {

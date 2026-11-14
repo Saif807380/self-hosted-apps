@@ -30,6 +30,7 @@ func TestEvaluate(t *testing.T) {
 			[]string{ReasonSale, ReasonLowest}},
 		{"deeper discount", Check{New: quote(130000, 65000), Previous: ptr(quote(130000, 91000)), LowestMinor: 91000},
 			[]string{ReasonSale, ReasonLowest}},
+		{"sale gets shallower", Check{New: quote(130000, 91000), Previous: ptr(quote(130000, 65000)), LowestMinor: 65000}, nil},
 		{"sale ends", Check{New: quote(130000, 130000), Previous: ptr(quote(130000, 91000)), LowestMinor: 91000}, nil},
 		{"sale returns, not a new low", Check{New: quote(130000, 91000), Previous: ptr(quote(130000, 130000)), LowestMinor: 65000},
 			[]string{ReasonSale}},
