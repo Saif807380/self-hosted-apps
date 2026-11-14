@@ -1,0 +1,51 @@
+{
+    "personalized": false,
+    "country": "US",
+    "prices": [
+        {
+            "title_id": 70010000006442,
+            "sales_status": "onsale",
+            "regular_price": {
+                "amount": "$19.99",
+                "currency": "USD",
+                "raw_value": "19.99"
+            },
+            "discount_price": {
+                "amount": "$4.99",
+                "currency": "USD",
+                "raw_value": "4.99",
+                "start_datetime": "2026-11-09T00:00:00Z",
+                "end_datetime": "2026-11-30T23:59:59Z"
+            },
+            "gold_point": {
+                "basic_gift_gp": "0",
+                "basic_gift_rate": "0",
+                "consume_gp": "0",
+                "extra_gold_points": [],
+                "gift_gp": "0",
+                "gift_rate": "0"
+            }
+        },
+        {
+            "title_id": 70010000095431,
+            "sales_status": "onsale",
+            "regular_price": {
+                "amount": "$79.99",
+                "currency": "USD",
+                "raw_value": "79.99"
+            },
+            "gold_point": {
+                "basic_gift_gp": "0",
+                "basic_gift_rate": "0",
+                "consume_gp": "0",
+                "extra_gold_points": [],
+                "gift_gp": "0",
+                "gift_rate": "0"
+            }
+        },
+        {
+            "title_id": 70010000000000,
+            "sales_status": "not_found"
+        }
+    ]
+}

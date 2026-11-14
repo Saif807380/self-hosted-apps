@@ -1,0 +1,96 @@
+{
+ "results": [
+  {
+   "hits": [
+    {
+     "title": "Hades II – Nintendo Switch™ 2 Edition",
+     "nsuid": "70010000105526",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/hades-ii-nintendo-switch-2-edition-switch-2/"
+    },
+    {
+     "title": "Hades II",
+     "nsuid": "70010000060675",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/hades-ii-switch/"
+    },
+    {
+     "title": "Hades",
+     "nsuid": "70010000033131",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/hades-switch/"
+    },
+    {
+     "title": "Hades Uprising",
+     "nsuid": "70010000118362",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/hades-uprising-switch/"
+    },
+    {
+     "title": "Hades II – Nintendo Switch™ 2 Edition Upgrade Pack",
+     "nsuid": "70050000062070",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": true,
+     "url": "/us/store/products/hades-ii-nintendo-switch-2-edition-upgrade-pack-switch-2/"
+    },
+    {
+     "title": "Special Costume for Hades",
+     "nsuid": "70050000018580",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/special-costume-for-hades-70050000018580-switch/"
+    },
+    {
+     "title": "Garden of the Greek Gods: Zeus, Poseidon & Hades Love Story",
+     "nsuid": "70010000106404",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/garden-of-the-greek-gods-zeus-poseidon-and-hades-love-story-switch/"
+    },
+    {
+     "title": "Froggy Hates Snow",
+     "nsuid": "70010000109656",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/froggy-hates-snow-switch/"
+    },
+    {
+     "title": "Doug Hates His Job",
+     "nsuid": "70010000037280",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/doug-hates-his-job-switch/"
+    },
+    {
+     "title": "Air Hares",
+     "nsuid": "70010000124448",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/air-hares-switch/"
+    },
+    {
+     "title": "Cool Shades",
+     "nsuid": "70050000071424",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/cool-shades-70050000071424-switch/"
+    }
+   ]
+  }
+ ]
+}

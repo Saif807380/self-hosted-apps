@@ -1,0 +1,1004 @@
+[
+    {
+        "id": 325591,
+        "cover": {
+            "id": 426980,
+            "image_id": "co95gk"
+        },
+        "external_games": [
+            {
+                "id": 3219899,
+                "uid": "B0DYYHCJWN",
+                "external_game_source": 20
+            },
+            {
+                "id": 2983975,
+                "uid": "10010877",
+                "external_game_source": 36
+            },
+            {
+                "id": 3218885,
+                "uid": "B0DYYJPKKK",
+                "external_game_source": 20
+            },
+            {
+                "id": 2969539,
+                "uid": "2622380",
+                "external_game_source": 1
+            },
+            {
+                "id": 2969520,
+                "uid": "982348888",
+                "external_game_source": 14
+            }
+        ],
+        "first_release_date": 1748563200,
+        "genres": [
+            {
+                "id": 12,
+                "name": "Role-playing (RPG)"
+            },
+            {
+                "id": 25,
+                "name": "Hack and slash/Beat 'em up"
+            }
+        ],
+        "involved_companies": [
+            {
+                "id": 299411,
+                "company": {
+                    "id": 248,
+                    "name": "Bandai Namco Entertainment"
+                },
+                "developer": false
+            },
+            {
+                "id": 299410,
+                "company": {
+                    "id": 1012,
+                    "name": "FromSoftware"
+                },
+                "developer": true
+            }
+        ],
+        "keywords": [
+            {
+                "id": 416,
+                "name": "roguelike"
+            },
+            {
+                "id": 472,
+                "name": "prequel"
+            },
+            {
+                "id": 1980,
+                "name": "procedurally generated"
+            },
+            {
+                "id": 16877,
+                "name": "controller support"
+            },
+            {
+                "id": 39201,
+                "name": "online coop"
+            }
+        ],
+        "name": "Elden Ring Nightreign",
+        "platforms": [
+            169,
+            48,
+            6,
+            167,
+            49
+        ],
+        "similar_games": [
+            279661,
+            208417,
+            196761,
+            92550,
+            138950,
+            248643,
+            210585,
+            383,
+            122200,
+            125624
+        ],
+        "themes": [
+            {
+                "id": 1,
+                "name": "Action"
+            },
+            {
+                "id": 17,
+                "name": "Fantasy"
+            },
+            {
+                "id": 21,
+                "name": "Survival"
+            },
+            {
+                "id": 38,
+                "name": "Open world"
+            }
+        ],
+        "total_rating": 82.21617273538804,
+        "total_rating_count": 111
+    },
+    {
+        "id": 119133,
+        "cover": {
+            "id": 212094,
+            "image_id": "co4jni"
+        },
+        "external_games": [
+            {
+                "id": 3190333,
+                "uid": "B09MG5LQ18",
+                "external_game_source": 20
+            },
+            {
+                "id": 2062011,
+                "uid": "B09743F8P6",
+                "external_game_source": 20
+            },
+            {
+                "id": 2063046,
+                "uid": "B0977MY2WM",
+                "external_game_source": 20
+            },
+            {
+                "id": 2062942,
+                "uid": "B0977QP5L6",
+                "external_game_source": 20
+            },
+            {
+                "id": 1930111,
+                "uid": "B07SPYK271",
+                "external_game_source": 20
+            },
+            {
+                "id": 1932061,
+                "uid": "B07SMBNTSJ",
+                "external_game_source": 20
+            },
+            {
+                "id": 1775842,
+                "uid": "73745",
+                "external_game_source": 3
+            },
+            {
+                "id": 1933890,
+                "uid": "B07T8J15JQ",
+                "external_game_source": 20
+            },
+            {
+                "id": 2270864,
+                "uid": "9P3J32CTXLRZ",
+                "external_game_source": 11
+            },
+            {
+                "id": 2271018,
+                "uid": "B09QPYZ6R2",
+                "external_game_source": 20
+            },
+            {
+                "id": 2271058,
+                "uid": "B09QPZHJH9",
+                "external_game_source": 20
+            },
+            {
+                "id": 2225572,
+                "uid": "B09QQYB8D9",
+                "external_game_source": 20
+            },
+            {
+                "id": 2635204,
+                "uid": "B097M66Y91",
+                "external_game_source": 20
+            },
+            {
+                "id": 2088476,
+                "uid": "B09D4KSL1B",
+                "external_game_source": 20
+            },
+            {
+                "id": 2254892,
+                "uid": "B09QPYZ6R2",
+                "external_game_source": 20
+            },
+            {
+                "id": 2254895,
+                "uid": "B09SMC6J15",
+                "external_game_source": 20
+            },
+            {
+                "id": 2254935,
+                "uid": "B09SQ6VGTB",
+                "external_game_source": 20
+            },
+            {
+                "id": 2184011,
+                "uid": "B09P1LTGH5",
+                "external_game_source": 20
+            },
+            {
+                "id": 2233957,
+                "uid": "B09R3BZHXX",
+                "external_game_source": 20
+            },
+            {
+                "id": 2241900,
+                "uid": "B09QPYY5HJ",
+                "external_game_source": 20
+            },
+            {
+                "id": 2682210,
+                "uid": "B0B7RSBXFT",
+                "external_game_source": 20
+            },
+            {
+                "id": 3232857,
+                "uid": "B07T8J27XQ",
+                "external_game_source": 20
+            },
+            {
+                "id": 2254996,
+                "uid": "B09QPYY5HJ",
+                "external_game_source": 20
+            },
+            {
+                "id": 2682054,
+                "uid": "B0B7RSBXFT",
+                "external_game_source": 20
+            },
+            {
+                "id": 2084186,
+                "uid": "1245620",
+                "external_game_source": 1
+            },
+            {
+                "id": 2882831,
+                "uid": "B09R3C1QHH",
+                "external_game_source": 20
+            },
+            {
+                "id": 2635202,
+                "uid": "B097M66Y91",
+                "external_game_source": 20
+            },
+            {
+                "id": 2062880,
+                "uid": "B0977PVNYX",
+                "external_game_source": 20
+            },
+            {
+                "id": 2225478,
+                "uid": "B09QQT2NWG",
+                "external_game_source": 20
+            },
+            {
+                "id": 2183928,
+                "uid": "B09P1LBC7K",
+                "external_game_source": 20
+            },
+            {
+                "id": 2254918,
+                "uid": "B09QPZHJH9",
+                "external_game_source": 20
+            },
+            {
+                "id": 2233934,
+                "uid": "B09R3HR7NY",
+                "external_game_source": 20
+            },
+            {
+                "id": 2636625,
+                "uid": "B09SMC6J15",
+                "external_game_source": 20
+            },
+            {
+                "id": 2167564,
+                "uid": "B09L1C64SN",
+                "external_game_source": 20
+            },
+            {
+                "id": 2682308,
+                "uid": "B0B7RSBXFT",
+                "external_game_source": 20
+            },
+            {
+                "id": 2271134,
+                "uid": "B09QPYY5HJ",
+                "external_game_source": 20
+            },
+            {
+                "id": 2233945,
+                "uid": "B09R3DSJMS",
+                "external_game_source": 20
+            },
+            {
+                "id": 2857523,
+                "uid": "B09R3HR7NY",
+                "external_game_source": 20
+            },
+            {
+                "id": 2636627,
+                "uid": "B09SMC6J15",
+                "external_game_source": 20
+            },
+            {
+                "id": 2233921,
+                "uid": "B09R3C1QHH",
+                "external_game_source": 20
+            },
+            {
+                "id": 2184002,
+                "uid": "B09P1MVC4J",
+                "external_game_source": 20
+            },
+            {
+                "id": 2062922,
+                "uid": "B0977LKSQ6",
+                "external_game_source": 20
+            },
+            {
+                "id": 2241788,
+                "uid": "B09QPYZ6R2",
+                "external_game_source": 20
+            },
+            {
+                "id": 3219800,
+                "uid": "B0H7Q922M5",
+                "external_game_source": 20
+            },
+            {
+                "id": 2063058,
+                "uid": "B0979YW1Z9",
+                "external_game_source": 20
+            },
+            {
+                "id": 2064411,
+                "uid": "B097M66Y91",
+                "external_game_source": 20
+            },
+            {
+                "id": 2636628,
+                "uid": "B09SMC6J15",
+                "external_game_source": 20
+            },
+            {
+                "id": 2241810,
+                "uid": "B09QPZHJH9",
+                "external_game_source": 20
+            },
+            {
+                "id": 2062924,
+                "uid": "B097B15N2T",
+                "external_game_source": 20
+            },
+            {
+                "id": 2167628,
+                "uid": "B09L19LT8Q",
+                "external_game_source": 20
+            },
+            {
+                "id": 3223289,
+                "uid": "B09W9WGSVL",
+                "external_game_source": 20
+            },
+            {
+                "id": 1914490,
+                "uid": "512953",
+                "external_game_source": 14
+            },
+            {
+                "id": 3190344,
+                "uid": "B09MG3FTNC",
+                "external_game_source": 20
+            },
+            {
+                "id": 2172221,
+                "uid": "10000333",
+                "external_game_source": 36
+            }
+        ],
+        "first_release_date": 1645747200,
+        "genres": [
+            {
+                "id": 12,
+                "name": "Role-playing (RPG)"
+            },
+            {
+                "id": 31,
+                "name": "Adventure"
+            }
+        ],
+        "involved_companies": [
+            {
+                "id": 334813,
+                "company": {
+                    "id": 248,
+                    "name": "Bandai Namco Entertainment"
+                },
+                "developer": false
+            },
+            {
+                "id": 334814,
+                "company": {
+                    "id": 1012,
+                    "name": "FromSoftware"
+                },
+                "developer": true
+            }
+        ],
+        "keywords": [
+            {
+                "id": 72,
+                "name": "exploration"
+            },
+            {
+                "id": 98,
+                "name": "monsters"
+            },
+            {
+                "id": 105,
+                "name": "knights"
+            },
+            {
+                "id": 109,
+                "name": "violence"
+            },
+            {
+                "id": 151,
+                "name": "medieval"
+            },
+            {
+                "id": 162,
+                "name": "brutal"
+            },
+            {
+                "id": 226,
+                "name": "magic"
+            },
+            {
+                "id": 227,
+                "name": "sword"
+            },
+            {
+                "id": 250,
+                "name": "3d"
+            },
+            {
+                "id": 332,
+                "name": "dragons"
+            },
+            {
+                "id": 558,
+                "name": "death"
+            },
+            {
+                "id": 623,
+                "name": "horse"
+            },
+            {
+                "id": 701,
+                "name": "archery"
+            },
+            {
+                "id": 905,
+                "name": "difficult"
+            },
+            {
+                "id": 1032,
+                "name": "insanity"
+            },
+            {
+                "id": 1065,
+                "name": "dragon"
+            },
+            {
+                "id": 1293,
+                "name": "achievements"
+            },
+            {
+                "id": 1317,
+                "name": "apocalypse"
+            },
+            {
+                "id": 1320,
+                "name": "undead"
+            },
+            {
+                "id": 1333,
+                "name": "online"
+            },
+            {
+                "id": 1345,
+                "name": "traps"
+            },
+            {
+                "id": 1494,
+                "name": "steam trading cards"
+            },
+            {
+                "id": 1524,
+                "name": "explorable world"
+            },
+            {
+                "id": 3433,
+                "name": "horse riding"
+            },
+            {
+                "id": 3486,
+                "name": "boss fight"
+            },
+            {
+                "id": 4004,
+                "name": "steam achievements"
+            },
+            {
+                "id": 4135,
+                "name": "xbox controller support for pc"
+            },
+            {
+                "id": 4150,
+                "name": "steam cloud"
+            },
+            {
+                "id": 4272,
+                "name": "customizable characters"
+            },
+            {
+                "id": 4359,
+                "name": "polygonal 3d"
+            },
+            {
+                "id": 4392,
+                "name": "bow and arrow"
+            },
+            {
+                "id": 4397,
+                "name": "upgradeable weapons"
+            },
+            {
+                "id": 4580,
+                "name": "wasd movement"
+            },
+            {
+                "id": 4613,
+                "name": "non-player character"
+            },
+            {
+                "id": 4759,
+                "name": "minotaurs"
+            },
+            {
+                "id": 4770,
+                "name": "ragdoll physics"
+            },
+            {
+                "id": 4777,
+                "name": "checkpoints"
+            },
+            {
+                "id": 4843,
+                "name": "saving the world"
+            },
+            {
+                "id": 4850,
+                "name": "moral decisions"
+            },
+            {
+                "id": 4852,
+                "name": "side quests"
+            },
+            {
+                "id": 4855,
+                "name": "branching storyline"
+            },
+            {
+                "id": 4886,
+                "name": "player vs player"
+            },
+            {
+                "id": 4891,
+                "name": "melee"
+            },
+            {
+                "id": 4897,
+                "name": "auto-saving"
+            },
+            {
+                "id": 5018,
+                "name": "optional boss"
+            },
+            {
+                "id": 5019,
+                "name": "parrying"
+            },
+            {
+                "id": 5323,
+                "name": "mercenary"
+            },
+            {
+                "id": 5541,
+                "name": "non-linear storytelling"
+            },
+            {
+                "id": 5840,
+                "name": "multiple enemy boss fights"
+            },
+            {
+                "id": 5999,
+                "name": "stealth kill"
+            },
+            {
+                "id": 6648,
+                "name": "new game plus"
+            },
+            {
+                "id": 6716,
+                "name": "dual wielding"
+            },
+            {
+                "id": 7080,
+                "name": "fast traveling"
+            },
+            {
+                "id": 7369,
+                "name": "secret achievements"
+            },
+            {
+                "id": 7423,
+                "name": "status effects"
+            },
+            {
+                "id": 7653,
+                "name": "hidden room"
+            },
+            {
+                "id": 9533,
+                "name": "souls as currency"
+            },
+            {
+                "id": 9777,
+                "name": "soul steal"
+            },
+            {
+                "id": 9781,
+                "name": "old-fashioned english"
+            },
+            {
+                "id": 9782,
+                "name": "pyromancer"
+            },
+            {
+                "id": 12083,
+                "name": "the game awards - best score or music - nominee"
+            },
+            {
+                "id": 16877,
+                "name": "controller support"
+            },
+            {
+                "id": 17326,
+                "name": "soulslike"
+            },
+            {
+                "id": 17689,
+                "name": "dual wield"
+            },
+            {
+                "id": 24287,
+                "name": "fictional world"
+            },
+            {
+                "id": 38778,
+                "name": "bosses"
+            },
+            {
+                "id": 39010,
+                "name": "the game awards - best art direction - winner"
+            },
+            {
+                "id": 39011,
+                "name": "the game awards - best audio design - nominee"
+            },
+            {
+                "id": 39025,
+                "name": "the game awards - best game direction - winner"
+            },
+            {
+                "id": 39034,
+                "name": "the game awards - best narrative - nominee"
+            },
+            {
+                "id": 39041,
+                "name": "the game awards - best roleplaying game - winner"
+            },
+            {
+                "id": 39046,
+                "name": "the game awards - game of the year - winner"
+            },
+            {
+                "id": 39049,
+                "name": "the game awards - game of the year - nominee"
+            },
+            {
+                "id": 39942,
+                "name": "lore rich"
+            },
+            {
+                "id": 40744,
+                "name": "interconnected-world"
+            },
+            {
+                "id": 42105,
+                "name": "shield"
+            },
+            {
+                "id": 43613,
+                "name": "epic adventure"
+            },
+            {
+                "id": 44373,
+                "name": "axe"
+            },
+            {
+                "id": 44629,
+                "name": "steam families"
+            },
+            {
+                "id": 47799,
+                "name": "sword sorcery"
+            },
+            {
+                "id": 48013,
+                "name": "spear"
+            },
+            {
+                "id": 48014,
+                "name": "scythe"
+            },
+            {
+                "id": 48097,
+                "name": "dynamic weather"
+            },
+            {
+                "id": 48116,
+                "name": "the game awards 2022"
+            },
+            {
+                "id": 48594,
+                "name": "the game awards - most anticipated game - winner"
+            }
+        ],
+        "name": "Elden Ring",
+        "platforms": [
+            169,
+            48,
+            508,
+            6,
+            167,
+            49
+        ],
+        "similar_games": [
+            2155,
+            2368,
+            23733,
+            5619,
+            1942,
+            103329,
+            115289,
+            1887,
+            6142,
+            3025
+        ],
+        "themes": [
+            {
+                "id": 1,
+                "name": "Action"
+            },
+            {
+                "id": 17,
+                "name": "Fantasy"
+            },
+            {
+                "id": 38,
+                "name": "Open world"
+            }
+        ],
+        "total_rating": 95.18987374817533,
+        "total_rating_count": 2352
+    },
+    {
+        "id": 206519,
+        "cover": {
+            "id": 275851,
+            "image_id": "co5wuj"
+        },
+        "external_games": [
+            {
+                "id": 3006363,
+                "uid": "1554905",
+                "external_game_source": 30
+            },
+            {
+                "id": 2452368,
+                "uid": "1938707659",
+                "external_game_source": 14
+            }
+        ],
+        "first_release_date": 1654214400,
+        "genres": [
+            {
+                "id": 31,
+                "name": "Adventure"
+            }
+        ],
+        "keywords": [
+            {
+                "id": 1617,
+                "name": "homebrew"
+            },
+            {
+                "id": 1787,
+                "name": "demake"
+            },
+            {
+                "id": 2004,
+                "name": "unofficial"
+            },
+            {
+                "id": 3079,
+                "name": "8-bit"
+            },
+            {
+                "id": 17326,
+                "name": "soulslike"
+            }
+        ],
+        "name": "Elden Ring GB",
+        "platforms": [
+            6,
+            33
+        ],
+        "similar_games": [
+            219369,
+            172829,
+            183654,
+            215764,
+            280715,
+            220781,
+            141101,
+            58636,
+            183617,
+            129561
+        ],
+        "themes": [
+            {
+                "id": 1,
+                "name": "Action"
+            }
+        ]
+    },
+    {
+        "id": 408334,
+        "cover": {
+            "id": 575171,
+            "image_id": "cocbsz"
+        },
+        "external_games": [
+            {
+                "id": 3195399,
+                "uid": "286173953",
+                "external_game_source": 14
+            }
+        ],
+        "genres": [
+            {
+                "id": 31,
+                "name": "Adventure"
+            },
+            {
+                "id": 32,
+                "name": "Indie"
+            }
+        ],
+        "involved_companies": [
+            {
+                "id": 398013,
+                "company": {
+                    "id": 54039,
+                    "name": "Cloudless Studio"
+                },
+                "developer": true
+            }
+        ],
+        "keywords": [
+            {
+                "id": 126,
+                "name": "retro"
+            },
+            {
+                "id": 537,
+                "name": "dark fantasy"
+            },
+            {
+                "id": 1033,
+                "name": "action-adventure"
+            },
+            {
+                "id": 2004,
+                "name": "unofficial"
+            },
+            {
+                "id": 17326,
+                "name": "soulslike"
+            },
+            {
+                "id": 24124,
+                "name": "fangame"
+            }
+        ],
+        "name": "Elden Ring Demake",
+        "platforms": [
+            6
+        ],
+        "similar_games": [
+            140793,
+            142252,
+            204628,
+            191427,
+            143761,
+            17001,
+            11417,
+            214943,
+            141490,
+            107272
+        ],
+        "themes": [
+            {
+                "id": 1,
+                "name": "Action"
+            },
+            {
+                "id": 17,
+                "name": "Fantasy"
+            }
+        ]
+    },
+    {
+        "id": 194075,
+        "external_games": [
+            {
+                "id": 2289154,
+                "uid": "488778359",
+                "external_game_source": 14
+            }
+        ],
+        "genres": [
+            {
+                "id": 12,
+                "name": "Role-playing (RPG)"
+            },
+            {
+                "id": 31,
+                "name": "Adventure"
+            }
+        ],
+        "name": "Elden Shell: Mortal Ring",
+        "similar_games": [
+            88517,
+            38730,
+            21332,
+            10009,
+            57985,
+            280139,
+            279494,
+            279138,
+            278263,
+            278250
+        ]
+    }
+]

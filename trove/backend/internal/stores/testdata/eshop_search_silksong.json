@@ -1,0 +1,32 @@
+{
+ "results": [
+  {
+   "hits": [
+    {
+     "title": "Hollow Knight: Silksong",
+     "nsuid": "70010000020840",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/hollow-knight-silksong-switch/"
+    },
+    {
+     "title": "Hollow Knight: Silksong – Nintendo Switch 2 Edition",
+     "nsuid": "70010000105851",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/hollow-knight-silksong-nintendo-switch-2-edition-switch-2/"
+    },
+    {
+     "title": "Hollow Knight: Silksong – Nintendo Switch 2 Edition upgrade pack",
+     "nsuid": "70050000061852",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": true,
+     "url": "/us/store/products/hollow-knight-silksong-nintendo-switch-2-edition-upgrade-pack-switch-2/"
+    }
+   ]
+  }
+ ]
+}
