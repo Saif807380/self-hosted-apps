@@ -43,18 +43,15 @@ Volume=%h/.local/share/cortex/searxng/settings.yml:/etc/searxng/settings.yml:ro,
 Restart=always
 TimeoutStartSec=300
 
-# NOT started on boot, deliberately.
+# Started on boot: Trove's worker searches it for game reviews (device
+# verdicts), so it can't wait for the rest of the stack to be brought up. It
+# idles at about 130 MB and binds to loopback only. Open WebUI still doesn't
+# autostart.
 #
-# There is no [Install] section, so the Quadlet generator creates no
-# default.target.wants symlink and systemd never starts this by itself.
-# Bring the stack up when you want it:
-#
-#     cortex/scripts/cortex.sh up
-#
-# `systemctl --user enable` cannot re-enable this: Quadlet units are generated
-# into /run and systemd refuses to enable a generated unit. Autostart is turned
-# back on by restoring the [Install] section below and re-running
-# cortex/scripts/install-quadlets.sh.
-#
-# [Install]
-# WantedBy=default.target
+# To turn autostart off again, comment out the [Install] section and re-run
+# cortex/scripts/install-quadlets.sh. `systemctl --user disable` cannot do it:
+# Quadlet units are generated into /run and systemd refuses to enable or
+# disable a generated unit.
+
+[Install]
+WantedBy=default.target
