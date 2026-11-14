@@ -16,7 +16,7 @@ import (
 
 const (
 	// Model is Claude Sonnet 5.5: strong judgement at a fraction of Opus's
-	// price, which matters for a call made once per wishlisted game.
+	// price, which matters for a call made once per game.
 	Model     = "claude-sonnet-5-5"
 	maxTokens = 16000
 )

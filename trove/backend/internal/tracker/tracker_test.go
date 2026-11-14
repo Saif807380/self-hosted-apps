@@ -193,6 +193,87 @@ func TestAutoLinkTakesIGDBTitle(t *testing.T) {
 	}
 }
 
+func TestOnlyWishlistedGamesRaiseSaleEvents(t *testing.T) {
+	ctx := context.Background()
+	tr, s, fake := newTestTracker(t)
+	id := addGame(t, s, "Elden Ring", model.GamePlayed, nil)
+	if err := tr.Refresh(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	fake.steamPrice.Store(251900) // −30%
+	if err := tr.CheckPrices(ctx, &id); err != nil {
+		t.Fatal(err)
+	}
+	// Priced for its history, but no alert.
+	history, _ := s.Gaming.PriceHistory(ctx, id)
+	if len(history) != 3 { // two Steam runs + one eShop run
+		t.Fatalf("history = %d runs, want 3", len(history))
+	}
+	if n := pendingEvents(t, s, id); n != 0 {
+		t.Errorf("events for a played game = %d, want 0", n)
+	}
+}
+
+func TestCorrectedTitleIsSearchedAgain(t *testing.T) {
+	ctx := context.Background()
+	tr, s, _ := newTestTracker(t)
+	id := addGame(t, s, "Prey", model.GameWishlist, nil) // ambiguous in the fake IGDB
+	if err := tr.Refresh(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	if meta, _ := s.Gaming.GetMeta(ctx, id); meta.MatchMethod != model.MatchUnresolved {
+		t.Fatalf("match = %s, want unresolved", meta.MatchMethod)
+	}
+	// Refreshing again without a change doesn't search again...
+	if err := tr.Refresh(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	// ...but fixing the title does.
+	if err := s.Gaming.SetTitle(ctx, id, "Elden Ring"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tr.Refresh(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	meta, err := s.Gaming.GetMeta(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if meta.MatchMethod != model.MatchAuto || *meta.IGDBID != 119133 {
+		t.Errorf("meta = %+v, want Elden Ring", meta)
+	}
+}
+
+func TestOnYourDevices(t *testing.T) {
+	n64 := catalog.Game{Title: "The Legend of Zelda: Ocarina of Time", ReleaseYear: 1998, Platforms: []int{4}}
+	remake := catalog.Game{Title: "The Legend of Zelda: Ocarina of Time", ReleaseYear: 2026, Platforms: []int{catalog.PlatformSwitch2}}
+	if got := onYourDevices([]catalog.Game{n64, remake}); len(got) != 1 || got[0].ReleaseYear != 2026 {
+		t.Errorf("got %+v, want only the remake", got)
+	}
+	// Nothing on your devices: keep them all rather than none.
+	if got := onYourDevices([]catalog.Game{n64}); len(got) != 1 {
+		t.Errorf("got %+v, want the N64 game kept", got)
+	}
+}
+
+func TestNeedsRelink(t *testing.T) {
+	searched := "Donkey Kong Bonanza"
+	unresolved := model.GameMeta{MatchMethod: model.MatchUnresolved, Title: &searched}
+	if NeedsRelink(unresolved, searched) {
+		t.Error("same title searched again")
+	}
+	if !NeedsRelink(unresolved, "Donkey Kong Bananza") {
+		t.Error("corrected title not searched again")
+	}
+	if !NeedsRelink(model.GameMeta{MatchMethod: model.MatchUnresolved}, "Anything") {
+		t.Error("unresolved game from before titles were kept not searched again")
+	}
+	linked := model.GameMeta{MatchMethod: model.MatchAuto, Title: &searched}
+	if NeedsRelink(linked, "Something else") {
+		t.Error("a linked game was searched again")
+	}
+}
+
 func TestAmbiguousGameIsUnresolved(t *testing.T) {
 	ctx := context.Background()
 	tr, s, _ := newTestTracker(t)

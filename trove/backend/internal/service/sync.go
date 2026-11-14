@@ -27,7 +27,7 @@ func (s *SyncService) PushChanges(ctx context.Context, cs *model.ChangeSet) (tim
 		return time.Time{}, err
 	}
 	s.invalidateCaches(ctx)
-	enqueueWishlisted(ctx, s.redis, cs.VideoGames)
+	enqueueRefresh(ctx, s.redis, cs.VideoGames)
 	return time.Now().UTC(), nil
 }
 

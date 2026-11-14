@@ -34,13 +34,18 @@ type GameRef struct {
 	ID     uuid.UUID `db:"id"`
 	Title  string    `db:"title"`
 	Studio *string   `db:"studio"`
+	Status string    `db:"status"`
 }
 
-// GamesToLink returns games that have never been looked up in IGDB.
+// GamesToLink returns games that have never been looked up in IGDB, and
+// games still waiting for you to pick a match whose title has changed since
+// they were searched for (a corrected typo deserves another search).
 func (s *GamingStore) GamesToLink(ctx context.Context, limit int) ([]GameRef, error) {
 	rows, err := s.db.Query(ctx, `
-		SELECT g.id, g.title, g.studio FROM video_games g
-		WHERE g.deleted = false AND NOT EXISTS (SELECT 1 FROM game_meta m WHERE m.video_game_id = g.id)
+		SELECT g.id, g.title, g.studio, g.status FROM video_games g
+		LEFT JOIN game_meta m ON m.video_game_id = g.id
+		WHERE g.deleted = false AND (m.video_game_id IS NULL
+			OR (m.match_method = 'unresolved' AND m.title IS DISTINCT FROM g.title))
 		ORDER BY (g.status = 'wishlist') DESC, g.created_at DESC
 		LIMIT $1`, limit)
 	if err != nil {
@@ -51,7 +56,7 @@ func (s *GamingStore) GamesToLink(ctx context.Context, limit int) ([]GameRef, er
 
 // GetGameRef returns one game's reference, or pgx.ErrNoRows.
 func (s *GamingStore) GetGameRef(ctx context.Context, id uuid.UUID) (GameRef, error) {
-	rows, err := s.db.Query(ctx, "SELECT id, title, studio FROM video_games WHERE id = $1 AND deleted = false", id)
+	rows, err := s.db.Query(ctx, "SELECT id, title, studio, status FROM video_games WHERE id = $1 AND deleted = false", id)
 	if err != nil {
 		return GameRef{}, fmt.Errorf("get game ref: %w", err)
 	}
@@ -95,6 +100,18 @@ func (s *GamingStore) SaveMeta(ctx context.Context, m model.GameMeta) error {
 		if _, err := tx.Exec(ctx, "DELETE FROM device_verdicts WHERE video_game_id = $1", m.VideoGameID); err != nil {
 			return fmt.Errorf("drop old verdict: %w", err)
 		}
+		// A cover or studio filled in from the old match goes too, to be
+		// refilled from the new one; yours stays.
+		if _, err := tx.Exec(ctx, `
+			UPDATE video_games g SET
+				cover_image = CASE WHEN g.cover_image = m.filled_cover THEN NULL ELSE g.cover_image END,
+				studio = CASE WHEN g.studio = m.filled_studio THEN NULL ELSE g.studio END,
+				updated_at = now()
+			FROM game_meta m
+			WHERE m.video_game_id = g.id AND g.id = $1
+				AND (g.cover_image = m.filled_cover OR g.studio = m.filled_studio)`, m.VideoGameID); err != nil {
+			return fmt.Errorf("clear filled cover and studio: %w", err)
+		}
 	}
 
 	_, err = tx.Exec(ctx, `
@@ -109,6 +126,8 @@ func (s *GamingStore) SaveMeta(ctx context.Context, m model.GameMeta) error {
 			keywords = EXCLUDED.keywords, igdb_rating = EXCLUDED.igdb_rating, similar_ids = EXCLUDED.similar_ids,
 			candidates = EXCLUDED.candidates, developers = EXCLUDED.developers, publishers = EXCLUDED.publishers,
 			listings_at = CASE WHEN $15 THEN NULL ELSE game_meta.listings_at END,
+			filled_cover = CASE WHEN $15 THEN NULL ELSE game_meta.filled_cover END,
+			filled_studio = CASE WHEN $15 THEN NULL ELSE game_meta.filled_studio END,
 			updated_at = now()`,
 		m.VideoGameID, m.MatchMethod, m.IGDBID, m.Title, m.ReleaseYear, m.CoverURL, m.SteamAppID,
 		nonNil(m.Platforms), nonNil(m.Genres), nonNil(m.Themes), nonNil(m.Keywords), m.IGDBRating,
@@ -119,8 +138,7 @@ func (s *GamingStore) SaveMeta(ctx context.Context, m model.GameMeta) error {
 	return tx.Commit(ctx)
 }
 
-// ListingTarget is a wishlisted, linked game whose store listings are due a
-// lookup.
+// ListingTarget is a linked game whose store listings are due a lookup.
 type ListingTarget struct {
 	ID         uuid.UUID `db:"id"`
 	Title      string    `db:"title"`
@@ -128,14 +146,14 @@ type ListingTarget struct {
 	Platforms  []int32   `db:"platforms"`
 }
 
-// GamesNeedingListings returns wishlisted games that are linked to IGDB but
+// GamesNeedingListings returns games that are linked to IGDB but
 // whose listings were never looked up, or not recently. With id set, only
 // that game is considered and its age is ignored.
 func (s *GamingStore) GamesNeedingListings(ctx context.Context, id *uuid.UUID) ([]ListingTarget, error) {
 	rows, err := s.db.Query(ctx, `
-		SELECT g.id, m.title, m.steam_appid, m.platforms
+		SELECT g.id, COALESCE(m.title, g.title) AS title, m.steam_appid, m.platforms
 		FROM video_games g JOIN game_meta m ON m.video_game_id = g.id
-		WHERE g.deleted = false AND g.status = 'wishlist' AND m.match_method <> 'unresolved'
+		WHERE g.deleted = false AND m.match_method <> 'unresolved'
 			AND ($1::uuid IS NULL OR g.id = $1)
 			AND ($1::uuid IS NOT NULL OR m.listings_at IS NULL OR m.listings_at < $2)`,
 		id, time.Now().Add(-listingsRefresh))
@@ -203,15 +221,19 @@ type PricedListing struct {
 	StoreRef    string    `db:"store_ref"`
 	Currency    string    `db:"currency"`
 	TargetINR   *int32    `db:"target_price_inr"`
+	// Wishlisted: only wishlisted games raise sale alerts; the others are
+	// priced for their history.
+	Wishlisted bool `db:"wishlisted"`
 }
 
-// ListingsToPrice returns the Steam and eShop listings of wishlisted games.
-// With id set, only that game's listings.
+// ListingsToPrice returns the Steam and eShop listings of every game. With
+// id set, only that game's listings.
 func (s *GamingStore) ListingsToPrice(ctx context.Context, id *uuid.UUID) ([]PricedListing, error) {
 	rows, err := s.db.Query(ctx, `
-		SELECT l.id, l.video_game_id, l.store, l.store_ref, l.currency, g.target_price_inr
+		SELECT l.id, l.video_game_id, l.store, l.store_ref, l.currency, g.target_price_inr,
+			g.status = 'wishlist' AS wishlisted
 		FROM store_listings l JOIN video_games g ON g.id = l.video_game_id
-		WHERE g.deleted = false AND g.status = 'wishlist' AND l.store IN ('steam', 'eshop') AND l.store_ref <> ''
+		WHERE g.deleted = false AND l.store IN ('steam', 'eshop') AND l.store_ref <> ''
 			AND ($1::uuid IS NULL OR g.id = $1)`, id)
 	if err != nil {
 		return nil, fmt.Errorf("listings to price: %w", err)
@@ -372,15 +394,19 @@ func (s *GamingStore) GamesMissingCover(ctx context.Context, id *uuid.UUID) ([]C
 
 // SetCoverIfEmpty gives a game a cover only if it still has none, so a cover
 // you uploaded meanwhile is never replaced. It bumps updated_at so the cover
-// reaches your devices on their next sync. It reports whether it was set.
+// reaches your devices on their next sync. It reports whether it was set,
+// and records the cover as filled in, so a relink can replace it.
 //
-// It and SetStudioIfEmpty are the worker's only writes to video_games: both
-// fill a blank field and never overwrite one. (SetTitle is the API's, when
-// you pick a match.)
+// The worker's writes to video_games are this, SetStudioIfEmpty, and
+// SetTitle when it first links a game; SaveMeta clears filled-in values on
+// a relink. None of them overwrites a value you set.
 func (s *GamingStore) SetCoverIfEmpty(ctx context.Context, id uuid.UUID, path string) (bool, error) {
 	tag, err := s.db.Exec(ctx, `
-		UPDATE video_games SET cover_image = $2, updated_at = now()
-		WHERE id = $1 AND cover_image IS NULL AND deleted = false`, id, path)
+		WITH filled AS (
+			UPDATE video_games SET cover_image = $2, updated_at = now()
+			WHERE id = $1 AND cover_image IS NULL AND deleted = false
+			RETURNING id)
+		UPDATE game_meta SET filled_cover = $2 WHERE video_game_id IN (SELECT id FROM filled)`, id, path)
 	if err != nil {
 		return false, fmt.Errorf("set cover: %w", err)
 	}
@@ -421,8 +447,11 @@ func (s *GamingStore) GamesMissingStudio(ctx context.Context, id *uuid.UUID) ([]
 // SetStudioIfEmpty fills a blank studio, like SetCoverIfEmpty does covers.
 func (s *GamingStore) SetStudioIfEmpty(ctx context.Context, id uuid.UUID, studio string) error {
 	_, err := s.db.Exec(ctx, `
-		UPDATE video_games SET studio = $2, updated_at = now()
-		WHERE id = $1 AND coalesce(btrim(studio), '') = '' AND deleted = false`, id, studio)
+		WITH filled AS (
+			UPDATE video_games SET studio = $2, updated_at = now()
+			WHERE id = $1 AND coalesce(btrim(studio), '') = '' AND deleted = false
+			RETURNING id)
+		UPDATE game_meta SET filled_studio = $2 WHERE video_game_id IN (SELECT id FROM filled)`, id, studio)
 	if err != nil {
 		return fmt.Errorf("set studio: %w", err)
 	}

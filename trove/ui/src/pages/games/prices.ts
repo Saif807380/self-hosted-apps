@@ -27,6 +27,15 @@ const SERIES_COLORS = {
 export const platPricesUrl = (title: string) =>
   `https://platprices.com/search?${new URLSearchParams({ q: title })}`
 
+/**
+ * The colour of the chart line a listing is drawn as: its own, or the
+ * shared line's when it has the same prices as another store.
+ */
+export function lineColor(l: Listing, series: ChartSeries[], isDark: boolean): string {
+  const line = series.find(s => s.listingIds.includes(l.id))
+  return seriesColor(line?.listing ?? l, isDark)
+}
+
 /** The chart colour for a listing, as hex (Recharts can't use CSS vars). */
 export function seriesColor(l: Listing, isDark: boolean): string {
   const key = l.store === 'eshop' ? (l.edition === 'Switch' ? 'switch' : 'switch2') : 'steam'
@@ -63,7 +72,8 @@ export const formatDay = (iso: string | number) =>
 export interface ChartSeries {
   key: string
   label: string
-  listing: Listing
+  listing: Listing // gives the line its colour
+  listingIds: string[] // every listing drawn as this line (see shareIdenticalLines)
 }
 
 export type ChartRow = { t: number } & Record<string, number | null>
@@ -75,7 +85,7 @@ export type ChartRow = { t: number } & Record<string, number | null>
  */
 export function buildChart(listings: Listing[], usdToInr: number): { series: ChartSeries[]; rows: ChartRow[] } {
   const priced = listings.filter(l => isPriced(l) && l.history?.length)
-  const series = priced.map(l => ({ key: l.id, label: listingLabel(l), listing: l }))
+  const series = priced.map(l => ({ key: l.id, label: listingLabel(l), listing: l, listingIds: [l.id] }))
 
   const times = new Set<number>()
   for (const l of priced) {
@@ -94,5 +104,32 @@ export function buildChart(listings: Listing[], usdToInr: number): { series: Cha
     }
     return row
   })
-  return { series, rows }
+  return { series: shareIdenticalLines(series, rows), rows }
+}
+
+/**
+ * Stores priced the same all along (a game's Switch and Switch 2 editions
+ * often cost the same) would draw one line exactly over the other and hide
+ * it, so they share one line labelled with both: "eShop · Switch & Switch 2".
+ * They split again once their prices differ.
+ */
+function shareIdenticalLines(series: ChartSeries[], rows: ChartRow[]): ChartSeries[] {
+  const groups: ChartSeries[][] = []
+  for (const s of series) {
+    const same = groups.find(g => rows.every(r => r[g[0].key] === r[s.key]))
+    if (same) same.push(s)
+    else groups.push([s])
+  }
+  return groups.map(g => (g.length === 1 ? g[0] : {
+    ...g[0],
+    label: sharedLabel(g.map(s => s.listing)),
+    listingIds: g.flatMap(s => s.listingIds),
+  }))
+}
+
+function sharedLabel(listings: Listing[]): string {
+  if (listings.every(l => l.store === 'eshop' && l.edition)) {
+    return `eShop · ${listings.map(l => l.edition).join(' & ')}`
+  }
+  return listings.map(listingLabel).join(' & ')
 }
