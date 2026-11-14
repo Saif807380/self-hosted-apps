@@ -68,8 +68,7 @@ func (s *GamingService) LinkGame(ctx context.Context, gameID uuid.UUID, igdbID i
 	if err := s.store.SaveMeta(ctx, tracker.MetaFromGame(gameID, g, model.MatchPicked)); err != nil {
 		return err
 	}
-	// You chose this game, so take its proper name too. Automatic matches
-	// leave your title alone.
+	// Take the chosen game's proper name, as an automatic match does.
 	if err := s.store.SetTitle(ctx, gameID, g.Title); err != nil {
 		return err
 	}

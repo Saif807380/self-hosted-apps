@@ -62,6 +62,10 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 # Device verdicts: which device to play each wishlisted game on
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/007_device_verdicts.sql
+
+# One-off: games linked to IGDB automatically take IGDB's title
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/008_igdb_titles.sql
 ```
 
 ### Sale alerts (web push)

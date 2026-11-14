@@ -90,8 +90,9 @@ func (t *Tracker) LinkPending(ctx context.Context) error {
 	return t.FillBlanks(ctx, nil)
 }
 
-// Link searches IGDB for a game and stores either a confident match or, when
-// ambiguous, the top candidates for you to choose from.
+// Link searches IGDB for a game and stores either a confident match (and
+// renames the game to IGDB's title) or, when ambiguous, the top candidates
+// for you to choose from.
 func (t *Tracker) Link(ctx context.Context, ref dao.GameRef) error {
 	candidates, err := t.IGDB.Search(ctx, catalog.LinkQuery(ref.Title), catalog.LinkPool)
 	if err != nil {
@@ -106,7 +107,15 @@ func (t *Tracker) Link(ctx context.Context, ref dao.GameRef) error {
 			t.Log.Warn("steam id lookup failed", "game", g.Title, "err", err)
 		}
 		t.Log.Info("linked", "game", ref.Title, "igdb", g.Title, "year", g.ReleaseYear)
-		return t.Store.SaveMeta(ctx, MetaFromGame(ref.ID, g, model.MatchAuto))
+		if err := t.Store.SaveMeta(ctx, MetaFromGame(ref.ID, g, model.MatchAuto)); err != nil {
+			return err
+		}
+		// Take IGDB's name, as picking a match does. This happens once, when
+		// the game is first linked, so renaming it afterwards sticks.
+		if g.Title == ref.Title {
+			return nil
+		}
+		return t.Store.SetTitle(ctx, ref.ID, g.Title)
 	}
 	t.Log.Info("ambiguous match", "game", ref.Title, "candidates", len(candidates))
 	return t.Store.SaveMeta(ctx, UnresolvedMeta(ref.ID, ref.Title, candidates))

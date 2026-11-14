@@ -168,6 +168,31 @@ func TestRefreshTracksAWishlistGame(t *testing.T) {
 	}
 }
 
+func TestAutoLinkTakesIGDBTitle(t *testing.T) {
+	ctx := context.Background()
+	tr, s, _ := newTestTracker(t)
+	id := addGame(t, s, "elden ring", model.GamePlayed, nil)
+	before, err := s.Games.Get(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tr.LinkPending(ctx); err != nil {
+		t.Fatal(err)
+	}
+	after, err := s.Games.Get(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after.Title != "Elden Ring" {
+		t.Errorf("title = %q, want IGDB's", after.Title)
+	}
+	// The rename has to reach other devices.
+	if !after.UpdatedAt.After(before.UpdatedAt) {
+		t.Errorf("updated_at not moved: %v -> %v", before.UpdatedAt, after.UpdatedAt)
+	}
+}
+
 func TestAmbiguousGameIsUnresolved(t *testing.T) {
 	ctx := context.Background()
 	tr, s, _ := newTestTracker(t)
