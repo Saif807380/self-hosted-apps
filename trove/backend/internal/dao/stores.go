@@ -9,6 +9,7 @@ type Stores struct {
 	Travel   *TravelStore
 	Workouts *WorkoutStore
 	Sync     *SyncStore
+	Gaming   *GamingStore
 }
 
 func NewStores(db *pgxpool.Pool) *Stores {
@@ -19,5 +20,6 @@ func NewStores(db *pgxpool.Pool) *Stores {
 		Travel:   &TravelStore{db: db},
 		Workouts: &WorkoutStore{db: db},
 		Sync:     &SyncStore{db: db},
+		Gaming:   &GamingStore{db: db},
 	}
 }

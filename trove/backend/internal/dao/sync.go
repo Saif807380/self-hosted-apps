@@ -283,13 +283,20 @@ func upsertBook(ctx context.Context, tx pgx.Tx, b model.Book) error {
 // upsertVideoGame applies a pushed game. A record with an empty Status comes
 // from a client that predates the game lifecycle: it inserts as played and,
 // on update, keeps the stored status, platform and target price.
+//
+// A pushed game without a cover or studio never clears the stored one: the
+// worker fills those when blank (GamingStore.SetCoverIfEmpty and
+// SetStudioIfEmpty), and an empty value just means the device hadn't synced
+// the filled-in one yet. Covers can only be replaced in the UI anyway.
 func upsertVideoGame(ctx context.Context, tx pgx.Tx, g model.VideoGame) error {
 	_, err := tx.Exec(ctx, `
 		INSERT INTO video_games (id, title, studio, rating, review, cover_image, deleted, created_at, updated_at,
 			status, platform, target_price_inr)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE(NULLIF($10::text, ''), 'played'), $11, $12)
-		ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, studio = EXCLUDED.studio, rating = EXCLUDED.rating,
-			review = EXCLUDED.review, cover_image = EXCLUDED.cover_image, deleted = EXCLUDED.deleted, updated_at = EXCLUDED.updated_at,
+		ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, rating = EXCLUDED.rating, review = EXCLUDED.review,
+			studio = COALESCE(NULLIF(btrim(EXCLUDED.studio), ''), video_games.studio),
+			cover_image = COALESCE(EXCLUDED.cover_image, video_games.cover_image),
+			deleted = EXCLUDED.deleted, updated_at = EXCLUDED.updated_at,
 			status = CASE WHEN $10::text = '' THEN video_games.status ELSE EXCLUDED.status END,
 			platform = CASE WHEN $10::text = '' THEN video_games.platform ELSE EXCLUDED.platform END,
 			target_price_inr = CASE WHEN $10::text = '' THEN video_games.target_price_inr ELSE EXCLUDED.target_price_inr END

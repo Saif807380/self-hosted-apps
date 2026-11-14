@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Box, Flex, Text } from '@chakra-ui/react'
 import {
   ResponsiveContainer,
@@ -11,22 +11,8 @@ import {
   Legend,
 } from 'recharts'
 import type { Exercise, WorkoutLog } from '@/types/api'
-
-// Resolve dark mode by watching document class — needed because Recharts SVG
-// attributes don't support CSS var() references (they're not CSS properties).
-function useIsDark() {
-  const [isDark, setIsDark] = useState(() =>
-    document.documentElement.classList.contains('dark')
-  )
-  useEffect(() => {
-    const obs = new MutationObserver(() =>
-      setIsDark(document.documentElement.classList.contains('dark'))
-    )
-    obs.observe(document.documentElement, { attributeFilter: ['class'] })
-    return () => obs.disconnect()
-  }, [])
-  return isDark
-}
+import { useIsDark } from '@/hooks/useIsDark'
+import { chartTheme } from '@/lib/chart-theme'
 
 interface ProgressSectionProps {
   exercises: Exercise[]
@@ -38,14 +24,7 @@ export default function ProgressSection({ exercises, logs, isMobile }: ProgressS
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>(exercises[0]?.id ?? '')
   const isDark = useIsDark()
 
-  // Resolved colors from theme (matching theme.ts values)
-  const colors = {
-    muted:    isDark ? '#636366' : '#a3a3a3',
-    border:   isDark ? '#2e2f35' : '#e5e2dc',
-    surface:  isDark ? '#1a1b1f' : '#ffffff',
-    primary:  isDark ? '#f2f2f7' : '#1c1c1e',
-    secondary: isDark ? '#8e8e93' : '#6b6b6b',
-  }
+  const colors = chartTheme(isDark)
 
   const exercise = exercises.find(e => e.id === selectedExerciseId)
   const exerciseLogs = logs

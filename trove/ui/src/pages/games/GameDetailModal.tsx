@@ -1,6 +1,7 @@
 import { Dialog, Portal, Button, Box, Flex, Stack, Text, CloseButton } from '@chakra-ui/react'
 import type { GameStatus, VideoGame } from '@/types/api'
 import { PLATFORM_LABELS, STATUS_LABELS, formatInr } from './lifecycle'
+import PricePanel from './PricePanel'
 import StarRating from '@/components/StarRating'
 import { useImageUrl } from '@/hooks/useImageUrl'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -197,6 +198,8 @@ export default function GameDetailModal({
                     </Flex>
                   </Box>
                 )}
+
+                {game.status === 'wishlist' && <PricePanel game={game} />}
 
                 {game.review && (
                   <Box pt={3} borderTopWidth="1px" borderColor="border.default">

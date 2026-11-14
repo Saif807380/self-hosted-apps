@@ -9,6 +9,7 @@ import (
 
 	"github.com/saifkazi/trove/backend/gen/trove/v1/books/booksv1connect"
 	"github.com/saifkazi/trove/backend/gen/trove/v1/games/gamesv1connect"
+	"github.com/saifkazi/trove/backend/gen/trove/v1/gaming/gamingv1connect"
 	"github.com/saifkazi/trove/backend/gen/trove/v1/sync/syncv1connect"
 	"github.com/saifkazi/trove/backend/gen/trove/v1/travel/travelv1connect"
 	"github.com/saifkazi/trove/backend/gen/trove/v1/workouts/workoutsv1connect"
@@ -33,6 +34,7 @@ func NewRouter(services *service.Services, uploadsDir string, tlsEnabled ...bool
 	// Connect RPC service handlers
 	mux.Handle(booksv1connect.NewBookServiceHandler(&bookHandler{svc: services.Books}))
 	mux.Handle(gamesv1connect.NewGameServiceHandler(&gameHandler{svc: services.Games}))
+	mux.Handle(gamingv1connect.NewGamingServiceHandler(&gamingHandler{svc: services.Gaming}))
 	mux.Handle(travelv1connect.NewTravelServiceHandler(&travelHandler{svc: services.Travel}))
 	mux.Handle(workoutsv1connect.NewWorkoutServiceHandler(&workoutHandler{svc: services.Workouts}))
 	mux.Handle(syncv1connect.NewSyncServiceHandler(

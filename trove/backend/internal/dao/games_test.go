@@ -125,6 +125,28 @@ func TestGameLifecycleSync(t *testing.T) {
 		t.Fatalf("after owned push: %+v", g)
 	}
 
+	// The worker adds a cover; a device that hasn't synced it yet pushes the
+	// game without one. The cover must survive.
+	if _, err := s.Gaming.SetCoverIfEmpty(ctx, id, "/uploads/auto.jpg"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Gaming.SetStudioIfEmpty(ctx, id, "Team Cherry"); err != nil {
+		t.Fatal(err)
+	}
+	stale := owned
+	stale.CoverImage, stale.Studio = nil, nil
+	push(stale)
+	if g := get(); g.CoverImage == nil || *g.CoverImage != "/uploads/auto.jpg" || g.Studio == nil || *g.Studio != "Team Cherry" {
+		t.Fatalf("push without a cover/studio cleared them: %v, %v", g.CoverImage, g.Studio)
+	}
+	// Replacing it still works.
+	replaced := owned
+	replaced.CoverImage = strPtr("/uploads/mine.jpg")
+	push(replaced)
+	if g := get(); *g.CoverImage != "/uploads/mine.jpg" {
+		t.Fatalf("cover not replaced: %v", *g.CoverImage)
+	}
+
 	// Old client inserting a brand-new game gets the played default.
 	oldID := uuid.New()
 	push(model.VideoGame{ID: oldID, Title: "Old " + oldID.String(), YearsPlayed: []int16{2025}, CreatedAt: time.Now().UTC()})

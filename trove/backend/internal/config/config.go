@@ -9,6 +9,11 @@ type Config struct {
 	UploadsDir  string
 	TLSCertFile string
 	TLSKeyFile  string
+
+	// IGDB (Twitch) client credentials for game lookups. Optional for the
+	// server: without them, catalog search and linking return an error.
+	IGDBClientID     string
+	IGDBClientSecret string
 }
 
 func Load() *Config {
@@ -19,6 +24,9 @@ func Load() *Config {
 		UploadsDir:  getEnv("UPLOADS_DIR", "./uploads"),
 		TLSCertFile: getEnv("TLS_CERT_FILE", ""),
 		TLSKeyFile:  getEnv("TLS_KEY_FILE", ""),
+
+		IGDBClientID:     getEnv("IGDB_CLIENT_ID", ""),
+		IGDBClientSecret: getEnv("IGDB_CLIENT_SECRET", ""),
 	}
 }
 

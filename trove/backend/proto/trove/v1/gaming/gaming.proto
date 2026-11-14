@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package trove.v1.gaming;
+
+option go_package = "github.com/saifkazi/trove/backend/gen/trove/v1/gaming;gamingv1";
+
+// An IGDB game, as offered when searching or choosing a match.
+message CatalogGame {
+  int64           igdb_id   = 1;
+  string          title     = 2;
+  int32           year      = 3; // 0 when unreleased
+  string          cover_url = 4;
+  repeated string platforms = 5; // pc | ps4 | ps5 | switch | switch2
+}
+
+message SearchCatalogRequest {
+  string query = 1;
+}
+
+message SearchCatalogResponse {
+  repeated CatalogGame games = 1;
+}
+
+// LinkGame ties a Trove game to the IGDB game you chose, replacing any
+// automatic or unresolved match, and queues a price refresh.
+message LinkGameRequest {
+  string video_game_id = 1;
+  int64  igdb_id       = 2;
+}
+
+message LinkGameResponse {}
+
+// RefreshGame asks the worker to look the game up again now.
+message RefreshGameRequest {
+  string video_game_id = 1;
+}
+
+message RefreshGameResponse {}
+
+// SetPsnLink sets the PS Store link to a pasted product page, or back to a
+// search link when url is empty.
+message SetPsnLinkRequest {
+  string video_game_id = 1;
+  string url           = 2;
+}
+
+message SetPsnLinkResponse {}
+
+message GetGameInsightsRequest {
+  string video_game_id = 1;
+}
+
+// A price held from `from` until `until` (the last time it was seen).
+// Amounts are in minor units of the listing's currency.
+message PriceRun {
+  string from         = 1;
+  string until        = 2;
+  int64  base_minor   = 3;
+  int64  final_minor  = 4;
+  int32  discount_pct = 5;
+  optional string sale_ends_at = 6;
+}
+
+message Listing {
+  string            id             = 1;
+  string            store          = 2; // steam | eshop | psn
+  string            edition        = 3; // e.g. "Switch 2"; empty when only one
+  string            title          = 4;
+  string            url            = 5;
+  string            currency       = 6;
+  bool              is_search_link = 7; // PS Store search rather than a product page
+  repeated PriceRun history        = 8; // oldest first; the last run is the current price
+  optional int64    lowest_minor   = 9;
+}
+
+message GetGameInsightsResponse {
+  string               match_status        = 1; // none | picked | auto | unresolved
+  optional CatalogGame match               = 2;
+  repeated CatalogGame candidates          = 3; // unresolved only
+  repeated Listing     listings            = 4;
+  double               usd_to_inr          = 5; // 0 if not fetched yet
+  optional string      listings_checked_at = 6;
+}
+
+service GamingService {
+  rpc SearchCatalog   (SearchCatalogRequest)   returns (SearchCatalogResponse);
+  rpc LinkGame        (LinkGameRequest)        returns (LinkGameResponse);
+  rpc RefreshGame     (RefreshGameRequest)     returns (RefreshGameResponse);
+  rpc SetPsnLink      (SetPsnLinkRequest)      returns (SetPsnLinkResponse);
+  rpc GetGameInsights (GetGameInsightsRequest) returns (GetGameInsightsResponse);
+}

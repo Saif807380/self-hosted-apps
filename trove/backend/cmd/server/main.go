@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/saifkazi/trove/backend/internal/catalog"
 	"github.com/saifkazi/trove/backend/internal/config"
 	"github.com/saifkazi/trove/backend/internal/controller"
 	"github.com/saifkazi/trove/backend/internal/dao"
@@ -29,7 +30,8 @@ func main() {
 	defer redisClient.Close()
 
 	stores := dao.NewStores(db)
-	services := service.NewServices(stores, redisClient)
+	igdb := &catalog.Client{ClientID: cfg.IGDBClientID, ClientSecret: cfg.IGDBClientSecret}
+	services := service.NewServices(stores, redisClient, igdb)
 	mux := controller.NewRouter(services, cfg.UploadsDir, cfg.TLSEnabled())
 
 	srv := &http.Server{

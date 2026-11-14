@@ -156,7 +156,10 @@ func (s *GameStore) Update(ctx context.Context, p UpdateGameParams) (*model.Vide
 	}
 	// $7 IS NULL marks a client without lifecycle fields: keep what's stored.
 	rows, err := tx.Query(ctx,
-		`UPDATE video_games SET title=$2, studio=$3, rating=$4, review=$5, cover_image=$6,
+		`UPDATE video_games SET title=$2, rating=$4, review=$5,
+			-- Replaced, never cleared: the worker fills these when blank.
+			studio = COALESCE(NULLIF(btrim($3), ''), studio),
+			cover_image = COALESCE($6, cover_image),
 			status = COALESCE($7::text, status),
 			platform = CASE WHEN $7::text IS NULL THEN platform ELSE $8 END,
 			target_price_inr = CASE WHEN $7::text IS NULL THEN target_price_inr ELSE $9 END,

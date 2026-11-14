@@ -3,13 +3,20 @@
 // the server.
 //
 //	IGDB_CLIENT_ID=… IGDB_CLIENT_SECRET=… go run ./cmd/storeprobe "Hades II" "Elden Ring"
+//
+// With -match, each argument is "Title|Studio" and the command only reports
+// whether Trove would link it to IGDB automatically:
+//
+//	go run ./cmd/storeprobe -match "Celeste|Extremely OK Games"
 package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/saifkazi/trove/backend/internal/catalog"
@@ -17,13 +24,22 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal(`usage: storeprobe "title" ["title" …]`)
+	matchOnly := flag.Bool("match", false, `arguments are "Title|Studio"; report IGDB auto-linking only`)
+	flag.Parse()
+	if flag.NArg() == 0 {
+		log.Fatal(`usage: storeprobe [-match] "title" ["title" …]`)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	igdb := &catalog.Client{ClientID: os.Getenv("IGDB_CLIENT_ID"), ClientSecret: os.Getenv("IGDB_CLIENT_SECRET")}
+	if *matchOnly {
+		for _, arg := range flag.Args() {
+			title, studio, _ := strings.Cut(arg, "|")
+			reportMatch(ctx, igdb, title, studio)
+		}
+		return
+	}
 	steam := &stores.SteamClient{}
 	eshop := &stores.EshopClient{}
 
@@ -33,7 +49,7 @@ func main() {
 	}
 	fmt.Printf("USD→INR %.2f\n", rate)
 
-	for _, title := range os.Args[1:] {
+	for _, title := range flag.Args() {
 		if err := probe(ctx, igdb, steam, eshop, rate, title); err != nil {
 			fmt.Printf("\n%s: ERROR %v\n", title, err)
 		}
@@ -106,4 +122,21 @@ func printQuote(label string, q stores.Quote, usdToINR float64) {
 		line += " until " + q.SaleEndsAt.Format("2006-01-02")
 	}
 	fmt.Println(line)
+}
+
+func reportMatch(ctx context.Context, igdb *catalog.Client, title, studio string) {
+	candidates, err := igdb.Search(ctx, catalog.LinkQuery(title), catalog.LinkPool)
+	if err != nil {
+		fmt.Printf("ERROR  %-42s %v\n", title, err)
+		return
+	}
+	if g, ok := catalog.ChooseMatch(title, studio, candidates); ok {
+		fmt.Printf("auto   %-42s → %s (%d, %d)\n", title, g.Title, g.IGDBID, g.ReleaseYear)
+		return
+	}
+	var names []string
+	for _, c := range candidates[:min(3, len(candidates))] {
+		names = append(names, fmt.Sprintf("%s (%d)", c.Title, c.ReleaseYear))
+	}
+	fmt.Printf("ASK    %-42s ? %s\n", title, strings.Join(names, " | "))
 }
