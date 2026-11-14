@@ -693,6 +693,8 @@ type GetGameInsightsResponse struct {
 	Listings          []*Listing             `protobuf:"bytes,4,rep,name=listings,proto3" json:"listings,omitempty"`
 	UsdToInr          float64                `protobuf:"fixed64,5,opt,name=usd_to_inr,json=usdToInr,proto3" json:"usd_to_inr,omitempty"` // 0 if not fetched yet
 	ListingsCheckedAt *string                `protobuf:"bytes,6,opt,name=listings_checked_at,json=listingsCheckedAt,proto3,oneof" json:"listings_checked_at,omitempty"`
+	Verdict           *DeviceVerdict         `protobuf:"bytes,7,opt,name=verdict,proto3,oneof" json:"verdict,omitempty"`
+	VerdictsEnabled   bool                   `protobuf:"varint,8,opt,name=verdicts_enabled,json=verdictsEnabled,proto3" json:"verdicts_enabled,omitempty"` // false: no API key, so no verdict is coming
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -769,6 +771,225 @@ func (x *GetGameInsightsResponse) GetListingsCheckedAt() string {
 	return ""
 }
 
+func (x *GetGameInsightsResponse) GetVerdict() *DeviceVerdict {
+	if x != nil {
+		return x.Verdict
+	}
+	return nil
+}
+
+func (x *GetGameInsightsResponse) GetVerdictsEnabled() bool {
+	if x != nil {
+		return x.VerdictsEnabled
+	}
+	return false
+}
+
+// Which of your devices to play a game on.
+type DeviceVerdict struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Summary       string                 `protobuf:"bytes,1,opt,name=summary,proto3" json:"summary,omitempty"`
+	Devices       []*DeviceRating        `protobuf:"bytes,2,rep,name=devices,proto3" json:"devices,omitempty"`         // best first
+	Unavailable   []string               `protobuf:"bytes,3,rep,name=unavailable,proto3" json:"unavailable,omitempty"` // pc | ps5 | switch2 the game isn't released for
+	Sources       []*Source              `protobuf:"bytes,4,rep,name=sources,proto3" json:"sources,omitempty"`
+	Complete      bool                   `protobuf:"varint,5,opt,name=complete,proto3" json:"complete,omitempty"` // false: some evidence was missing; it's redone later
+	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeviceVerdict) Reset() {
+	*x = DeviceVerdict{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeviceVerdict) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeviceVerdict) ProtoMessage() {}
+
+func (x *DeviceVerdict) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeviceVerdict.ProtoReflect.Descriptor instead.
+func (*DeviceVerdict) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeviceVerdict) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
+func (x *DeviceVerdict) GetDevices() []*DeviceRating {
+	if x != nil {
+		return x.Devices
+	}
+	return nil
+}
+
+func (x *DeviceVerdict) GetUnavailable() []string {
+	if x != nil {
+		return x.Unavailable
+	}
+	return nil
+}
+
+func (x *DeviceVerdict) GetSources() []*Source {
+	if x != nil {
+		return x.Sources
+	}
+	return nil
+}
+
+func (x *DeviceVerdict) GetComplete() bool {
+	if x != nil {
+		return x.Complete
+	}
+	return false
+}
+
+func (x *DeviceVerdict) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+type DeviceRating struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Device        string                 `protobuf:"bytes,1,opt,name=device,proto3" json:"device,omitempty"` // pc | ps5 | switch2
+	Rating        string                 `protobuf:"bytes,2,opt,name=rating,proto3" json:"rating,omitempty"` // great | good | playable | avoid
+	Expect        string                 `protobuf:"bytes,3,opt,name=expect,proto3" json:"expect,omitempty"` // e.g. "1080p, medium settings, ~60 fps"
+	Reasons       []string               `protobuf:"bytes,4,rep,name=reasons,proto3" json:"reasons,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeviceRating) Reset() {
+	*x = DeviceRating{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeviceRating) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeviceRating) ProtoMessage() {}
+
+func (x *DeviceRating) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeviceRating.ProtoReflect.Descriptor instead.
+func (*DeviceRating) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *DeviceRating) GetDevice() string {
+	if x != nil {
+		return x.Device
+	}
+	return ""
+}
+
+func (x *DeviceRating) GetRating() string {
+	if x != nil {
+		return x.Rating
+	}
+	return ""
+}
+
+func (x *DeviceRating) GetExpect() string {
+	if x != nil {
+		return x.Expect
+	}
+	return ""
+}
+
+func (x *DeviceRating) GetReasons() []string {
+	if x != nil {
+		return x.Reasons
+	}
+	return nil
+}
+
+type Source struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
+	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Source) Reset() {
+	*x = Source{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Source) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Source) ProtoMessage() {}
+
+func (x *Source) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Source.ProtoReflect.Descriptor instead.
+func (*Source) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *Source) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *Source) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
 // The VAPID public key a browser needs to subscribe. enabled is false when
 // the server has no keys, in which case alerts can't be turned on.
 type GetPushConfigRequest struct {
@@ -779,7 +1000,7 @@ type GetPushConfigRequest struct {
 
 func (x *GetPushConfigRequest) Reset() {
 	*x = GetPushConfigRequest{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[13]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -791,7 +1012,7 @@ func (x *GetPushConfigRequest) String() string {
 func (*GetPushConfigRequest) ProtoMessage() {}
 
 func (x *GetPushConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[13]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -804,7 +1025,7 @@ func (x *GetPushConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPushConfigRequest.ProtoReflect.Descriptor instead.
 func (*GetPushConfigRequest) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{13}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{16}
 }
 
 type GetPushConfigResponse struct {
@@ -817,7 +1038,7 @@ type GetPushConfigResponse struct {
 
 func (x *GetPushConfigResponse) Reset() {
 	*x = GetPushConfigResponse{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[14]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -829,7 +1050,7 @@ func (x *GetPushConfigResponse) String() string {
 func (*GetPushConfigResponse) ProtoMessage() {}
 
 func (x *GetPushConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[14]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -842,7 +1063,7 @@ func (x *GetPushConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPushConfigResponse.ProtoReflect.Descriptor instead.
 func (*GetPushConfigResponse) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{14}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetPushConfigResponse) GetEnabled() bool {
@@ -871,7 +1092,7 @@ type SubscribePushRequest struct {
 
 func (x *SubscribePushRequest) Reset() {
 	*x = SubscribePushRequest{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[15]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -883,7 +1104,7 @@ func (x *SubscribePushRequest) String() string {
 func (*SubscribePushRequest) ProtoMessage() {}
 
 func (x *SubscribePushRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[15]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -896,7 +1117,7 @@ func (x *SubscribePushRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribePushRequest.ProtoReflect.Descriptor instead.
 func (*SubscribePushRequest) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{15}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *SubscribePushRequest) GetEndpoint() string {
@@ -928,7 +1149,7 @@ type SubscribePushResponse struct {
 
 func (x *SubscribePushResponse) Reset() {
 	*x = SubscribePushResponse{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[16]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -940,7 +1161,7 @@ func (x *SubscribePushResponse) String() string {
 func (*SubscribePushResponse) ProtoMessage() {}
 
 func (x *SubscribePushResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[16]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -953,7 +1174,7 @@ func (x *SubscribePushResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribePushResponse.ProtoReflect.Descriptor instead.
 func (*SubscribePushResponse) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{16}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{19}
 }
 
 type UnsubscribePushRequest struct {
@@ -965,7 +1186,7 @@ type UnsubscribePushRequest struct {
 
 func (x *UnsubscribePushRequest) Reset() {
 	*x = UnsubscribePushRequest{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[17]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -977,7 +1198,7 @@ func (x *UnsubscribePushRequest) String() string {
 func (*UnsubscribePushRequest) ProtoMessage() {}
 
 func (x *UnsubscribePushRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[17]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -990,7 +1211,7 @@ func (x *UnsubscribePushRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsubscribePushRequest.ProtoReflect.Descriptor instead.
 func (*UnsubscribePushRequest) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{17}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *UnsubscribePushRequest) GetEndpoint() string {
@@ -1008,7 +1229,7 @@ type UnsubscribePushResponse struct {
 
 func (x *UnsubscribePushResponse) Reset() {
 	*x = UnsubscribePushResponse{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[18]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1020,7 +1241,7 @@ func (x *UnsubscribePushResponse) String() string {
 func (*UnsubscribePushResponse) ProtoMessage() {}
 
 func (x *UnsubscribePushResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[18]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1033,7 +1254,7 @@ func (x *UnsubscribePushResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsubscribePushResponse.ProtoReflect.Descriptor instead.
 func (*UnsubscribePushResponse) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{18}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{21}
 }
 
 // Sends a test notification to every subscribed browser.
@@ -1045,7 +1266,7 @@ type SendTestPushRequest struct {
 
 func (x *SendTestPushRequest) Reset() {
 	*x = SendTestPushRequest{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[19]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1057,7 +1278,7 @@ func (x *SendTestPushRequest) String() string {
 func (*SendTestPushRequest) ProtoMessage() {}
 
 func (x *SendTestPushRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[19]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1070,7 +1291,7 @@ func (x *SendTestPushRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendTestPushRequest.ProtoReflect.Descriptor instead.
 func (*SendTestPushRequest) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{19}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{22}
 }
 
 type SendTestPushResponse struct {
@@ -1082,7 +1303,7 @@ type SendTestPushResponse struct {
 
 func (x *SendTestPushResponse) Reset() {
 	*x = SendTestPushResponse{}
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[20]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1094,7 +1315,7 @@ func (x *SendTestPushResponse) String() string {
 func (*SendTestPushResponse) ProtoMessage() {}
 
 func (x *SendTestPushResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[20]
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1107,7 +1328,7 @@ func (x *SendTestPushResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendTestPushResponse.ProtoReflect.Descriptor instead.
 func (*SendTestPushResponse) Descriptor() ([]byte, []int) {
-	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{20}
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *SendTestPushResponse) GetDelivered() int32 {
@@ -1166,7 +1387,7 @@ const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
 	"\x0eis_search_link\x18\a \x01(\bR\fisSearchLink\x123\n" +
 	"\ahistory\x18\b \x03(\v2\x19.trove.v1.gaming.PriceRunR\ahistory\x12&\n" +
 	"\flowest_minor\x18\t \x01(\x03H\x00R\vlowestMinor\x88\x01\x01B\x0f\n" +
-	"\r_lowest_minor\"\xde\x02\n" +
+	"\r_lowest_minor\"\xd4\x03\n" +
 	"\x17GetGameInsightsResponse\x12!\n" +
 	"\fmatch_status\x18\x01 \x01(\tR\vmatchStatus\x127\n" +
 	"\x05match\x18\x02 \x01(\v2\x1c.trove.v1.gaming.CatalogGameH\x00R\x05match\x88\x01\x01\x12<\n" +
@@ -1176,9 +1397,29 @@ const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
 	"\blistings\x18\x04 \x03(\v2\x18.trove.v1.gaming.ListingR\blistings\x12\x1c\n" +
 	"\n" +
 	"usd_to_inr\x18\x05 \x01(\x01R\busdToInr\x123\n" +
-	"\x13listings_checked_at\x18\x06 \x01(\tH\x01R\x11listingsCheckedAt\x88\x01\x01B\b\n" +
+	"\x13listings_checked_at\x18\x06 \x01(\tH\x01R\x11listingsCheckedAt\x88\x01\x01\x12=\n" +
+	"\averdict\x18\a \x01(\v2\x1e.trove.v1.gaming.DeviceVerdictH\x02R\averdict\x88\x01\x01\x12)\n" +
+	"\x10verdicts_enabled\x18\b \x01(\bR\x0fverdictsEnabledB\b\n" +
 	"\x06_matchB\x16\n" +
-	"\x14_listings_checked_at\"\x16\n" +
+	"\x14_listings_checked_atB\n" +
+	"\n" +
+	"\b_verdict\"\xf2\x01\n" +
+	"\rDeviceVerdict\x12\x18\n" +
+	"\asummary\x18\x01 \x01(\tR\asummary\x127\n" +
+	"\adevices\x18\x02 \x03(\v2\x1d.trove.v1.gaming.DeviceRatingR\adevices\x12 \n" +
+	"\vunavailable\x18\x03 \x03(\tR\vunavailable\x121\n" +
+	"\asources\x18\x04 \x03(\v2\x17.trove.v1.gaming.SourceR\asources\x12\x1a\n" +
+	"\bcomplete\x18\x05 \x01(\bR\bcomplete\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x06 \x01(\tR\tcreatedAt\"p\n" +
+	"\fDeviceRating\x12\x16\n" +
+	"\x06device\x18\x01 \x01(\tR\x06device\x12\x16\n" +
+	"\x06rating\x18\x02 \x01(\tR\x06rating\x12\x16\n" +
+	"\x06expect\x18\x03 \x01(\tR\x06expect\x12\x18\n" +
+	"\areasons\x18\x04 \x03(\tR\areasons\"0\n" +
+	"\x06Source\x12\x14\n" +
+	"\x05label\x18\x01 \x01(\tR\x05label\x12\x10\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\"\x16\n" +
 	"\x14GetPushConfigRequest\"P\n" +
 	"\x15GetPushConfigResponse\x12\x18\n" +
 	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x1d\n" +
@@ -1219,7 +1460,7 @@ func file_trove_v1_gaming_gaming_proto_rawDescGZIP() []byte {
 	return file_trove_v1_gaming_gaming_proto_rawDescData
 }
 
-var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*CatalogGame)(nil),             // 0: trove.v1.gaming.CatalogGame
 	(*SearchCatalogRequest)(nil),    // 1: trove.v1.gaming.SearchCatalogRequest
@@ -1234,14 +1475,17 @@ var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*PriceRun)(nil),                // 10: trove.v1.gaming.PriceRun
 	(*Listing)(nil),                 // 11: trove.v1.gaming.Listing
 	(*GetGameInsightsResponse)(nil), // 12: trove.v1.gaming.GetGameInsightsResponse
-	(*GetPushConfigRequest)(nil),    // 13: trove.v1.gaming.GetPushConfigRequest
-	(*GetPushConfigResponse)(nil),   // 14: trove.v1.gaming.GetPushConfigResponse
-	(*SubscribePushRequest)(nil),    // 15: trove.v1.gaming.SubscribePushRequest
-	(*SubscribePushResponse)(nil),   // 16: trove.v1.gaming.SubscribePushResponse
-	(*UnsubscribePushRequest)(nil),  // 17: trove.v1.gaming.UnsubscribePushRequest
-	(*UnsubscribePushResponse)(nil), // 18: trove.v1.gaming.UnsubscribePushResponse
-	(*SendTestPushRequest)(nil),     // 19: trove.v1.gaming.SendTestPushRequest
-	(*SendTestPushResponse)(nil),    // 20: trove.v1.gaming.SendTestPushResponse
+	(*DeviceVerdict)(nil),           // 13: trove.v1.gaming.DeviceVerdict
+	(*DeviceRating)(nil),            // 14: trove.v1.gaming.DeviceRating
+	(*Source)(nil),                  // 15: trove.v1.gaming.Source
+	(*GetPushConfigRequest)(nil),    // 16: trove.v1.gaming.GetPushConfigRequest
+	(*GetPushConfigResponse)(nil),   // 17: trove.v1.gaming.GetPushConfigResponse
+	(*SubscribePushRequest)(nil),    // 18: trove.v1.gaming.SubscribePushRequest
+	(*SubscribePushResponse)(nil),   // 19: trove.v1.gaming.SubscribePushResponse
+	(*UnsubscribePushRequest)(nil),  // 20: trove.v1.gaming.UnsubscribePushRequest
+	(*UnsubscribePushResponse)(nil), // 21: trove.v1.gaming.UnsubscribePushResponse
+	(*SendTestPushRequest)(nil),     // 22: trove.v1.gaming.SendTestPushRequest
+	(*SendTestPushResponse)(nil),    // 23: trove.v1.gaming.SendTestPushResponse
 }
 var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	0,  // 0: trove.v1.gaming.SearchCatalogResponse.games:type_name -> trove.v1.gaming.CatalogGame
@@ -1249,29 +1493,32 @@ var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	0,  // 2: trove.v1.gaming.GetGameInsightsResponse.match:type_name -> trove.v1.gaming.CatalogGame
 	0,  // 3: trove.v1.gaming.GetGameInsightsResponse.candidates:type_name -> trove.v1.gaming.CatalogGame
 	11, // 4: trove.v1.gaming.GetGameInsightsResponse.listings:type_name -> trove.v1.gaming.Listing
-	1,  // 5: trove.v1.gaming.GamingService.SearchCatalog:input_type -> trove.v1.gaming.SearchCatalogRequest
-	3,  // 6: trove.v1.gaming.GamingService.LinkGame:input_type -> trove.v1.gaming.LinkGameRequest
-	5,  // 7: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
-	7,  // 8: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
-	9,  // 9: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
-	13, // 10: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
-	15, // 11: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
-	17, // 12: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
-	19, // 13: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
-	2,  // 14: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
-	4,  // 15: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
-	6,  // 16: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
-	8,  // 17: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
-	12, // 18: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
-	14, // 19: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
-	16, // 20: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
-	18, // 21: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
-	20, // 22: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
-	14, // [14:23] is the sub-list for method output_type
-	5,  // [5:14] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	13, // 5: trove.v1.gaming.GetGameInsightsResponse.verdict:type_name -> trove.v1.gaming.DeviceVerdict
+	14, // 6: trove.v1.gaming.DeviceVerdict.devices:type_name -> trove.v1.gaming.DeviceRating
+	15, // 7: trove.v1.gaming.DeviceVerdict.sources:type_name -> trove.v1.gaming.Source
+	1,  // 8: trove.v1.gaming.GamingService.SearchCatalog:input_type -> trove.v1.gaming.SearchCatalogRequest
+	3,  // 9: trove.v1.gaming.GamingService.LinkGame:input_type -> trove.v1.gaming.LinkGameRequest
+	5,  // 10: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
+	7,  // 11: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
+	9,  // 12: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
+	16, // 13: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
+	18, // 14: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
+	20, // 15: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
+	22, // 16: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
+	2,  // 17: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
+	4,  // 18: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
+	6,  // 19: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
+	8,  // 20: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
+	12, // 21: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
+	17, // 22: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
+	19, // 23: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
+	21, // 24: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
+	23, // 25: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
+	17, // [17:26] is the sub-list for method output_type
+	8,  // [8:17] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_trove_v1_gaming_gaming_proto_init() }
@@ -1288,7 +1535,7 @@ func file_trove_v1_gaming_gaming_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trove_v1_gaming_gaming_proto_rawDesc), len(file_trove_v1_gaming_gaming_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

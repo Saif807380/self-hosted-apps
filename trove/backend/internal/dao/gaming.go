@@ -88,8 +88,12 @@ func (s *GamingStore) SaveMeta(ctx context.Context, m model.GameMeta) error {
 	}
 	relinked := previous != nil && (m.IGDBID == nil || *previous != *m.IGDBID)
 	if relinked {
+		// Both were about the old game.
 		if _, err := tx.Exec(ctx, "DELETE FROM store_listings WHERE video_game_id = $1", m.VideoGameID); err != nil {
 			return fmt.Errorf("drop old listings: %w", err)
+		}
+		if _, err := tx.Exec(ctx, "DELETE FROM device_verdicts WHERE video_game_id = $1", m.VideoGameID); err != nil {
+			return fmt.Errorf("drop old verdict: %w", err)
 		}
 	}
 

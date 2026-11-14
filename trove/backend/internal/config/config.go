@@ -22,6 +22,12 @@ type Config struct {
 	// VAPIDSubject identifies the sender to push services: an https: URL or
 	// an email address.
 	VAPIDSubject string
+
+	// AnthropicAPIKey enables device verdicts (Claude). SearxURL is the
+	// SearXNG instance the worker searches for reviews of each version;
+	// verdicts made while it's unreachable are redone once it's back.
+	AnthropicAPIKey string
+	SearxURL        string
 }
 
 func Load() *Config {
@@ -39,6 +45,9 @@ func Load() *Config {
 		VAPIDPublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
 		VAPIDPrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
 		VAPIDSubject:    getEnv("VAPID_SUBJECT", "https://localhost"),
+
+		AnthropicAPIKey: getEnv("ANTHROPIC_API_KEY", ""),
+		SearxURL:        getEnv("SEARXNG_URL", "http://127.0.0.1:8888"),
 	}
 }
 

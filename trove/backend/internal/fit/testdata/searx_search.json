@@ -1,0 +1,11 @@
+{
+ "query": "hand-written in SearXNG's format: the service was down when these tests were written",
+ "number_of_results": 0,
+ "results": [
+  {"url": "https://example.com/elden-ring-performance", "title": "Elden Ring performance review", "content": "Runs at a mostly stable 60 fps in performance mode.", "engine": "duckduckgo"},
+  {"url": "https://example.com/elden-ring-pc", "title": "Elden Ring PC port", "content": "Stutters on first load; locked to 60 fps.", "engine": "bing"},
+  {"url": "https://example.com/c", "title": "C", "content": "c", "engine": "bing"},
+  {"url": "https://example.com/d", "title": "D", "content": "d", "engine": "bing"},
+  {"url": "https://example.com/e", "title": "E", "content": "beyond the per-query limit", "engine": "bing"}
+ ]
+}

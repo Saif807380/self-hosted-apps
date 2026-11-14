@@ -29,6 +29,8 @@ type GamingService struct {
 	igdb  *catalog.Client
 	redis *redis.Client
 	push  *push.Sender
+	// verdicts: the worker has an API key, so verdicts are being made.
+	verdicts bool
 }
 
 // GameInsights is everything the game detail view shows about prices.
@@ -37,6 +39,9 @@ type GameInsights struct {
 	Listings []model.StoreListing
 	History  []model.PriceRun
 	USDToINR float64
+	Verdict  *dao.StoredVerdict // nil until the worker has made one
+	// VerdictsEnabled is false when no verdict is coming (no API key).
+	VerdictsEnabled bool
 }
 
 func (s *GamingService) SearchCatalog(ctx context.Context, query string) ([]catalog.Game, error) {
@@ -104,7 +109,7 @@ func (s *GamingService) GetGameInsights(ctx context.Context, gameID uuid.UUID) (
 	if _, err := s.store.GetGameRef(ctx, gameID); err != nil {
 		return nil, err
 	}
-	out := &GameInsights{}
+	out := &GameInsights{VerdictsEnabled: s.verdicts}
 	meta, err := s.store.GetMeta(ctx, gameID)
 	switch {
 	case err == nil:
@@ -120,6 +125,13 @@ func (s *GamingService) GetGameInsights(ctx context.Context, gameID uuid.UUID) (
 	}
 	if rate, _, err := s.store.FXRate(ctx, "USD", "INR"); err == nil {
 		out.USDToINR = rate
+	}
+	verdict, err := s.store.GetVerdict(ctx, gameID)
+	switch {
+	case err == nil:
+		out.Verdict = verdict
+	case !errors.Is(err, pgx.ErrNoRows):
+		return nil, err
 	}
 	return out, nil
 }

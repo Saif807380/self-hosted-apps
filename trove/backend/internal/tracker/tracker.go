@@ -14,6 +14,7 @@ import (
 	"github.com/saifkazi/trove/backend/internal/alerts"
 	"github.com/saifkazi/trove/backend/internal/catalog"
 	"github.com/saifkazi/trove/backend/internal/dao"
+	"github.com/saifkazi/trove/backend/internal/fit"
 	"github.com/saifkazi/trove/backend/internal/model"
 	"github.com/saifkazi/trove/backend/internal/stores"
 )
@@ -36,10 +37,14 @@ type Tracker struct {
 	UploadsDir string
 	// Notify sends sale alerts; nil disables them.
 	Notify Notifier
+	// Fit gathers evidence and LLM weighs it for device verdicts; either
+	// nil disables verdicts.
+	Fit *fit.Gatherer
+	LLM fit.Completer
 }
 
 // Refresh runs the whole pipeline for one game: link it if it never was,
-// look up its listings, and check its prices.
+// look up its listings, check its prices and make its device verdict.
 func (t *Tracker) Refresh(ctx context.Context, id uuid.UUID) error {
 	ref, err := t.Store.GetGameRef(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -64,7 +69,11 @@ func (t *Tracker) Refresh(ctx context.Context, id uuid.UUID) error {
 	if err := t.CheckPrices(ctx, &id); err != nil {
 		return err
 	}
-	return t.DeliverSales(ctx)
+	// Alerts first: a verdict waits on a model call.
+	if err := t.DeliverSales(ctx); err != nil {
+		return err
+	}
+	return t.Judge(ctx, &id)
 }
 
 // LinkPending links games that have never been looked up in IGDB.

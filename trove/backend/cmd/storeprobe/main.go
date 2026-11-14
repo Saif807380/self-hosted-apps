@@ -8,6 +8,11 @@
 // whether Trove would link it to IGDB automatically:
 //
 //	go run ./cmd/storeprobe -match "Celeste|Extremely OK Games"
+//
+// With -evidence, it prints what a device verdict for each title would be
+// based on (the text sent to the model), without calling the model:
+//
+//	go run ./cmd/storeprobe -evidence "Elden Ring"
 package main
 
 import (
@@ -20,14 +25,17 @@ import (
 	"time"
 
 	"github.com/saifkazi/trove/backend/internal/catalog"
+	"github.com/saifkazi/trove/backend/internal/config"
+	"github.com/saifkazi/trove/backend/internal/fit"
 	"github.com/saifkazi/trove/backend/internal/stores"
 )
 
 func main() {
 	matchOnly := flag.Bool("match", false, `arguments are "Title|Studio"; report IGDB auto-linking only`)
+	evidenceOnly := flag.Bool("evidence", false, "print the evidence a device verdict would use (no model call)")
 	flag.Parse()
 	if flag.NArg() == 0 {
-		log.Fatal(`usage: storeprobe [-match] "title" ["title" …]`)
+		log.Fatal(`usage: storeprobe [-match | -evidence] "title" ["title" …]`)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
@@ -37,6 +45,15 @@ func main() {
 		for _, arg := range flag.Args() {
 			title, studio, _ := strings.Cut(arg, "|")
 			reportMatch(ctx, igdb, title, studio)
+		}
+		return
+	}
+	if *evidenceOnly {
+		gatherer := &fit.Gatherer{SearxURL: config.Load().SearxURL}
+		for _, title := range flag.Args() {
+			if err := reportEvidence(ctx, igdb, gatherer, title); err != nil {
+				fmt.Printf("\n%s: ERROR %v\n", title, err)
+			}
 		}
 		return
 	}
@@ -143,4 +160,27 @@ func reportMatch(ctx context.Context, igdb *catalog.Client, title, studio string
 		names = append(names, fmt.Sprintf("%s (%d)", c.Title, c.ReleaseYear))
 	}
 	fmt.Printf("ASK    %-42s ? %s\n", title, strings.Join(names, " | "))
+}
+
+func reportEvidence(ctx context.Context, igdb *catalog.Client, gatherer *fit.Gatherer, title string) error {
+	found, err := igdb.Search(ctx, title, 1)
+	if err != nil {
+		return err
+	}
+	if len(found) == 0 {
+		return fmt.Errorf("no IGDB match")
+	}
+	g, err := igdb.EnsureSteamAppID(ctx, found[0])
+	if err != nil {
+		return err
+	}
+	platforms := make([]int32, len(g.Platforms))
+	for i, p := range g.Platforms {
+		platforms[i] = int32(p)
+	}
+	ev := gatherer.Gather(ctx, fit.Game{
+		Title: g.Title, Year: g.ReleaseYear, Genres: g.Genres, Platforms: platforms, SteamAppID: g.SteamAppID,
+	})
+	fmt.Printf("\n=== %s (complete: %t)\n%s\n", g.Title, ev.Complete(), fit.Prompt(ev))
+	return nil
 }

@@ -58,6 +58,10 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 # Sale alerts: web push subscriptions
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/006_push.sql
+
+# Device verdicts: which device to play each wishlisted game on
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/007_device_verdicts.sql
 ```
 
 ### Sale alerts (web push)
@@ -99,6 +103,22 @@ cd backend && set -a && . ../infra/.env && set +a && \
 `go run ./cmd/storeprobe "Hades II"` checks the store lookups by hand, and
 `go run ./cmd/storeprobe -match "Title|Studio"` shows how a game would be
 matched to IGDB.
+
+### Device verdicts
+
+With `ANTHROPIC_API_KEY` in `infra/.env`, the worker also decides which
+device (the G15, PS5 or Switch 2) to play each wishlisted game on. It
+gathers the platforms (IGDB), Steam's PC requirements and Metacritic score,
+ProtonDB, the Steam Deck rating, AreWeAntiCheatYet and web search results,
+then asks Claude Sonnet 5.5 (`internal/llm`) for a ranked verdict, about
+1–2¢ a game. Verdicts are redone after 90 days or when the game is
+relinked; anti-cheat that blocks Linux always rules the PC out.
+
+Web search goes through SearXNG (`SEARXNG_URL`, default
+`http://127.0.0.1:8888`, cortex's `searxng.service`). While it's down,
+verdicts are made without it and marked incomplete, then redone once it's
+reachable (checked every 6 hours). Steam's review endpoint redirects
+requests from this machine, so review sentiment comes from the web search.
 
 ### 4. Start the backend
 

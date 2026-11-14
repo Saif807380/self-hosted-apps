@@ -197,6 +197,27 @@ func mapInsights(in *service.GameInsights) *gamingv1.GetGameInsightsResponse {
 		}
 		out.Listings = append(out.Listings, pb)
 	}
+	out.VerdictsEnabled = in.VerdictsEnabled
+	out.Verdict = mapVerdict(in.Verdict)
+	return out
+}
+
+func mapVerdict(v *dao.StoredVerdict) *gamingv1.DeviceVerdict {
+	if v == nil {
+		return nil
+	}
+	out := &gamingv1.DeviceVerdict{
+		Summary: v.Verdict.Summary, Unavailable: v.Verdict.Unavailable,
+		Complete: v.Complete, CreatedAt: v.CreatedAt.Format(time.RFC3339),
+	}
+	for _, d := range v.Verdict.Devices {
+		out.Devices = append(out.Devices, &gamingv1.DeviceRating{
+			Device: d.Device, Rating: d.Rating, Expect: d.Expect, Reasons: d.Reasons,
+		})
+	}
+	for _, s := range v.Sources {
+		out.Sources = append(out.Sources, &gamingv1.Source{Label: s.Label, Url: s.URL})
+	}
 	return out
 }
 

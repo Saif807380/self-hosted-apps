@@ -1,6 +1,7 @@
 // Command worker runs Trove's price tracking: it links games to IGDB, finds
-// their store listings, checks prices and records sale events. It runs as its
-// own container so slow store calls never hold up the API.
+// their store listings, checks prices, records sale events and makes device
+// verdicts. It runs as its own container so slow store and model calls never
+// hold up the API.
 package main
 
 import (
@@ -16,7 +17,9 @@ import (
 	"github.com/saifkazi/trove/backend/internal/catalog"
 	"github.com/saifkazi/trove/backend/internal/config"
 	"github.com/saifkazi/trove/backend/internal/dao"
+	"github.com/saifkazi/trove/backend/internal/fit"
 	"github.com/saifkazi/trove/backend/internal/jobs"
+	"github.com/saifkazi/trove/backend/internal/llm"
 	"github.com/saifkazi/trove/backend/internal/push"
 	"github.com/saifkazi/trove/backend/internal/stores"
 	"github.com/saifkazi/trove/backend/internal/tracker"
@@ -70,6 +73,11 @@ func main() {
 		UploadsDir: cfg.UploadsDir,
 		Notify:     sender,
 	}
+	if model := llm.New(cfg.AnthropicAPIKey, log); model != nil {
+		t.Fit, t.LLM = &fit.Gatherer{SearxURL: cfg.SearxURL}, model
+	} else {
+		log.Warn("ANTHROPIC_API_KEY not set; device verdicts will not be made")
+	}
 	w := &worker{t: t, log: log}
 
 	log.Info("worker started", "link_every", linkEvery, "price_every", priceEvery)
@@ -96,7 +104,10 @@ type worker struct {
 }
 
 func (w *worker) link(ctx context.Context) error {
-	return w.t.LinkPending(ctx)
+	if err := w.t.LinkPending(ctx); err != nil {
+		return err
+	}
+	return w.t.Judge(ctx, nil)
 }
 
 func (w *worker) prices(ctx context.Context) error {
