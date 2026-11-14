@@ -54,7 +54,34 @@ podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
 # Price tracking: IGDB metadata, store listings, price history, sale events
 podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
   psql -U lms -d lms -f - < backend/migrations/005_price_tracking.sql
+
+# Sale alerts: web push subscriptions
+podman exec -i $(podman ps --format '{{.Names}}' | grep postgres) \
+  psql -U lms -d lms -f - < backend/migrations/006_push.sql
 ```
+
+### Sale alerts (web push)
+
+The worker sends a notification per game when a wishlisted game goes on
+sale. It needs `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` in
+`infra/.env`; generate the keys once with `make vapid` (new keys mean every
+device has to turn alerts on again).
+
+Push only works from a production build (`src/sw.ts` is the service worker)
+on a certificate the browser trusts. To try it against a scratch backend,
+serve the build with the tailnet certificate and open
+`https://cachyos.tail4f0f0b.ts.net:3100` (tailnet on):
+
+```bash
+cd ui && bun run build && \
+  TROVE_TLS_CERT=../infra/certs/cachyos.tail4f0f0b.ts.net.crt \
+  TROVE_TLS_KEY=../infra/certs/cachyos.tail4f0f0b.ts.net.key \
+  TROVE_BACKEND_URL=http://localhost:18080 bunx --bun vite preview --port 3100
+```
+
+Browsers that can't receive alerts: CachyOS's `firefox-pure` (push is locked
+off) and ungoogled-chromium (no push service). Chrome and Firefox on Android
+work.
 
 ### Price tracking worker
 

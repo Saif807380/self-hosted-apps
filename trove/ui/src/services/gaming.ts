@@ -62,4 +62,16 @@ export const gamingApi = {
 
   setPsnLink: (videoGameId: string, url: string) =>
     rpc<Record<string, never>>(SVC, 'SetPsnLink', { videoGameId, url }),
+
+  pushConfig: () =>
+    rpc<{ enabled?: boolean; publicKey?: string }>(SVC, 'GetPushConfig', {}),
+
+  subscribePush: (sub: { endpoint: string; p256dh: string; auth: string }) =>
+    rpc<Record<string, never>>(SVC, 'SubscribePush', sub),
+
+  unsubscribePush: (endpoint: string) =>
+    rpc<Record<string, never>>(SVC, 'UnsubscribePush', { endpoint }),
+
+  sendTestPush: () =>
+    rpc<{ delivered?: number }>(SVC, 'SendTestPush', {}).then(r => r.delivered ?? 0),
 }

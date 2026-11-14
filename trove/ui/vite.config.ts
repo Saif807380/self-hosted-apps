@@ -5,7 +5,12 @@ import fs from 'fs'
 import path from 'path'
 
 const certsDir = path.resolve(__dirname, '../infra/certs')
-const hasCerts = fs.existsSync(path.join(certsDir, 'cert.pem'))
+// TROVE_TLS_CERT / TROVE_TLS_KEY swap in another certificate, e.g. the
+// tailnet one: service workers (and so push) only register on a page whose
+// certificate the browser trusts.
+const certFile = process.env.TROVE_TLS_CERT ?? path.join(certsDir, 'cert.pem')
+const keyFile = process.env.TROVE_TLS_KEY ?? path.join(certsDir, 'key.pem')
+const hasCerts = fs.existsSync(certFile)
 // TROVE_BACKEND_URL points the dev server at another backend, e.g. one running
 // against a scratch copy of the database.
 const backendUrl = process.env.TROVE_BACKEND_URL ?? (hasCerts ? 'https://localhost:8080' : 'http://localhost:8080')
@@ -15,6 +20,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Our own service worker (src/sw.ts) so it can handle web push for sale
+      // alerts; caching rules live there now.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       manifest: {
         name: 'Trove',
         short_name: 'Trove',
@@ -25,27 +35,6 @@ export default defineConfig({
         icons: [
           { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-        ],
-      },
-      workbox: {
-        navigateFallback: '/index.html',
-        runtimeCaching: [
-          {
-            urlPattern: /^https?:\/\/.*\/uploads\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'uploads-cache',
-              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-          {
-            urlPattern: /^https?:\/\/.*\/fonts\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'fonts-cache',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
         ],
       },
     }),
@@ -60,8 +49,8 @@ export default defineConfig({
     port: 3000,
     ...(hasCerts && {
       https: {
-        cert: fs.readFileSync(path.join(certsDir, 'cert.pem')),
-        key: fs.readFileSync(path.join(certsDir, 'key.pem')),
+        cert: fs.readFileSync(certFile),
+        key: fs.readFileSync(keyFile),
       },
     }),
     proxy: {

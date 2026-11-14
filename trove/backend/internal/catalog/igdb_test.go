@@ -109,3 +109,39 @@ func TestEscape(t *testing.T) {
 		t.Errorf("escape = %s", got)
 	}
 }
+
+func TestEnsureSteamAppID(t *testing.T) {
+	var query string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			w.Write([]byte(`{"access_token":"tok","expires_in":3600}`)) //nolint:errcheck
+			return
+		}
+		b, _ := io.ReadAll(r.Body)
+		query = string(b)
+		w.Write([]byte(`[{"id":144024,"name":"Final Fantasy VII Remake Intergrade","external_games":[{"external_game_source":1,"uid":"1462040"}]}]`)) //nolint:errcheck
+	}))
+	defer srv.Close()
+	c := &Client{ClientID: "id", ClientSecret: "s", BaseURL: srv.URL, TokenURL: srv.URL + "/token"}
+
+	g, err := c.EnsureSteamAppID(context.Background(), Game{
+		IGDBID: 11169, Title: "Final Fantasy VII Remake", Platforms: []int{PlatformPS4, PlatformPC}, BundleIDs: []int64{133299, 144024},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.SteamAppID != "1462040" {
+		t.Errorf("steam app id = %q", g.SteamAppID)
+	}
+	if !strings.Contains(query, "id = (133299,144024) | version_parent = 11169") {
+		t.Errorf("query = %s", query)
+	}
+
+	// Already known, or not on PC: no lookup.
+	query = ""
+	for _, g := range []Game{{SteamAppID: "1", Platforms: []int{PlatformPC}}, {Platforms: []int{PlatformPS5}}} {
+		if _, err := c.EnsureSteamAppID(context.Background(), g); err != nil || query != "" {
+			t.Errorf("unexpected lookup for %+v: %q", g, query)
+		}
+	}
+}

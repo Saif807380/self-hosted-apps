@@ -17,6 +17,7 @@ import (
 	"github.com/saifkazi/trove/backend/internal/config"
 	"github.com/saifkazi/trove/backend/internal/dao"
 	"github.com/saifkazi/trove/backend/internal/jobs"
+	"github.com/saifkazi/trove/backend/internal/push"
 	"github.com/saifkazi/trove/backend/internal/stores"
 	"github.com/saifkazi/trove/backend/internal/tracker"
 )
@@ -50,8 +51,16 @@ func main() {
 	rdb := dao.NewRedisClient(cfg.RedisURL)
 	defer rdb.Close()
 
+	gaming := dao.NewStores(pool).Gaming
+	sender := &push.Sender{
+		Store: gaming, PublicKey: cfg.VAPIDPublicKey, PrivateKey: cfg.VAPIDPrivateKey,
+		Subject: cfg.VAPIDSubject, Log: log,
+	}
+	if !sender.Enabled() {
+		log.Warn("VAPID keys not set; sale alerts will not be sent")
+	}
 	t := &tracker.Tracker{
-		Store: dao.NewStores(pool).Gaming,
+		Store: gaming,
 		IGDB:  &catalog.Client{ClientID: cfg.IGDBClientID, ClientSecret: cfg.IGDBClientSecret},
 		Steam: &stores.SteamClient{},
 		Eshop: &stores.EshopClient{},
@@ -59,6 +68,7 @@ func main() {
 		Log:   log,
 		// Shared with the backend, which serves and syncs these as covers.
 		UploadsDir: cfg.UploadsDir,
+		Notify:     sender,
 	}
 	w := &worker{t: t, log: log}
 
@@ -96,7 +106,10 @@ func (w *worker) prices(ctx context.Context) error {
 	if err := w.t.FindListings(ctx, nil); err != nil {
 		return err
 	}
-	return w.t.CheckPrices(ctx, nil)
+	if err := w.t.CheckPrices(ctx, nil); err != nil {
+		return err
+	}
+	return w.t.DeliverSales(ctx)
 }
 
 // every runs job now and then on each tick until ctx is cancelled.

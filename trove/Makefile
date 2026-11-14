@@ -1,4 +1,4 @@
-.PHONY: dev-infra dev-backend dev-ui dev-down prod-up prod-down port-forward
+.PHONY: dev-infra dev-backend dev-ui dev-down prod-up prod-down port-forward vapid
 
 # Set up WSL2 → Windows port forwarding (requires PowerShell as Admin)
 port-forward:
@@ -26,8 +26,15 @@ dev-ui:
 	cd ui && bun run dev
 
 # Production: full stack in containers
+# --force-recreate: podman-compose doesn't reliably replace a running
+# container when only its image changed, which can leave old code serving.
 prod-up:
-	cd infra && podman-compose up -d --build
+	cd infra && podman-compose up -d --build --force-recreate
 
 prod-down:
 	cd infra && podman-compose down
+
+# Print a new VAPID key pair for web push (sale alerts) to paste into
+# infra/.env. Run once: new keys mean every device must turn alerts on again.
+vapid:
+	cd backend && go run ./cmd/vapidkeys

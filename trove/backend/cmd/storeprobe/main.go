@@ -131,7 +131,11 @@ func reportMatch(ctx context.Context, igdb *catalog.Client, title, studio string
 		return
 	}
 	if g, ok := catalog.ChooseMatch(title, studio, candidates); ok {
-		fmt.Printf("auto   %-42s → %s (%d, %d)\n", title, g.Title, g.IGDBID, g.ReleaseYear)
+		g, err = igdb.EnsureSteamAppID(ctx, g)
+		if err != nil {
+			fmt.Printf("ERROR  %-42s steam id: %v\n", title, err)
+		}
+		fmt.Printf("auto   %-42s → %s (%d, %d) steam=%s\n", title, g.Title, g.IGDBID, g.ReleaseYear, g.SteamAppID)
 		return
 	}
 	var names []string

@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/saifkazi/trove/backend/internal/stores"
 )
 
 const (
@@ -34,14 +36,16 @@ const (
 	PlatformSwitch2 = 508
 )
 
-// mainGameTypes are IGDB game_type values that are games in their own right:
-// main game, standalone expansion, remake, remaster, expanded game.
-const mainGameTypes = "(0,4,8,9,10)"
+// mainGameTypes are IGDB game_type values for things you can buy as a game:
+// main game, bundle, standalone expansion, remake, remaster, expanded game,
+// port. Bundles matter: "Final Fantasy VII Remake Intergrade" is a bundle,
+// and it's the entry that's on Steam.
+const mainGameTypes = "(0,3,4,8,9,10,11)"
 
 const gameFields = `fields name, first_release_date, cover.image_id, platforms,
  involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
  genres.name, themes.name, keywords.name, total_rating, total_rating_count, similar_games,
- external_games.external_game_source, external_games.uid;`
+ external_games.external_game_source, external_games.uid, bundles;`
 
 // Game is the subset of an IGDB game Trove uses.
 type Game struct {
@@ -59,6 +63,7 @@ type Game struct {
 	RatingCount int
 	SimilarIDs  []int64
 	SteamAppID  string
+	BundleIDs   []int64 // bundles that include this game
 }
 
 // HasPlatform reports whether the game was released on any of the platforms.
@@ -105,16 +110,65 @@ func (c *Client) Search(ctx context.Context, query string, limit int) ([]Game, e
 	return games, nil
 }
 
+// EnsureSteamAppID fills in a PC game's Steam app id when its IGDB entry
+// has none, borrowing it from a bundle or version of the game that has one
+// (the Steam product is often "<game> Intergrade" or a "Complete Edition").
+func (c *Client) EnsureSteamAppID(ctx context.Context, g Game) (Game, error) {
+	if g.SteamAppID != "" || !g.HasPlatform(PlatformPC) {
+		return g, nil
+	}
+	where := fmt.Sprintf("version_parent = %d", g.IGDBID)
+	if len(g.BundleIDs) > 0 {
+		where = fmt.Sprintf("id = (%s) | %s", joinIDs(g.BundleIDs), where)
+	}
+	var raw []igdbGame
+	if err := c.query(ctx, "games", fmt.Sprintf(`%s where %s; limit 50;`, gameFields, where), &raw); err != nil {
+		return g, err
+	}
+	related := make([]Game, len(raw))
+	for i, r := range raw {
+		related[i] = r.toGame()
+	}
+	g.SteamAppID = PickRelatedSteam(g.Title, related)
+	return g, nil
+}
+
+// PickRelatedSteam chooses the Steam app id among a game's bundles and
+// versions: those whose title starts with the game's are preferred
+// ("Final Fantasy VII Remake Intergrade" over an unrelated compilation),
+// then the most rated. It returns "" when none is on Steam.
+func PickRelatedSteam(title string, related []Game) string {
+	base := stores.NormalizeTitle(title)
+	best, bestScore := "", -1
+	for _, r := range related {
+		if r.SteamAppID == "" {
+			continue
+		}
+		score := r.RatingCount
+		if name := stores.NormalizeTitle(r.Title); name == base || strings.HasPrefix(name, base+" ") {
+			score += 1_000_000
+		}
+		if score > bestScore {
+			best, bestScore = r.SteamAppID, score
+		}
+	}
+	return best
+}
+
+func joinIDs(ids []int64) string {
+	parts := make([]string, len(ids))
+	for i, id := range ids {
+		parts[i] = strconv.FormatInt(id, 10)
+	}
+	return strings.Join(parts, ",")
+}
+
 // Get fetches games by IGDB id.
 func (c *Client) Get(ctx context.Context, ids []int64) ([]Game, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	parts := make([]string, len(ids))
-	for i, id := range ids {
-		parts[i] = strconv.FormatInt(id, 10)
-	}
-	body := fmt.Sprintf(`%s where id = (%s); limit %d;`, gameFields, strings.Join(parts, ","), len(ids))
+	body := fmt.Sprintf(`%s where id = (%s); limit %d;`, gameFields, joinIDs(ids), len(ids))
 	return c.games(ctx, body)
 }
 
@@ -254,6 +308,7 @@ type igdbGame struct {
 	Rating      float64 `json:"total_rating"`
 	RatingCount int     `json:"total_rating_count"`
 	Similar     []int64 `json:"similar_games"`
+	Bundles     []int64 `json:"bundles"`
 	External    []struct {
 		Source int    `json:"external_game_source"`
 		UID    string `json:"uid"`
@@ -271,6 +326,7 @@ func (g igdbGame) toGame() Game {
 		Rating:      g.Rating,
 		RatingCount: g.RatingCount,
 		SimilarIDs:  g.Similar,
+		BundleIDs:   g.Bundles,
 	}
 	if g.Released > 0 {
 		out.ReleaseYear = time.Unix(g.Released, 0).UTC().Year()

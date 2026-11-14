@@ -14,6 +14,14 @@ type Config struct {
 	// server: without them, catalog search and linking return an error.
 	IGDBClientID     string
 	IGDBClientSecret string
+
+	// Web push (VAPID) keys for sale notifications; generate with
+	// `make vapid`. Without them, alerts can't be turned on.
+	VAPIDPublicKey  string
+	VAPIDPrivateKey string
+	// VAPIDSubject identifies the sender to push services: an https: URL or
+	// an email address.
+	VAPIDSubject string
 }
 
 func Load() *Config {
@@ -27,6 +35,10 @@ func Load() *Config {
 
 		IGDBClientID:     getEnv("IGDB_CLIENT_ID", ""),
 		IGDBClientSecret: getEnv("IGDB_CLIENT_SECRET", ""),
+
+		VAPIDPublicKey:  getEnv("VAPID_PUBLIC_KEY", ""),
+		VAPIDPrivateKey: getEnv("VAPID_PRIVATE_KEY", ""),
+		VAPIDSubject:    getEnv("VAPID_SUBJECT", "https://localhost"),
 	}
 }
 

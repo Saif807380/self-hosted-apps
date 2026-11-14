@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"net/url"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	gamingv1 "github.com/saifkazi/trove/backend/gen/trove/v1/gaming"
 	"github.com/saifkazi/trove/backend/gen/trove/v1/gaming/gamingv1connect"
 	"github.com/saifkazi/trove/backend/internal/catalog"
+	"github.com/saifkazi/trove/backend/internal/dao"
 	"github.com/saifkazi/trove/backend/internal/model"
 	"github.com/saifkazi/trove/backend/internal/service"
 	"github.com/saifkazi/trove/backend/internal/stores"
@@ -99,6 +101,51 @@ func (h *gamingHandler) GetGameInsights(
 		return nil, connectErr(err)
 	}
 	return connect.NewResponse(mapInsights(in)), nil
+}
+
+func (h *gamingHandler) GetPushConfig(
+	_ context.Context,
+	_ *connect.Request[gamingv1.GetPushConfigRequest],
+) (*connect.Response[gamingv1.GetPushConfigResponse], error) {
+	enabled, key := h.svc.PushConfig()
+	return connect.NewResponse(&gamingv1.GetPushConfigResponse{Enabled: enabled, PublicKey: key}), nil
+}
+
+func (h *gamingHandler) SubscribePush(
+	ctx context.Context,
+	req *connect.Request[gamingv1.SubscribePushRequest],
+) (*connect.Response[gamingv1.SubscribePushResponse], error) {
+	m := req.Msg
+	u, err := url.Parse(m.Endpoint)
+	if err != nil || u.Scheme != "https" || u.Host == "" || m.P256Dh == "" || m.Auth == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("an https endpoint, p256dh and auth are required"))
+	}
+	sub := dao.PushSubscription{Endpoint: m.Endpoint, P256dh: m.P256Dh, Auth: m.Auth}
+	if err := h.svc.SubscribePush(ctx, sub, req.Header().Get("User-Agent")); err != nil {
+		return nil, connectErr(err)
+	}
+	return connect.NewResponse(&gamingv1.SubscribePushResponse{}), nil
+}
+
+func (h *gamingHandler) UnsubscribePush(
+	ctx context.Context,
+	req *connect.Request[gamingv1.UnsubscribePushRequest],
+) (*connect.Response[gamingv1.UnsubscribePushResponse], error) {
+	if err := h.svc.UnsubscribePush(ctx, req.Msg.Endpoint); err != nil {
+		return nil, connectErr(err)
+	}
+	return connect.NewResponse(&gamingv1.UnsubscribePushResponse{}), nil
+}
+
+func (h *gamingHandler) SendTestPush(
+	ctx context.Context,
+	_ *connect.Request[gamingv1.SendTestPushRequest],
+) (*connect.Response[gamingv1.SendTestPushResponse], error) {
+	delivered, err := h.svc.SendTestPush(ctx)
+	if err != nil {
+		return nil, connectErr(err)
+	}
+	return connect.NewResponse(&gamingv1.SendTestPushResponse{Delivered: int32(delivered)}), nil
 }
 
 func mapInsights(in *service.GameInsights) *gamingv1.GetGameInsightsResponse {
