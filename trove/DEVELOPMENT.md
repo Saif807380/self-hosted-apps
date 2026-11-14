@@ -4,7 +4,7 @@
 
 | Tool | Version | Install |
 |------|---------|---------|
-| Go | 1.24+ | https://go.dev/dl |
+| Go | 1.25+ | https://go.dev/dl |
 | Bun | 1.3+ | `curl -fsSL https://bun.sh/install \| bash` |
 | Podman | 3.4+ | https://podman.io/getting-started/installation |
 | podman-compose | latest | `pip install podman-compose` |
