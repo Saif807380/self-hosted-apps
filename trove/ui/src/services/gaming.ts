@@ -58,6 +58,20 @@ export interface DeviceVerdict {
   createdAt: string
 }
 
+/** A wishlisted game's listing that's discounted right now. */
+export interface Deal {
+  videoGameId: string
+  store: StoreName
+  edition?: string
+  url: string
+  currency: string
+  baseMinor: string
+  finalMinor: string
+  discountPct?: number
+  saleEndsAt?: string
+  lowest?: boolean // the lowest price Trove has seen for it
+}
+
 export interface GameInsights {
   matchStatus: MatchStatus
   match?: CatalogGame
@@ -72,6 +86,9 @@ export interface GameInsights {
 export const gamingApi = {
   insights: (videoGameId: string) =>
     rpc<GameInsights>(SVC, 'GetGameInsights', { videoGameId }),
+
+  deals: () =>
+    rpc<{ deals?: Deal[]; usdToInr?: number }>(SVC, 'ListDeals', {}),
 
   search: (query: string) =>
     rpc<{ games?: CatalogGame[] }>(SVC, 'SearchCatalog', { query }).then(r => r.games ?? []),

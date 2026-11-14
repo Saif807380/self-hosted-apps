@@ -12,6 +12,8 @@ interface GameFiltersProps {
   hasFilters: boolean
   /** Year filter and year sorts only apply to played games. */
   showYears: boolean
+  /** The discount sort only applies to the Deals tab. */
+  showDiscount?: boolean
 }
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -22,7 +24,7 @@ export default function GameFilters({
   search, onSearch,
   yearPlayed, onYearPlayed,
   sort, onSort,
-  onAdd, onClear, hasFilters, showYears,
+  onAdd, onClear, hasFilters, showYears, showDiscount = false,
 }: GameFiltersProps) {
   return (
     <Stack gap={5} h="full">
@@ -81,6 +83,7 @@ export default function GameFilters({
             borderColor="border.default"
             borderRadius="7px"
           >
+            {showDiscount && <option value="discount_desc">Biggest discount</option>}
             <option value="title_asc">Title: A → Z</option>
             <option value="title_desc">Title: Z → A</option>
             {showYears ? (

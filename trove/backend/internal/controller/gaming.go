@@ -103,6 +103,30 @@ func (h *gamingHandler) GetGameInsights(
 	return connect.NewResponse(mapInsights(in)), nil
 }
 
+func (h *gamingHandler) ListDeals(
+	ctx context.Context,
+	_ *connect.Request[gamingv1.ListDealsRequest],
+) (*connect.Response[gamingv1.ListDealsResponse], error) {
+	deals, rate, err := h.svc.ListDeals(ctx)
+	if err != nil {
+		return nil, connectErr(err)
+	}
+	out := &gamingv1.ListDealsResponse{UsdToInr: rate}
+	for _, d := range deals {
+		pb := &gamingv1.Deal{
+			VideoGameId: d.VideoGameID.String(), Store: d.Store, Edition: d.Edition, Url: d.URL,
+			Currency: d.Currency, BaseMinor: d.BaseMinor, FinalMinor: d.FinalMinor,
+			DiscountPct: int32(d.DiscountPct), Lowest: d.Lowest,
+		}
+		if d.SaleEndsAt != nil {
+			end := d.SaleEndsAt.Format(time.RFC3339)
+			pb.SaleEndsAt = &end
+		}
+		out.Deals = append(out.Deals, pb)
+	}
+	return connect.NewResponse(out), nil
+}
+
 func (h *gamingHandler) GetPushConfig(
 	_ context.Context,
 	_ *connect.Request[gamingv1.GetPushConfigRequest],

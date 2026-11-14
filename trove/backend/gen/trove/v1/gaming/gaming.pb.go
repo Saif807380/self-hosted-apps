@@ -1338,6 +1338,212 @@ func (x *SendTestPushResponse) GetDelivered() int32 {
 	return 0
 }
 
+type ListDealsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDealsRequest) Reset() {
+	*x = ListDealsRequest{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDealsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDealsRequest) ProtoMessage() {}
+
+func (x *ListDealsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDealsRequest.ProtoReflect.Descriptor instead.
+func (*ListDealsRequest) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{24}
+}
+
+// A wishlisted game's listing that's discounted right now. Amounts are in
+// minor units of the listing's currency.
+type Deal struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VideoGameId   string                 `protobuf:"bytes,1,opt,name=video_game_id,json=videoGameId,proto3" json:"video_game_id,omitempty"`
+	Store         string                 `protobuf:"bytes,2,opt,name=store,proto3" json:"store,omitempty"`     // steam | eshop
+	Edition       string                 `protobuf:"bytes,3,opt,name=edition,proto3" json:"edition,omitempty"` // e.g. "Switch 2"; empty when only one
+	Url           string                 `protobuf:"bytes,4,opt,name=url,proto3" json:"url,omitempty"`
+	Currency      string                 `protobuf:"bytes,5,opt,name=currency,proto3" json:"currency,omitempty"`
+	BaseMinor     int64                  `protobuf:"varint,6,opt,name=base_minor,json=baseMinor,proto3" json:"base_minor,omitempty"`
+	FinalMinor    int64                  `protobuf:"varint,7,opt,name=final_minor,json=finalMinor,proto3" json:"final_minor,omitempty"`
+	DiscountPct   int32                  `protobuf:"varint,8,opt,name=discount_pct,json=discountPct,proto3" json:"discount_pct,omitempty"`
+	SaleEndsAt    *string                `protobuf:"bytes,9,opt,name=sale_ends_at,json=saleEndsAt,proto3,oneof" json:"sale_ends_at,omitempty"`
+	Lowest        bool                   `protobuf:"varint,10,opt,name=lowest,proto3" json:"lowest,omitempty"` // the lowest price Trove has seen for it
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Deal) Reset() {
+	*x = Deal{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Deal) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Deal) ProtoMessage() {}
+
+func (x *Deal) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Deal.ProtoReflect.Descriptor instead.
+func (*Deal) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *Deal) GetVideoGameId() string {
+	if x != nil {
+		return x.VideoGameId
+	}
+	return ""
+}
+
+func (x *Deal) GetStore() string {
+	if x != nil {
+		return x.Store
+	}
+	return ""
+}
+
+func (x *Deal) GetEdition() string {
+	if x != nil {
+		return x.Edition
+	}
+	return ""
+}
+
+func (x *Deal) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *Deal) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *Deal) GetBaseMinor() int64 {
+	if x != nil {
+		return x.BaseMinor
+	}
+	return 0
+}
+
+func (x *Deal) GetFinalMinor() int64 {
+	if x != nil {
+		return x.FinalMinor
+	}
+	return 0
+}
+
+func (x *Deal) GetDiscountPct() int32 {
+	if x != nil {
+		return x.DiscountPct
+	}
+	return 0
+}
+
+func (x *Deal) GetSaleEndsAt() string {
+	if x != nil && x.SaleEndsAt != nil {
+		return *x.SaleEndsAt
+	}
+	return ""
+}
+
+func (x *Deal) GetLowest() bool {
+	if x != nil {
+		return x.Lowest
+	}
+	return false
+}
+
+type ListDealsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Deals         []*Deal                `protobuf:"bytes,1,rep,name=deals,proto3" json:"deals,omitempty"`                           // biggest discount first
+	UsdToInr      float64                `protobuf:"fixed64,2,opt,name=usd_to_inr,json=usdToInr,proto3" json:"usd_to_inr,omitempty"` // 0 if not fetched yet
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDealsResponse) Reset() {
+	*x = ListDealsResponse{}
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDealsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDealsResponse) ProtoMessage() {}
+
+func (x *ListDealsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trove_v1_gaming_gaming_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDealsResponse.ProtoReflect.Descriptor instead.
+func (*ListDealsResponse) Descriptor() ([]byte, []int) {
+	return file_trove_v1_gaming_gaming_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ListDealsResponse) GetDeals() []*Deal {
+	if x != nil {
+		return x.Deals
+	}
+	return nil
+}
+
+func (x *ListDealsResponse) GetUsdToInr() float64 {
+	if x != nil {
+		return x.UsdToInr
+	}
+	return 0
+}
+
 var File_trove_v1_gaming_gaming_proto protoreflect.FileDescriptor
 
 const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
@@ -1435,14 +1641,36 @@ const file_trove_v1_gaming_gaming_proto_rawDesc = "" +
 	"\x17UnsubscribePushResponse\"\x15\n" +
 	"\x13SendTestPushRequest\"4\n" +
 	"\x14SendTestPushResponse\x12\x1c\n" +
-	"\tdelivered\x18\x01 \x01(\x05R\tdelivered2\xda\x06\n" +
+	"\tdelivered\x18\x01 \x01(\x05R\tdelivered\"\x12\n" +
+	"\x10ListDealsRequest\"\xbb\x02\n" +
+	"\x04Deal\x12\"\n" +
+	"\rvideo_game_id\x18\x01 \x01(\tR\vvideoGameId\x12\x14\n" +
+	"\x05store\x18\x02 \x01(\tR\x05store\x12\x18\n" +
+	"\aedition\x18\x03 \x01(\tR\aedition\x12\x10\n" +
+	"\x03url\x18\x04 \x01(\tR\x03url\x12\x1a\n" +
+	"\bcurrency\x18\x05 \x01(\tR\bcurrency\x12\x1d\n" +
+	"\n" +
+	"base_minor\x18\x06 \x01(\x03R\tbaseMinor\x12\x1f\n" +
+	"\vfinal_minor\x18\a \x01(\x03R\n" +
+	"finalMinor\x12!\n" +
+	"\fdiscount_pct\x18\b \x01(\x05R\vdiscountPct\x12%\n" +
+	"\fsale_ends_at\x18\t \x01(\tH\x00R\n" +
+	"saleEndsAt\x88\x01\x01\x12\x16\n" +
+	"\x06lowest\x18\n" +
+	" \x01(\bR\x06lowestB\x0f\n" +
+	"\r_sale_ends_at\"^\n" +
+	"\x11ListDealsResponse\x12+\n" +
+	"\x05deals\x18\x01 \x03(\v2\x15.trove.v1.gaming.DealR\x05deals\x12\x1c\n" +
+	"\n" +
+	"usd_to_inr\x18\x02 \x01(\x01R\busdToInr2\xae\a\n" +
 	"\rGamingService\x12^\n" +
 	"\rSearchCatalog\x12%.trove.v1.gaming.SearchCatalogRequest\x1a&.trove.v1.gaming.SearchCatalogResponse\x12O\n" +
 	"\bLinkGame\x12 .trove.v1.gaming.LinkGameRequest\x1a!.trove.v1.gaming.LinkGameResponse\x12X\n" +
 	"\vRefreshGame\x12#.trove.v1.gaming.RefreshGameRequest\x1a$.trove.v1.gaming.RefreshGameResponse\x12U\n" +
 	"\n" +
 	"SetPsnLink\x12\".trove.v1.gaming.SetPsnLinkRequest\x1a#.trove.v1.gaming.SetPsnLinkResponse\x12d\n" +
-	"\x0fGetGameInsights\x12'.trove.v1.gaming.GetGameInsightsRequest\x1a(.trove.v1.gaming.GetGameInsightsResponse\x12^\n" +
+	"\x0fGetGameInsights\x12'.trove.v1.gaming.GetGameInsightsRequest\x1a(.trove.v1.gaming.GetGameInsightsResponse\x12R\n" +
+	"\tListDeals\x12!.trove.v1.gaming.ListDealsRequest\x1a\".trove.v1.gaming.ListDealsResponse\x12^\n" +
 	"\rGetPushConfig\x12%.trove.v1.gaming.GetPushConfigRequest\x1a&.trove.v1.gaming.GetPushConfigResponse\x12^\n" +
 	"\rSubscribePush\x12%.trove.v1.gaming.SubscribePushRequest\x1a&.trove.v1.gaming.SubscribePushResponse\x12d\n" +
 	"\x0fUnsubscribePush\x12'.trove.v1.gaming.UnsubscribePushRequest\x1a(.trove.v1.gaming.UnsubscribePushResponse\x12[\n" +
@@ -1460,7 +1688,7 @@ func file_trove_v1_gaming_gaming_proto_rawDescGZIP() []byte {
 	return file_trove_v1_gaming_gaming_proto_rawDescData
 }
 
-var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_trove_v1_gaming_gaming_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*CatalogGame)(nil),             // 0: trove.v1.gaming.CatalogGame
 	(*SearchCatalogRequest)(nil),    // 1: trove.v1.gaming.SearchCatalogRequest
@@ -1486,6 +1714,9 @@ var file_trove_v1_gaming_gaming_proto_goTypes = []any{
 	(*UnsubscribePushResponse)(nil), // 21: trove.v1.gaming.UnsubscribePushResponse
 	(*SendTestPushRequest)(nil),     // 22: trove.v1.gaming.SendTestPushRequest
 	(*SendTestPushResponse)(nil),    // 23: trove.v1.gaming.SendTestPushResponse
+	(*ListDealsRequest)(nil),        // 24: trove.v1.gaming.ListDealsRequest
+	(*Deal)(nil),                    // 25: trove.v1.gaming.Deal
+	(*ListDealsResponse)(nil),       // 26: trove.v1.gaming.ListDealsResponse
 }
 var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	0,  // 0: trove.v1.gaming.SearchCatalogResponse.games:type_name -> trove.v1.gaming.CatalogGame
@@ -1496,29 +1727,32 @@ var file_trove_v1_gaming_gaming_proto_depIdxs = []int32{
 	13, // 5: trove.v1.gaming.GetGameInsightsResponse.verdict:type_name -> trove.v1.gaming.DeviceVerdict
 	14, // 6: trove.v1.gaming.DeviceVerdict.devices:type_name -> trove.v1.gaming.DeviceRating
 	15, // 7: trove.v1.gaming.DeviceVerdict.sources:type_name -> trove.v1.gaming.Source
-	1,  // 8: trove.v1.gaming.GamingService.SearchCatalog:input_type -> trove.v1.gaming.SearchCatalogRequest
-	3,  // 9: trove.v1.gaming.GamingService.LinkGame:input_type -> trove.v1.gaming.LinkGameRequest
-	5,  // 10: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
-	7,  // 11: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
-	9,  // 12: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
-	16, // 13: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
-	18, // 14: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
-	20, // 15: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
-	22, // 16: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
-	2,  // 17: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
-	4,  // 18: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
-	6,  // 19: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
-	8,  // 20: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
-	12, // 21: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
-	17, // 22: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
-	19, // 23: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
-	21, // 24: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
-	23, // 25: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
-	17, // [17:26] is the sub-list for method output_type
-	8,  // [8:17] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	25, // 8: trove.v1.gaming.ListDealsResponse.deals:type_name -> trove.v1.gaming.Deal
+	1,  // 9: trove.v1.gaming.GamingService.SearchCatalog:input_type -> trove.v1.gaming.SearchCatalogRequest
+	3,  // 10: trove.v1.gaming.GamingService.LinkGame:input_type -> trove.v1.gaming.LinkGameRequest
+	5,  // 11: trove.v1.gaming.GamingService.RefreshGame:input_type -> trove.v1.gaming.RefreshGameRequest
+	7,  // 12: trove.v1.gaming.GamingService.SetPsnLink:input_type -> trove.v1.gaming.SetPsnLinkRequest
+	9,  // 13: trove.v1.gaming.GamingService.GetGameInsights:input_type -> trove.v1.gaming.GetGameInsightsRequest
+	24, // 14: trove.v1.gaming.GamingService.ListDeals:input_type -> trove.v1.gaming.ListDealsRequest
+	16, // 15: trove.v1.gaming.GamingService.GetPushConfig:input_type -> trove.v1.gaming.GetPushConfigRequest
+	18, // 16: trove.v1.gaming.GamingService.SubscribePush:input_type -> trove.v1.gaming.SubscribePushRequest
+	20, // 17: trove.v1.gaming.GamingService.UnsubscribePush:input_type -> trove.v1.gaming.UnsubscribePushRequest
+	22, // 18: trove.v1.gaming.GamingService.SendTestPush:input_type -> trove.v1.gaming.SendTestPushRequest
+	2,  // 19: trove.v1.gaming.GamingService.SearchCatalog:output_type -> trove.v1.gaming.SearchCatalogResponse
+	4,  // 20: trove.v1.gaming.GamingService.LinkGame:output_type -> trove.v1.gaming.LinkGameResponse
+	6,  // 21: trove.v1.gaming.GamingService.RefreshGame:output_type -> trove.v1.gaming.RefreshGameResponse
+	8,  // 22: trove.v1.gaming.GamingService.SetPsnLink:output_type -> trove.v1.gaming.SetPsnLinkResponse
+	12, // 23: trove.v1.gaming.GamingService.GetGameInsights:output_type -> trove.v1.gaming.GetGameInsightsResponse
+	26, // 24: trove.v1.gaming.GamingService.ListDeals:output_type -> trove.v1.gaming.ListDealsResponse
+	17, // 25: trove.v1.gaming.GamingService.GetPushConfig:output_type -> trove.v1.gaming.GetPushConfigResponse
+	19, // 26: trove.v1.gaming.GamingService.SubscribePush:output_type -> trove.v1.gaming.SubscribePushResponse
+	21, // 27: trove.v1.gaming.GamingService.UnsubscribePush:output_type -> trove.v1.gaming.UnsubscribePushResponse
+	23, // 28: trove.v1.gaming.GamingService.SendTestPush:output_type -> trove.v1.gaming.SendTestPushResponse
+	19, // [19:29] is the sub-list for method output_type
+	9,  // [9:19] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_trove_v1_gaming_gaming_proto_init() }
@@ -1529,13 +1763,14 @@ func file_trove_v1_gaming_gaming_proto_init() {
 	file_trove_v1_gaming_gaming_proto_msgTypes[10].OneofWrappers = []any{}
 	file_trove_v1_gaming_gaming_proto_msgTypes[11].OneofWrappers = []any{}
 	file_trove_v1_gaming_gaming_proto_msgTypes[12].OneofWrappers = []any{}
+	file_trove_v1_gaming_gaming_proto_msgTypes[25].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trove_v1_gaming_gaming_proto_rawDesc), len(file_trove_v1_gaming_gaming_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   24,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
