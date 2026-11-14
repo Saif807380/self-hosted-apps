@@ -15,11 +15,17 @@ message VideoGame {
   string          created_at   = 8;
   string          updated_at   = 9;
   bool            deleted      = 10;
+  // wishlist | owned | played | dropped. Empty only from clients that predate
+  // the field; the server then keeps the stored status, platform and target.
+  string          status           = 11;
+  optional string platform         = 12; // pc | ps5 | switch2
+  optional int32  target_price_inr = 13; // sale alert threshold, whole rupees
 }
 
 message ListGamesRequest {
   optional string search      = 1;
   optional int32  year_played = 2;
+  optional string status      = 3;
 }
 
 message ListGamesResponse {
@@ -41,6 +47,9 @@ message CreateGameRequest {
   optional string review       = 4;
   optional string cover_image  = 5;
   repeated int32  years_played = 6;
+  optional string status           = 7; // defaults to played
+  optional string platform         = 8;
+  optional int32  target_price_inr = 9;
 }
 
 message CreateGameResponse {
@@ -55,6 +64,9 @@ message UpdateGameRequest {
   optional string review       = 5;
   optional string cover_image  = 6;
   repeated int32  years_played = 7;
+  optional string status           = 8; // unset keeps status, platform and target
+  optional string platform         = 9;
+  optional int32  target_price_inr = 10;
 }
 
 message UpdateGameResponse {

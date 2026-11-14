@@ -22,19 +22,24 @@ const (
 )
 
 type VideoGame struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Studio        *string                `protobuf:"bytes,3,opt,name=studio,proto3,oneof" json:"studio,omitempty"`
-	Rating        *int32                 `protobuf:"varint,4,opt,name=rating,proto3,oneof" json:"rating,omitempty"`
-	Review        *string                `protobuf:"bytes,5,opt,name=review,proto3,oneof" json:"review,omitempty"`
-	CoverImage    *string                `protobuf:"bytes,6,opt,name=cover_image,json=coverImage,proto3,oneof" json:"cover_image,omitempty"`
-	YearsPlayed   []int32                `protobuf:"varint,7,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     string                 `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Deleted       bool                   `protobuf:"varint,10,opt,name=deleted,proto3" json:"deleted,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title       string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Studio      *string                `protobuf:"bytes,3,opt,name=studio,proto3,oneof" json:"studio,omitempty"`
+	Rating      *int32                 `protobuf:"varint,4,opt,name=rating,proto3,oneof" json:"rating,omitempty"`
+	Review      *string                `protobuf:"bytes,5,opt,name=review,proto3,oneof" json:"review,omitempty"`
+	CoverImage  *string                `protobuf:"bytes,6,opt,name=cover_image,json=coverImage,proto3,oneof" json:"cover_image,omitempty"`
+	YearsPlayed []int32                `protobuf:"varint,7,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
+	CreatedAt   string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt   string                 `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Deleted     bool                   `protobuf:"varint,10,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	// wishlist | owned | played | dropped. Empty only from clients that predate
+	// the field; the server then keeps the stored status, platform and target.
+	Status         string  `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
+	Platform       *string `protobuf:"bytes,12,opt,name=platform,proto3,oneof" json:"platform,omitempty"`                                      // pc | ps5 | switch2
+	TargetPriceInr *int32  `protobuf:"varint,13,opt,name=target_price_inr,json=targetPriceInr,proto3,oneof" json:"target_price_inr,omitempty"` // sale alert threshold, whole rupees
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *VideoGame) Reset() {
@@ -137,10 +142,32 @@ func (x *VideoGame) GetDeleted() bool {
 	return false
 }
 
+func (x *VideoGame) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *VideoGame) GetPlatform() string {
+	if x != nil && x.Platform != nil {
+		return *x.Platform
+	}
+	return ""
+}
+
+func (x *VideoGame) GetTargetPriceInr() int32 {
+	if x != nil && x.TargetPriceInr != nil {
+		return *x.TargetPriceInr
+	}
+	return 0
+}
+
 type ListGamesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Search        *string                `protobuf:"bytes,1,opt,name=search,proto3,oneof" json:"search,omitempty"`
 	YearPlayed    *int32                 `protobuf:"varint,2,opt,name=year_played,json=yearPlayed,proto3,oneof" json:"year_played,omitempty"`
+	Status        *string                `protobuf:"bytes,3,opt,name=status,proto3,oneof" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -187,6 +214,13 @@ func (x *ListGamesRequest) GetYearPlayed() int32 {
 		return *x.YearPlayed
 	}
 	return 0
+}
+
+func (x *ListGamesRequest) GetStatus() string {
+	if x != nil && x.Status != nil {
+		return *x.Status
+	}
+	return ""
 }
 
 type ListGamesResponse struct {
@@ -322,15 +356,18 @@ func (x *GetGameResponse) GetGame() *VideoGame {
 }
 
 type CreateGameRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Studio        *string                `protobuf:"bytes,2,opt,name=studio,proto3,oneof" json:"studio,omitempty"`
-	Rating        *int32                 `protobuf:"varint,3,opt,name=rating,proto3,oneof" json:"rating,omitempty"`
-	Review        *string                `protobuf:"bytes,4,opt,name=review,proto3,oneof" json:"review,omitempty"`
-	CoverImage    *string                `protobuf:"bytes,5,opt,name=cover_image,json=coverImage,proto3,oneof" json:"cover_image,omitempty"`
-	YearsPlayed   []int32                `protobuf:"varint,6,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Title          string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Studio         *string                `protobuf:"bytes,2,opt,name=studio,proto3,oneof" json:"studio,omitempty"`
+	Rating         *int32                 `protobuf:"varint,3,opt,name=rating,proto3,oneof" json:"rating,omitempty"`
+	Review         *string                `protobuf:"bytes,4,opt,name=review,proto3,oneof" json:"review,omitempty"`
+	CoverImage     *string                `protobuf:"bytes,5,opt,name=cover_image,json=coverImage,proto3,oneof" json:"cover_image,omitempty"`
+	YearsPlayed    []int32                `protobuf:"varint,6,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
+	Status         *string                `protobuf:"bytes,7,opt,name=status,proto3,oneof" json:"status,omitempty"` // defaults to played
+	Platform       *string                `protobuf:"bytes,8,opt,name=platform,proto3,oneof" json:"platform,omitempty"`
+	TargetPriceInr *int32                 `protobuf:"varint,9,opt,name=target_price_inr,json=targetPriceInr,proto3,oneof" json:"target_price_inr,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *CreateGameRequest) Reset() {
@@ -405,6 +442,27 @@ func (x *CreateGameRequest) GetYearsPlayed() []int32 {
 	return nil
 }
 
+func (x *CreateGameRequest) GetStatus() string {
+	if x != nil && x.Status != nil {
+		return *x.Status
+	}
+	return ""
+}
+
+func (x *CreateGameRequest) GetPlatform() string {
+	if x != nil && x.Platform != nil {
+		return *x.Platform
+	}
+	return ""
+}
+
+func (x *CreateGameRequest) GetTargetPriceInr() int32 {
+	if x != nil && x.TargetPriceInr != nil {
+		return *x.TargetPriceInr
+	}
+	return 0
+}
+
 type CreateGameResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Game          *VideoGame             `protobuf:"bytes,1,opt,name=game,proto3" json:"game,omitempty"`
@@ -450,16 +508,19 @@ func (x *CreateGameResponse) GetGame() *VideoGame {
 }
 
 type UpdateGameRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Studio        *string                `protobuf:"bytes,3,opt,name=studio,proto3,oneof" json:"studio,omitempty"`
-	Rating        *int32                 `protobuf:"varint,4,opt,name=rating,proto3,oneof" json:"rating,omitempty"`
-	Review        *string                `protobuf:"bytes,5,opt,name=review,proto3,oneof" json:"review,omitempty"`
-	CoverImage    *string                `protobuf:"bytes,6,opt,name=cover_image,json=coverImage,proto3,oneof" json:"cover_image,omitempty"`
-	YearsPlayed   []int32                `protobuf:"varint,7,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title          string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Studio         *string                `protobuf:"bytes,3,opt,name=studio,proto3,oneof" json:"studio,omitempty"`
+	Rating         *int32                 `protobuf:"varint,4,opt,name=rating,proto3,oneof" json:"rating,omitempty"`
+	Review         *string                `protobuf:"bytes,5,opt,name=review,proto3,oneof" json:"review,omitempty"`
+	CoverImage     *string                `protobuf:"bytes,6,opt,name=cover_image,json=coverImage,proto3,oneof" json:"cover_image,omitempty"`
+	YearsPlayed    []int32                `protobuf:"varint,7,rep,packed,name=years_played,json=yearsPlayed,proto3" json:"years_played,omitempty"`
+	Status         *string                `protobuf:"bytes,8,opt,name=status,proto3,oneof" json:"status,omitempty"` // unset keeps status, platform and target
+	Platform       *string                `protobuf:"bytes,9,opt,name=platform,proto3,oneof" json:"platform,omitempty"`
+	TargetPriceInr *int32                 `protobuf:"varint,10,opt,name=target_price_inr,json=targetPriceInr,proto3,oneof" json:"target_price_inr,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *UpdateGameRequest) Reset() {
@@ -539,6 +600,27 @@ func (x *UpdateGameRequest) GetYearsPlayed() []int32 {
 		return x.YearsPlayed
 	}
 	return nil
+}
+
+func (x *UpdateGameRequest) GetStatus() string {
+	if x != nil && x.Status != nil {
+		return *x.Status
+	}
+	return ""
+}
+
+func (x *UpdateGameRequest) GetPlatform() string {
+	if x != nil && x.Platform != nil {
+		return *x.Platform
+	}
+	return ""
+}
+
+func (x *UpdateGameRequest) GetTargetPriceInr() int32 {
+	if x != nil && x.TargetPriceInr != nil {
+		return *x.TargetPriceInr
+	}
+	return 0
 }
 
 type UpdateGameResponse struct {
@@ -669,7 +751,7 @@ var File_trove_v1_games_games_proto protoreflect.FileDescriptor
 
 const file_trove_v1_games_games_proto_rawDesc = "" +
 	"\n" +
-	"\x1atrove/v1/games/games.proto\x12\x0etrove.v1.games\"\xda\x02\n" +
+	"\x1atrove/v1/games/games.proto\x12\x0etrove.v1.games\"\xe4\x03\n" +
 	"\tVideoGame\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1b\n" +
@@ -684,23 +766,30 @@ const file_trove_v1_games_games_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\t \x01(\tR\tupdatedAt\x12\x18\n" +
 	"\adeleted\x18\n" +
-	" \x01(\bR\adeletedB\t\n" +
+	" \x01(\bR\adeleted\x12\x16\n" +
+	"\x06status\x18\v \x01(\tR\x06status\x12\x1f\n" +
+	"\bplatform\x18\f \x01(\tH\x04R\bplatform\x88\x01\x01\x12-\n" +
+	"\x10target_price_inr\x18\r \x01(\x05H\x05R\x0etargetPriceInr\x88\x01\x01B\t\n" +
 	"\a_studioB\t\n" +
 	"\a_ratingB\t\n" +
 	"\a_reviewB\x0e\n" +
-	"\f_cover_image\"p\n" +
+	"\f_cover_imageB\v\n" +
+	"\t_platformB\x13\n" +
+	"\x11_target_price_inr\"\x98\x01\n" +
 	"\x10ListGamesRequest\x12\x1b\n" +
 	"\x06search\x18\x01 \x01(\tH\x00R\x06search\x88\x01\x01\x12$\n" +
 	"\vyear_played\x18\x02 \x01(\x05H\x01R\n" +
-	"yearPlayed\x88\x01\x01B\t\n" +
+	"yearPlayed\x88\x01\x01\x12\x1b\n" +
+	"\x06status\x18\x03 \x01(\tH\x02R\x06status\x88\x01\x01B\t\n" +
 	"\a_searchB\x0e\n" +
-	"\f_year_played\"D\n" +
+	"\f_year_playedB\t\n" +
+	"\a_status\"D\n" +
 	"\x11ListGamesResponse\x12/\n" +
 	"\x05games\x18\x01 \x03(\v2\x19.trove.v1.games.VideoGameR\x05games\" \n" +
 	"\x0eGetGameRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"@\n" +
 	"\x0fGetGameResponse\x12-\n" +
-	"\x04game\x18\x01 \x01(\v2\x19.trove.v1.games.VideoGameR\x04game\"\xfa\x01\n" +
+	"\x04game\x18\x01 \x01(\v2\x19.trove.v1.games.VideoGameR\x04game\"\x94\x03\n" +
 	"\x11CreateGameRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1b\n" +
 	"\x06studio\x18\x02 \x01(\tH\x00R\x06studio\x88\x01\x01\x12\x1b\n" +
@@ -708,13 +797,19 @@ const file_trove_v1_games_games_proto_rawDesc = "" +
 	"\x06review\x18\x04 \x01(\tH\x02R\x06review\x88\x01\x01\x12$\n" +
 	"\vcover_image\x18\x05 \x01(\tH\x03R\n" +
 	"coverImage\x88\x01\x01\x12!\n" +
-	"\fyears_played\x18\x06 \x03(\x05R\vyearsPlayedB\t\n" +
+	"\fyears_played\x18\x06 \x03(\x05R\vyearsPlayed\x12\x1b\n" +
+	"\x06status\x18\a \x01(\tH\x04R\x06status\x88\x01\x01\x12\x1f\n" +
+	"\bplatform\x18\b \x01(\tH\x05R\bplatform\x88\x01\x01\x12-\n" +
+	"\x10target_price_inr\x18\t \x01(\x05H\x06R\x0etargetPriceInr\x88\x01\x01B\t\n" +
 	"\a_studioB\t\n" +
 	"\a_ratingB\t\n" +
 	"\a_reviewB\x0e\n" +
-	"\f_cover_image\"C\n" +
+	"\f_cover_imageB\t\n" +
+	"\a_statusB\v\n" +
+	"\t_platformB\x13\n" +
+	"\x11_target_price_inr\"C\n" +
 	"\x12CreateGameResponse\x12-\n" +
-	"\x04game\x18\x01 \x01(\v2\x19.trove.v1.games.VideoGameR\x04game\"\x8a\x02\n" +
+	"\x04game\x18\x01 \x01(\v2\x19.trove.v1.games.VideoGameR\x04game\"\xa4\x03\n" +
 	"\x11UpdateGameRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1b\n" +
@@ -723,11 +818,18 @@ const file_trove_v1_games_games_proto_rawDesc = "" +
 	"\x06review\x18\x05 \x01(\tH\x02R\x06review\x88\x01\x01\x12$\n" +
 	"\vcover_image\x18\x06 \x01(\tH\x03R\n" +
 	"coverImage\x88\x01\x01\x12!\n" +
-	"\fyears_played\x18\a \x03(\x05R\vyearsPlayedB\t\n" +
+	"\fyears_played\x18\a \x03(\x05R\vyearsPlayed\x12\x1b\n" +
+	"\x06status\x18\b \x01(\tH\x04R\x06status\x88\x01\x01\x12\x1f\n" +
+	"\bplatform\x18\t \x01(\tH\x05R\bplatform\x88\x01\x01\x12-\n" +
+	"\x10target_price_inr\x18\n" +
+	" \x01(\x05H\x06R\x0etargetPriceInr\x88\x01\x01B\t\n" +
 	"\a_studioB\t\n" +
 	"\a_ratingB\t\n" +
 	"\a_reviewB\x0e\n" +
-	"\f_cover_image\"C\n" +
+	"\f_cover_imageB\t\n" +
+	"\a_statusB\v\n" +
+	"\t_platformB\x13\n" +
+	"\x11_target_price_inr\"C\n" +
 	"\x12UpdateGameResponse\x12-\n" +
 	"\x04game\x18\x01 \x01(\v2\x19.trove.v1.games.VideoGameR\x04game\"#\n" +
 	"\x11DeleteGameRequest\x12\x0e\n" +

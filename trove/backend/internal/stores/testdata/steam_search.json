@@ -1,0 +1,169 @@
+{
+    "total": 9,
+    "items": [
+        {
+            "type": "app",
+            "name": "Celeste",
+            "id": 504230,
+            "price": {
+                "currency": "INR",
+                "initial": 89900,
+                "final": 89900
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/504230/capsule_231x87.jpg?t=1714089525",
+            "metascore": "88",
+            "platforms": {
+                "windows": true,
+                "mac": true,
+                "linux": true
+            },
+            "streamingvideo": false,
+            "controller_support": "full"
+        },
+        {
+            "type": "app",
+            "name": "Celeste Soundtrack",
+            "id": 1092840,
+            "price": {
+                "currency": "INR",
+                "initial": 40400,
+                "final": 40400
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1092840/capsule_231x87.jpg?t=1607394540",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": true,
+                "linux": true
+            },
+            "streamingvideo": false
+        },
+        {
+            "type": "app",
+            "name": "Celeste - Sora Extra Soundtrack",
+            "id": 411401,
+            "price": {
+                "currency": "INR",
+                "initial": 30000,
+                "final": 30000
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/411401/capsule_231x87.jpg?t=1643101789",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": true,
+                "linux": true
+            },
+            "streamingvideo": false
+        },
+        {
+            "type": "app",
+            "name": "Celeste Blue Wizard Luna",
+            "id": 3779560,
+            "price": {
+                "currency": "INR",
+                "initial": 77900,
+                "final": 62300
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3779560/d8b2413c897ff2593b8119d4391208de13e0d3ca/capsule_231x87.jpg?t=1793840429",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": false,
+                "linux": false
+            },
+            "streamingvideo": false
+        },
+        {
+            "type": "app",
+            "name": "Trombone Champ: Celeste Song Pack",
+            "id": 4140930,
+            "price": {
+                "currency": "INR",
+                "initial": 40000,
+                "final": 40000
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4140930/85743ca1c6d3dd5115781e00e514b7118183a1fe/capsule_231x87.jpg?t=1766078754",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": true,
+                "linux": false
+            },
+            "streamingvideo": false
+        },
+        {
+            "type": "app",
+            "name": "Trombone Champ: Unflattened - Celeste Song Pack",
+            "id": 4218420,
+            "price": {
+                "currency": "INR",
+                "initial": 40000,
+                "final": 40000
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4218420/e87529cf0a61c5e49067196abff91cbe0a50ea53/capsule_231x87.jpg?t=1766158578",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": false,
+                "linux": false
+            },
+            "streamingvideo": false
+        },
+        {
+            "type": "app",
+            "name": "Rift of the NecroDancer: Celeste Music Pack",
+            "id": 4632820,
+            "price": {
+                "currency": "INR",
+                "initial": 29800,
+                "final": 29800
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4632820/4477fef04dc4e842abf4cc53933c993834f482aa/capsule_231x87.jpg?t=1781192581",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": false,
+                "linux": false
+            },
+            "streamingvideo": false,
+            "controller_support": "full"
+        },
+        {
+            "type": "app",
+            "name": "Celeste & Luna: Hentai Puzzle 18+",
+            "id": 3429040,
+            "price": {
+                "currency": "INR",
+                "initial": 10500,
+                "final": 10500
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3429040/65afc74b9c6fb5f859852d1cca499b94eb9c49c7/capsule_231x87.jpg?t=1739823152",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": true,
+                "linux": true
+            },
+            "streamingvideo": false
+        },
+        {
+            "type": "app",
+            "name": "Timewell: Trail of Celestes",
+            "id": 1745210,
+            "price": {
+                "currency": "INR",
+                "initial": 81000,
+                "final": 81000
+            },
+            "tiny_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1745210/capsule_231x87.jpg?t=1685965181",
+            "metascore": "",
+            "platforms": {
+                "windows": true,
+                "mac": false,
+                "linux": false
+            },
+            "streamingvideo": false
+        }
+    ]
+}

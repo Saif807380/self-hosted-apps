@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
-import { Box, Flex, Heading, SimpleGrid, Text, Spinner } from '@chakra-ui/react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Box, Button, Flex, Heading, SimpleGrid, Text, Spinner } from '@chakra-ui/react'
 import { useGames } from '@/hooks/useGames'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { toaster } from '@/lib/toaster'
-import type { VideoGame, VideoGameFormData } from '@/types/api'
+import type { GameStatus, VideoGame, VideoGameFormData } from '@/types/api'
 import GameCard from './games/GameCard'
 import GameListItem from './games/GameListItem'
 import GameFilters from './games/GameFilters'
@@ -13,14 +14,22 @@ import GameDetailModal from './games/GameDetailModal'
 import EmptyState from '@/components/EmptyState'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import ViewToggle from '@/components/ViewToggle'
+import { STATUS_LABELS, STATUS_TABS, isGameStatus } from './games/lifecycle'
 
 const SIDEBAR_WIDTH = 240
 
+const defaultSort = (tab: GameStatus) => (tab === 'played' ? 'title_asc' : 'added_desc')
+
 export default function GamesPage() {
   const isMobile = useIsMobile()
+  // ?tab= picks the list and ?game= opens a game, so links (e.g. from a sale
+  // notification) can land on a specific game.
+  const [params, setParams] = useSearchParams()
+  const tabParam = params.get('tab')
+  const tab: GameStatus = isGameStatus(tabParam) ? tabParam : 'played'
   const [search, setSearch] = useState('')
   const [yearPlayed, setYearPlayed] = useState<number | undefined>()
-  const [sort, setSort] = useState('title_asc')
+  const [sort, setSort] = useState(() => defaultSort(tab))
   const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 767px)').matches)
   const [formOpen, setFormOpen] = useState(false)
   const [editGame, setEditGame] = useState<VideoGame | null>(null)
@@ -29,12 +38,27 @@ export default function GamesPage() {
   const [view, setView] = useState<'grid' | 'list'>(() => window.matchMedia('(max-width: 767px)').matches ? 'list' : 'grid')
 
   const debouncedSearch = useDebounce(search, 300)
-  const { games, loading, error, createGame, updateGame, deleteGame } = useGames({
+  const { games, counts, loading, error, createGame, updateGame, deleteGame, setStatus } = useGames({
     search: debouncedSearch,
-    yearPlayed,
+    yearPlayed: tab === 'played' ? yearPlayed : undefined,
+    status: tab,
   })
 
   const hasFilters = !!search || !!yearPlayed
+
+  const handleTabChange = (next: GameStatus) => {
+    setParams({ tab: next })
+    setYearPlayed(undefined)
+    setSort(defaultSort(next))
+  }
+
+  const linkedGameId = params.get('game')
+  useEffect(() => {
+    if (!linkedGameId || loading) return
+    const linked = games.find(g => g.id === linkedGameId)
+    if (linked) setViewGame(linked)
+    setParams({ tab }, { replace: true })
+  }, [linkedGameId, loading, games, tab, setParams])
 
   const sortedGames = useMemo(() => {
     return [...games].sort((a, b) => {
@@ -50,6 +74,7 @@ export default function GamesPage() {
           const bYear = b.yearsPlayed.length ? Math.min(...b.yearsPlayed) : Infinity
           return aYear - bYear
         }
+        case 'added_desc': return b.createdAt.localeCompare(a.createdAt)
         default: return a.title.localeCompare(b.title)
       }
     })
@@ -70,6 +95,18 @@ export default function GamesPage() {
     handleFormClose()
   }
 
+  const handleStatusChange = async (game: VideoGame, status: GameStatus) => {
+    await setStatus(game.id, status)
+    toaster.create({ title: `Moved to ${STATUS_LABELS[status]}`, type: 'success', duration: 3000 })
+  }
+
+  // Finishing goes through the form so a rating and the year can be added.
+  const handleFinish = (game: VideoGame) => {
+    const year = new Date().getFullYear()
+    const yearsPlayed = game.yearsPlayed.includes(year) ? game.yearsPlayed : [...game.yearsPlayed, year]
+    handleEdit({ ...game, status: 'played', yearsPlayed })
+  }
+
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return
     await deleteGame(deleteTarget.id)
@@ -80,7 +117,7 @@ export default function GamesPage() {
   const handleClearFilters = () => {
     setSearch('')
     setYearPlayed(undefined)
-    setSort('title_asc')
+    setSort(defaultSort(tab))
   }
 
   return (
@@ -100,6 +137,23 @@ export default function GamesPage() {
           )}
         </Box>
         <ViewToggle view={view} onChange={setView} />
+      </Flex>
+
+      <Flex gap={1.5} mb={5} wrap="wrap" role="tablist" aria-label="Game lists">
+        {STATUS_TABS.map(t => (
+          <Button
+            key={t.status}
+            size="sm"
+            role="tab"
+            aria-selected={tab === t.status}
+            variant={tab === t.status ? 'solid' : 'outline'}
+            borderRadius="8px"
+            onClick={() => handleTabChange(t.status)}
+          >
+            {t.icon} {t.label}
+            <Text as="span" fontSize="xs" opacity={0.7} ml={1}>{counts[t.status]}</Text>
+          </Button>
+        ))}
       </Flex>
 
       <Flex gap={6} align="flex-start" direction={isMobile ? 'column' : 'row'}>
@@ -154,6 +208,7 @@ export default function GamesPage() {
                 onAdd={handleOpenAdd}
                 onClear={handleClearFilters}
                 hasFilters={hasFilters}
+                showYears={tab === 'played'}
               />
             </Box>
           </Box>
@@ -194,6 +249,8 @@ export default function GamesPage() {
         onClose={() => setViewGame(null)}
         onEdit={handleEdit}
         onDelete={setDeleteTarget}
+        onStatusChange={handleStatusChange}
+        onFinish={handleFinish}
       />
 
       <GameForm
@@ -201,6 +258,7 @@ export default function GamesPage() {
         onClose={handleFormClose}
         onSubmit={handleSubmit}
         editGame={editGame}
+        defaultStatus={tab}
       />
 
       <ConfirmDialog

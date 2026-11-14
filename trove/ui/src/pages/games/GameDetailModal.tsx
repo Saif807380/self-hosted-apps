@@ -1,5 +1,6 @@
 import { Dialog, Portal, Button, Box, Flex, Stack, Text, CloseButton } from '@chakra-ui/react'
-import type { VideoGame } from '@/types/api'
+import type { GameStatus, VideoGame } from '@/types/api'
+import { PLATFORM_LABELS, STATUS_LABELS, formatInr } from './lifecycle'
 import StarRating from '@/components/StarRating'
 import { useImageUrl } from '@/hooks/useImageUrl'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -10,6 +11,17 @@ interface GameDetailModalProps {
   onClose: () => void
   onEdit: (game: VideoGame) => void
   onDelete: (game: VideoGame) => void
+  onStatusChange: (game: VideoGame, status: GameStatus) => void
+  /** Finishing a game opens the form so a rating and year can be added. */
+  onFinish: (game: VideoGame) => void
+}
+
+// The next steps offered for a game in each status.
+const NEXT_STEPS: Record<GameStatus, { label: string; to: GameStatus | 'finish' }[]> = {
+  wishlist: [{ label: 'Bought it', to: 'owned' }, { label: 'Not interested', to: 'dropped' }],
+  owned: [{ label: 'Finished it', to: 'finish' }, { label: 'Dropped it', to: 'dropped' }],
+  dropped: [{ label: 'Back to wishlist', to: 'wishlist' }],
+  played: [],
 }
 
 const COVER_GRADIENTS: [string, string][] = [
@@ -27,7 +39,9 @@ function getCoverGradient(title: string): [string, string] {
   return COVER_GRADIENTS[(title.charCodeAt(0) || 65) % COVER_GRADIENTS.length]
 }
 
-export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelete }: GameDetailModalProps) {
+export default function GameDetailModal({
+  game, isOpen, onClose, onEdit, onDelete, onStatusChange, onFinish,
+}: GameDetailModalProps) {
   const coverUrl = useImageUrl(game?.coverImage)
   const isMobile = useIsMobile()
 
@@ -38,6 +52,16 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
 
   const handleEdit = () => { onClose(); onEdit(game) }
   const handleDelete = () => { onClose(); onDelete(game) }
+  const handleStep = (to: GameStatus | 'finish') => {
+    onClose()
+    if (to === 'finish') onFinish(game)
+    else onStatusChange(game, to)
+  }
+  const facts = [
+    game.status !== 'played' && STATUS_LABELS[game.status],
+    game.platform && PLATFORM_LABELS[game.platform],
+    game.status === 'wishlist' && game.targetPriceInr && `Alert below ${formatInr(game.targetPriceInr)}`,
+  ].filter(Boolean) as string[]
 
   return (
     <Dialog.Root
@@ -137,6 +161,21 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
                   <Text fontSize="sm" color="text.secondary">{game.studio}</Text>
                 )}
 
+                {facts.length > 0 && (
+                  <Flex gap={1.5} wrap="wrap" justify="center">
+                    {facts.map(fact => (
+                      <Box
+                        key={fact}
+                        px={2} py="2px" borderRadius="5px"
+                        fontSize="xs" fontWeight="600"
+                        bg="bg.subtle" color="text.secondary"
+                      >
+                        {fact}
+                      </Box>
+                    ))}
+                  </Flex>
+                )}
+
                 {game.rating != null && game.rating > 0 && (
                   <StarRating value={game.rating} readOnly size="md" />
                 )}
@@ -175,7 +214,12 @@ export default function GameDetailModal({ game, isOpen, onClose, onEdit, onDelet
               </Stack>
             </Dialog.Body>
 
-            <Dialog.Footer borderTopWidth="1px" borderColor="border.default" pt={3} gap={2}>
+            <Dialog.Footer borderTopWidth="1px" borderColor="border.default" pt={3} gap={2} flexWrap="wrap">
+              {NEXT_STEPS[game.status].map(step => (
+                <Button key={step.label} size="sm" borderRadius="7px" onClick={() => handleStep(step.to)}>
+                  {step.label}
+                </Button>
+              ))}
               <Button variant="outline" size="sm" borderRadius="7px" onClick={handleEdit}>Edit</Button>
               <Button colorPalette="red" variant="outline" size="sm" borderRadius="7px" onClick={handleDelete}>Delete</Button>
             </Dialog.Footer>

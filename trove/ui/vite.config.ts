@@ -6,7 +6,9 @@ import path from 'path'
 
 const certsDir = path.resolve(__dirname, '../infra/certs')
 const hasCerts = fs.existsSync(path.join(certsDir, 'cert.pem'))
-const backendUrl = hasCerts ? 'https://localhost:8080' : 'http://localhost:8080'
+// TROVE_BACKEND_URL points the dev server at another backend, e.g. one running
+// against a scratch copy of the database.
+const backendUrl = process.env.TROVE_BACKEND_URL ?? (hasCerts ? 'https://localhost:8080' : 'http://localhost:8080')
 
 export default defineConfig({
   plugins: [

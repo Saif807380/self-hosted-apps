@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	trovev1 "github.com/saifkazi/trove/backend/gen/trove/v1"
 	booksv1 "github.com/saifkazi/trove/backend/gen/trove/v1/books"
 	gamesv1 "github.com/saifkazi/trove/backend/gen/trove/v1/games"
 	syncv1 "github.com/saifkazi/trove/backend/gen/trove/v1/sync"
 	"github.com/saifkazi/trove/backend/gen/trove/v1/sync/syncv1connect"
 	travelv1 "github.com/saifkazi/trove/backend/gen/trove/v1/travel"
 	workoutsv1 "github.com/saifkazi/trove/backend/gen/trove/v1/workouts"
-	trovev1 "github.com/saifkazi/trove/backend/gen/trove/v1"
 	"github.com/saifkazi/trove/backend/internal/model"
 	"github.com/saifkazi/trove/backend/internal/service"
 )
@@ -463,12 +463,15 @@ func syncMapTags(tags []model.Tag) []*trovev1.Tag {
 
 func syncMapVideoGame(g *model.VideoGame) *gamesv1.VideoGame {
 	pb := &gamesv1.VideoGame{
-		Id:          g.ID.String(),
-		Title:       g.Title,
-		YearsPlayed: int32SliceFromInt16(g.YearsPlayed),
-		CreatedAt:   g.CreatedAt.Format(time.RFC3339Nano),
-		UpdatedAt:   g.UpdatedAt.Format(time.RFC3339Nano),
-		Deleted:     g.Deleted,
+		Id:             g.ID.String(),
+		Title:          g.Title,
+		YearsPlayed:    int32SliceFromInt16(g.YearsPlayed),
+		Status:         g.Status,
+		Platform:       g.Platform,
+		TargetPriceInr: g.TargetPriceINR,
+		CreatedAt:      g.CreatedAt.Format(time.RFC3339Nano),
+		UpdatedAt:      g.UpdatedAt.Format(time.RFC3339Nano),
+		Deleted:        g.Deleted,
 	}
 	if g.Studio != nil {
 		pb.Studio = g.Studio
@@ -488,9 +491,9 @@ func syncMapVideoGame(g *model.VideoGame) *gamesv1.VideoGame {
 
 func syncMapTravelLocation(l *model.TravelLocation) *travelv1.TravelLocation {
 	pb := &travelv1.TravelLocation{
-		Id:      l.ID.String(),
-		City:    l.City,
-		Country: l.Country,
+		Id:        l.ID.String(),
+		City:      l.City,
+		Country:   l.Country,
 		CreatedAt: l.CreatedAt.Format(time.RFC3339Nano),
 		UpdatedAt: l.UpdatedAt.Format(time.RFC3339Nano),
 		Deleted:   l.Deleted,
@@ -578,16 +581,16 @@ func syncBookFromProto(pb *booksv1.Book) (*model.Book, error) {
 	updatedAt, _ := time.Parse(time.RFC3339Nano, pb.UpdatedAt)
 
 	b := &model.Book{
-		ID:        id,
-		Title:     pb.Title,
-		Author:    pb.Author,
-		Rating:    int16PtrFromInt32(pb.Rating),
-		Review:    pb.Review,
+		ID:         id,
+		Title:      pb.Title,
+		Author:     pb.Author,
+		Rating:     int16PtrFromInt32(pb.Rating),
+		Review:     pb.Review,
 		CoverImage: pb.CoverImage,
-		YearsRead: int16SliceFromInt32(pb.YearsRead),
-		Deleted:   pb.Deleted,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		YearsRead:  int16SliceFromInt32(pb.YearsRead),
+		Deleted:    pb.Deleted,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
 	}
 	for _, t := range pb.Tags {
 		tid, err := parseUUID(t.Id)
@@ -633,16 +636,26 @@ func syncVideoGameFromProto(pb *gamesv1.VideoGame) (*model.VideoGame, error) {
 	updatedAt, _ := time.Parse(time.RFC3339Nano, pb.UpdatedAt)
 
 	g := &model.VideoGame{
-		ID:          id,
-		Title:       pb.Title,
-		Studio:      pb.Studio,
-		Rating:      int16PtrFromInt32(pb.Rating),
-		Review:      pb.Review,
-		CoverImage:  pb.CoverImage,
-		YearsPlayed: int16SliceFromInt32(pb.YearsPlayed),
-		Deleted:     pb.Deleted,
-		CreatedAt:   createdAt,
-		UpdatedAt:   updatedAt,
+		ID:             id,
+		Title:          pb.Title,
+		Studio:         pb.Studio,
+		Rating:         int16PtrFromInt32(pb.Rating),
+		Review:         pb.Review,
+		CoverImage:     pb.CoverImage,
+		YearsPlayed:    int16SliceFromInt32(pb.YearsPlayed),
+		Status:         pb.Status,
+		Platform:       pb.Platform,
+		TargetPriceINR: pb.TargetPriceInr,
+		Deleted:        pb.Deleted,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+	}
+	// An empty status is an older client; upsertVideoGame keeps the stored
+	// lifecycle fields in that case, so only validate what was sent.
+	if g.Status != "" {
+		if err := model.ValidateGameLifecycle(g.Status, g.Platform, g.TargetPriceINR); err != nil {
+			return nil, err
+		}
 	}
 	if g.YearsPlayed == nil {
 		g.YearsPlayed = []int16{}

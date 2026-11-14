@@ -1,0 +1,24 @@
+{
+ "results": [
+  {
+   "hits": [
+    {
+     "title": "ELDEN RING Tarnished Edition",
+     "nsuid": "70010000097552",
+     "platformCode": "NINTENDO_SWITCH_2",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/elden-ring-tarnished-edition-switch-2/"
+    },
+    {
+     "title": "Ariana and the Elder Codex: Rainfall Ring",
+     "nsuid": "70050000068169",
+     "platformCode": "NINTENDO_SWITCH",
+     "topLevelCategoryCode": "GAMES",
+     "isUpgrade": false,
+     "url": "/us/store/products/ariana-and-the-elder-codex-rainfall-ring-70050000068169-switch/"
+    }
+   ]
+  }
+ ]
+}

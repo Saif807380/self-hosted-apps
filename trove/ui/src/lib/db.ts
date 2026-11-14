@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie'
+import type { GameStatus, GamePlatform } from '@/types/api'
 
 // Flat DB record types (no embedded relations)
 
@@ -36,6 +37,9 @@ export interface VideoGameRecord {
   review?: string
   coverImage?: string
   yearsPlayed: number[]
+  status: GameStatus
+  platform?: GamePlatform
+  targetPriceInr?: number
   createdAt: string
   updatedAt: string
   deleted: boolean
@@ -176,6 +180,12 @@ class TroveDB extends Dexie {
     this.version(2).stores({
       imageBlobs: 'id, uploaded',
     })
+    // Game lifecycle: every game pulled before this version was a played game.
+    this.version(3).stores({
+      videoGames: 'id, updatedAt, status',
+    }).upgrade(tx => tx.table('videoGames').toCollection().modify(g => {
+      if (!g.status) g.status = 'played'
+    }))
   }
 }
 
