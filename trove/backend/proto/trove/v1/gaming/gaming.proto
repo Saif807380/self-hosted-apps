@@ -80,6 +80,30 @@ message GetGameInsightsResponse {
   repeated Listing     listings            = 4;
   double               usd_to_inr          = 5; // 0 if not fetched yet
   optional string      listings_checked_at = 6;
+  optional DeviceVerdict verdict           = 7;
+  bool                 verdicts_enabled    = 8; // false: no API key, so no verdict is coming
+}
+
+// Which of your devices to play a game on.
+message DeviceVerdict {
+  string                summary     = 1;
+  repeated DeviceRating devices     = 2; // best first
+  repeated string       unavailable = 3; // pc | ps5 | switch2 the game isn't released for
+  repeated Source       sources     = 4;
+  bool                  complete    = 5; // false: some evidence was missing; it's redone later
+  string                created_at  = 6;
+}
+
+message DeviceRating {
+  string          device  = 1; // pc | ps5 | switch2
+  string          rating  = 2; // great | good | playable | avoid
+  string          expect  = 3; // e.g. "1080p, medium settings, ~60 fps"
+  repeated string reasons = 4;
+}
+
+message Source {
+  string label = 1;
+  string url   = 2;
 }
 
 // The VAPID public key a browser needs to subscribe. enabled is false when

@@ -38,6 +38,26 @@ export interface Listing {
 
 export type MatchStatus = 'none' | 'picked' | 'auto' | 'unresolved'
 
+export type Device = 'pc' | 'ps5' | 'switch2'
+export type DeviceRatingName = 'great' | 'good' | 'playable' | 'avoid'
+
+export interface DeviceRating {
+  device: Device
+  rating: DeviceRatingName
+  expect?: string
+  reasons?: string[]
+}
+
+/** Which of your devices to play a game on. */
+export interface DeviceVerdict {
+  summary?: string
+  devices?: DeviceRating[] // best first
+  unavailable?: Device[]
+  sources?: { label?: string; url: string }[]
+  complete?: boolean // false: some evidence was missing; it's redone later
+  createdAt: string
+}
+
 export interface GameInsights {
   matchStatus: MatchStatus
   match?: CatalogGame
@@ -45,6 +65,8 @@ export interface GameInsights {
   listings?: Listing[]
   usdToInr?: number
   listingsCheckedAt?: string
+  verdict?: DeviceVerdict
+  verdictsEnabled?: boolean // false: no verdict is coming (no API key)
 }
 
 export const gamingApi = {

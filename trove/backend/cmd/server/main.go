@@ -37,7 +37,7 @@ func main() {
 		Store: stores.Gaming, PublicKey: cfg.VAPIDPublicKey, PrivateKey: cfg.VAPIDPrivateKey,
 		Subject: cfg.VAPIDSubject, Log: slog.Default(),
 	}
-	services := service.NewServices(stores, redisClient, igdb, sender)
+	services := service.NewServices(stores, redisClient, igdb, sender, cfg.AnthropicAPIKey != "")
 	mux := controller.NewRouter(services, cfg.UploadsDir, cfg.TLSEnabled())
 
 	srv := &http.Server{

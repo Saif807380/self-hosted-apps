@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Box, Button, Flex, Input, Spinner, Stack, Text } from '@chakra-ui/react'
+import { useCallback, useEffect, useState } from 'react'
+import { Box, Button, Flex, Input, Stack, Text } from '@chakra-ui/react'
 import type { VideoGame } from '@/types/api'
 import { gamingApi, type CatalogGame, type GameInsights, type Listing } from '@/services/gaming'
 import { useDebounce } from '@/hooks/useDebounce'
 import PriceChart from './PriceChart'
+import VerdictSection from './VerdictSection'
+import { LinkButton, Loading, Note, SectionTitle } from './panel'
 import { useIsDark } from '@/hooks/useIsDark'
 import {
   buildChart, currentRun, formatDay, formatPrice, isPriced, listingLabel, platPricesUrl, seriesColor,
@@ -14,7 +16,7 @@ import {
 const POLL_MS = 8000
 const POLL_LIMIT = 15
 
-/** Prices, price history and the IGDB match for a wishlisted game. */
+/** Prices, price history, device verdict and the IGDB match for a wishlisted game. */
 export default function PricePanel({ game }: { game: VideoGame }) {
   const [insights, setInsights] = useState<GameInsights | null>(null)
   const [error, setError] = useState('')
@@ -34,11 +36,14 @@ export default function PricePanel({ game }: { game: VideoGame }) {
 
   const pending = !insights || insights.matchStatus === 'none' ||
     (insights.matchStatus !== 'unresolved' && !insights.listingsCheckedAt)
+  // The verdict comes last in the worker's run, after the prices.
+  const verdictPending = !!insights?.verdictsEnabled && !insights.verdict &&
+    insights.matchStatus !== 'unresolved'
   useEffect(() => {
-    if (!pending || polls >= POLL_LIMIT) return
+    if ((!pending && !verdictPending) || polls >= POLL_LIMIT) return
     const timer = setTimeout(() => { setPolls(n => n + 1); load() }, POLL_MS)
     return () => clearTimeout(timer)
-  }, [pending, polls, load])
+  }, [pending, verdictPending, polls, load])
 
   const restartPolling = async () => { setPolls(0); await load() }
 
@@ -53,7 +58,10 @@ export default function PricePanel({ game }: { game: VideoGame }) {
     <Stack gap={4} w="full" pt={3} borderTopWidth="1px" borderColor="border.default">
       <MatchSection game={game} insights={insights} onLinked={restartPolling} />
       {insights.matchStatus !== 'unresolved' && (
-        <PriceSection game={game} insights={insights} pending={pending && polls < POLL_LIMIT} onChanged={restartPolling} />
+        <>
+          <PriceSection game={game} insights={insights} pending={pending && polls < POLL_LIMIT} onChanged={restartPolling} />
+          <VerdictSection insights={insights} pending={verdictPending && polls < POLL_LIMIT} />
+        </>
       )}
     </Stack>
   )
@@ -282,17 +290,6 @@ function LinkPicker({ game, candidates, onCancel, onLinked }: {
   )
 }
 
-function LinkButton({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Button
-      asChild size="xs" variant="outline" borderRadius="6px"
-      bg="bg.surface" borderColor="text.muted" _hover={{ borderColor: 'text.secondary' }}
-    >
-      <a href={href} target="_blank" rel="noreferrer">{children}</a>
-    </Button>
-  )
-}
-
 function priceAge(listings: Listing[]): string {
   const last = listings.flatMap(l => l.history ?? []).map(r => Date.parse(r.until)).reduce((a, b) => Math.max(a, b), 0)
   return last ? `Checked ${formatDay(last)}, every 6 hours` : 'Not checked yet'
@@ -302,24 +299,3 @@ const linkStyle = {
   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
   color: 'var(--chakra-colors-accent)', fontSize: 'inherit', textDecoration: 'underline',
 } as const
-
-function SectionTitle({ children }: { children: ReactNode }) {
-  return (
-    <Text fontSize="xs" color="text.muted" fontWeight="500" textTransform="uppercase" letterSpacing="0.04em">
-      {children}
-    </Text>
-  )
-}
-
-function Note({ children }: { children: ReactNode }) {
-  return <Text fontSize="xs" color="text.muted" textAlign="center" pt={2}>{children}</Text>
-}
-
-function Loading({ label = 'Loading prices…' }: { label?: string }) {
-  return (
-    <Flex align="center" justify="center" gap={2} pt={2}>
-      <Spinner size="xs" color="accent" />
-      <Text fontSize="xs" color="text.muted">{label}</Text>
-    </Flex>
-  )
-}
