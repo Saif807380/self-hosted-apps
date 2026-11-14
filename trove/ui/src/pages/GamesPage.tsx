@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Box, Button, Flex, Heading, SimpleGrid, Text, Spinner } from '@chakra-ui/react'
 import { useGames } from '@/hooks/useGames'
+import { useDeals } from '@/hooks/useDeals'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { toaster } from '@/lib/toaster'
@@ -19,7 +20,16 @@ import { STATUS_LABELS, STATUS_TABS, isGameStatus } from './games/lifecycle'
 
 const SIDEBAR_WIDTH = 240
 
-const defaultSort = (tab: GameStatus) => (tab === 'played' ? 'title_asc' : 'added_desc')
+// The lists are your game statuses, plus Deals: wishlisted games on sale.
+type Tab = GameStatus | 'deals'
+
+const defaultSort = (tab: Tab) => {
+  switch (tab) {
+    case 'played': return 'title_asc'
+    case 'deals': return 'discount_desc'
+    default: return 'added_desc'
+  }
+}
 
 export default function GamesPage() {
   const isMobile = useIsMobile()
@@ -27,7 +37,9 @@ export default function GamesPage() {
   // notification) can land on a specific game.
   const [params, setParams] = useSearchParams()
   const tabParam = params.get('tab')
-  const tab: GameStatus = isGameStatus(tabParam) ? tabParam : 'played'
+  const tab: Tab = tabParam === 'deals' ? 'deals' : isGameStatus(tabParam) ? tabParam : 'played'
+  // Deals are wishlisted games; new games added from there join the wishlist.
+  const listStatus: GameStatus = tab === 'deals' ? 'wishlist' : tab
   const [search, setSearch] = useState('')
   const [yearPlayed, setYearPlayed] = useState<number | undefined>()
   const [sort, setSort] = useState(() => defaultSort(tab))
@@ -42,12 +54,14 @@ export default function GamesPage() {
   const { games, counts, loading, error, createGame, updateGame, deleteGame, setStatus } = useGames({
     search: debouncedSearch,
     yearPlayed: tab === 'played' ? yearPlayed : undefined,
-    status: tab,
+    status: listStatus,
   })
+  const { deals, status: dealsStatus } = useDeals()
+  const listed = tab === 'deals' ? games.filter(g => deals.has(g.id)) : games
 
   const hasFilters = !!search || !!yearPlayed
 
-  const handleTabChange = (next: GameStatus) => {
+  const handleTabChange = (next: Tab) => {
     setParams({ tab: next })
     setYearPlayed(undefined)
     setSort(defaultSort(next))
@@ -62,8 +76,10 @@ export default function GamesPage() {
   }, [linkedGameId, loading, games, tab, setParams])
 
   const sortedGames = useMemo(() => {
-    return [...games].sort((a, b) => {
+    const discount = (g: VideoGame) => deals.get(g.id)?.discountPct ?? 0
+    return [...listed].sort((a, b) => {
       switch (sort) {
+        case 'discount_desc': return discount(b) - discount(a)
         case 'title_desc': return b.title.localeCompare(a.title)
         case 'year_desc': {
           const aYear = a.yearsPlayed.length ? Math.max(...a.yearsPlayed) : -1
@@ -79,7 +95,7 @@ export default function GamesPage() {
         default: return a.title.localeCompare(b.title)
       }
     })
-  }, [games, sort])
+  }, [listed, deals, sort])
 
   const handleOpenAdd = () => { setEditGame(null); setFormOpen(true) }
   const handleEdit = (game: VideoGame) => { setEditGame(game); setFormOpen(true) }
@@ -158,6 +174,17 @@ export default function GamesPage() {
             <Text as="span" fontSize="xs" opacity={0.7} ml={1}>{counts[t.status]}</Text>
           </Button>
         ))}
+        <Button
+          size="sm"
+          role="tab"
+          aria-selected={tab === 'deals'}
+          variant={tab === 'deals' ? 'solid' : 'outline'}
+          borderRadius="8px"
+          onClick={() => handleTabChange('deals')}
+        >
+          🏷️ Deals
+          {dealsStatus === 'ready' && <Text as="span" fontSize="xs" opacity={0.7} ml={1}>{deals.size}</Text>}
+        </Button>
       </Flex>
 
       <Flex gap={6} align="flex-start" direction={isMobile ? 'column' : 'row'}>
@@ -213,13 +240,20 @@ export default function GamesPage() {
                 onClear={handleClearFilters}
                 hasFilters={hasFilters}
                 showYears={tab === 'played'}
+                showDiscount={tab === 'deals'}
               />
             </Box>
           </Box>
         </Box>
 
         <Box flex={1} minW={0} w={isMobile ? '100%' : 'auto'}>
-          {loading ? (
+          {tab === 'deals' && dealsStatus !== 'ready' ? (
+            dealsStatus === 'loading'
+              ? <Flex justify="center" py={24}><Spinner color="accent" size="lg" /></Flex>
+              : <DealsNote>{dealsStatus === 'offline' ? 'Deals need a connection.' : "Deals aren't available right now."}</DealsNote>
+          ) : tab === 'deals' && !loading && sortedGames.length === 0 && !hasFilters ? (
+            <DealsNote>None of your wishlisted games is on sale right now. Trove checks prices every 6 hours.</DealsNote>
+          ) : loading ? (
             <Flex justify="center" py={24}><Spinner color="accent" size="lg" /></Flex>
           ) : error ? (
             <Flex justify="center" py={16}><Text color="red.500" fontSize="sm">{error}</Text></Flex>
@@ -234,13 +268,13 @@ export default function GamesPage() {
           ) : view === 'grid' ? (
             <SimpleGrid columns={{ base: 2, sm: 3, md: sidebarOpen ? 4 : 5, lg: sidebarOpen ? 5 : 6, xl: sidebarOpen ? 6 : 7 }} gap={{ base: 3, md: 6 }}>
               {sortedGames.map(game => (
-                <GameCard key={game.id} game={game} onClick={setViewGame} />
+                <GameCard key={game.id} game={game} deal={deals.get(game.id)} onClick={setViewGame} />
               ))}
             </SimpleGrid>
           ) : (
             <Flex direction="column" gap={2}>
               {sortedGames.map(game => (
-                <GameListItem key={game.id} game={game} onClick={setViewGame} />
+                <GameListItem key={game.id} game={game} deal={deals.get(game.id)} onClick={setViewGame} />
               ))}
             </Flex>
           )}
@@ -262,7 +296,7 @@ export default function GamesPage() {
         onClose={handleFormClose}
         onSubmit={handleSubmit}
         editGame={editGame}
-        defaultStatus={tab}
+        defaultStatus={listStatus}
       />
 
       <ConfirmDialog
@@ -274,4 +308,8 @@ export default function GamesPage() {
       />
     </Box>
   )
+}
+
+function DealsNote({ children }: { children: string }) {
+  return <Flex justify="center" py={16} px={4}><Text color="text.muted" fontSize="sm" textAlign="center">{children}</Text></Flex>
 }

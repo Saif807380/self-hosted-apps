@@ -137,12 +137,35 @@ message SendTestPushResponse {
   int32 delivered = 1;
 }
 
+message ListDealsRequest {}
+
+// A wishlisted game's listing that's discounted right now. Amounts are in
+// minor units of the listing's currency.
+message Deal {
+  string          video_game_id = 1;
+  string          store         = 2; // steam | eshop
+  string          edition       = 3; // e.g. "Switch 2"; empty when only one
+  string          url           = 4;
+  string          currency      = 5;
+  int64           base_minor    = 6;
+  int64           final_minor   = 7;
+  int32           discount_pct  = 8;
+  optional string sale_ends_at  = 9;
+  bool            lowest        = 10; // the lowest price Trove has seen for it
+}
+
+message ListDealsResponse {
+  repeated Deal deals      = 1; // biggest discount first
+  double        usd_to_inr = 2; // 0 if not fetched yet
+}
+
 service GamingService {
   rpc SearchCatalog   (SearchCatalogRequest)   returns (SearchCatalogResponse);
   rpc LinkGame        (LinkGameRequest)        returns (LinkGameResponse);
   rpc RefreshGame     (RefreshGameRequest)     returns (RefreshGameResponse);
   rpc SetPsnLink      (SetPsnLinkRequest)      returns (SetPsnLinkResponse);
   rpc GetGameInsights (GetGameInsightsRequest) returns (GetGameInsightsResponse);
+  rpc ListDeals       (ListDealsRequest)       returns (ListDealsResponse);
   rpc GetPushConfig   (GetPushConfigRequest)   returns (GetPushConfigResponse);
   rpc SubscribePush   (SubscribePushRequest)   returns (SubscribePushResponse);
   rpc UnsubscribePush (UnsubscribePushRequest) returns (UnsubscribePushResponse);

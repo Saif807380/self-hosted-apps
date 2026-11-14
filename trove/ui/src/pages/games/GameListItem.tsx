@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { Box, Flex, Text } from '@chakra-ui/react'
 import type { VideoGame } from '@/types/api'
+import type { Deal } from '@/services/gaming'
+import DealTag from './DealTag'
 import StarRating from '@/components/StarRating'
 import { useImageUrl } from '@/hooks/useImageUrl'
 
 interface GameListItemProps {
   game: VideoGame
   onClick: (game: VideoGame) => void
+  /** The game's best current deal, when it's a wishlisted game on sale. */
+  deal?: Deal
 }
 
 const COVER_GRADIENTS: [string, string][] = [
@@ -24,7 +28,7 @@ function getCoverGradient(title: string): [string, string] {
   return COVER_GRADIENTS[(title.charCodeAt(0) || 65) % COVER_GRADIENTS.length]
 }
 
-export default function GameListItem({ game, onClick }: GameListItemProps) {
+export default function GameListItem({ game, onClick, deal }: GameListItemProps) {
   const [hovered, setHovered] = useState(false)
   const [gradFrom, gradTo] = getCoverGradient(game.title)
   const initial = game.title[0]?.toUpperCase() ?? '?'
@@ -91,6 +95,8 @@ export default function GameListItem({ game, onClick }: GameListItemProps) {
               {game.studio}
             </Text>
           )}
+
+          {deal && <DealTag deal={deal} size="xs" />}
 
           <Flex gap={2} align="center" wrap="wrap">
             {game.yearsPlayed?.length > 0 && (

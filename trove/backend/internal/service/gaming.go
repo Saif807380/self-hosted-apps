@@ -135,6 +135,20 @@ func (s *GamingService) GetGameInsights(ctx context.Context, gameID uuid.UUID) (
 	return out, nil
 }
 
+// ListDeals returns the wishlisted games' discounted listings and the
+// USD->INR rate (0 if never fetched) to compare eShop prices with.
+func (s *GamingService) ListDeals(ctx context.Context) ([]dao.Deal, float64, error) {
+	deals, err := s.store.ListDeals(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	rate, _, err := s.store.FXRate(ctx, "USD", "INR")
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, 0, err
+	}
+	return deals, rate, nil
+}
+
 // PushConfig returns whether alerts can be turned on, and the public key a
 // browser subscribes with.
 func (s *GamingService) PushConfig() (enabled bool, publicKey string) {

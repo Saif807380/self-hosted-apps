@@ -1,9 +1,9 @@
-import type { Listing, PriceRun } from '@/services/gaming'
+import type { Deal, Listing, PriceRun } from '@/services/gaming'
 
 /** A listing that has prices (Steam, eShop), as opposed to a PS Store link. */
 export const isPriced = (l: Listing) => l.store !== 'psn'
 
-export function listingLabel(l: Listing): string {
+export function listingLabel(l: Pick<Listing, 'store' | 'edition'>): string {
   switch (l.store) {
     case 'steam': return 'Steam'
     case 'eshop': return l.edition ? `eShop · ${l.edition}` : 'eShop'
@@ -52,10 +52,34 @@ export function toRupees(minor: string | number, currency: string, usdToInr: num
   return undefined
 }
 
+/**
+ * Each game's best deal: the biggest discount, then the lower price in
+ * rupees (eShop prices are converted).
+ */
+export function bestDeals(deals: Deal[], usdToInr: number): Map<string, Deal> {
+  const rupees = (d: Deal) => toRupees(d.finalMinor, d.currency, usdToInr) ?? Infinity
+  const best = new Map<string, Deal>()
+  for (const d of deals) {
+    const current = best.get(d.videoGameId)
+    const better = !current || (d.discountPct ?? 0) > (current.discountPct ?? 0) ||
+      ((d.discountPct ?? 0) === (current.discountPct ?? 0) && rupees(d) < rupees(current))
+    if (better) best.set(d.videoGameId, d)
+  }
+  return best
+}
+
 const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
 export const formatRupees = (rupees: number) => inr.format(rupees)
+
+/** "₹899" or "$19.99": a price in its own currency, short enough for a card. */
+export function shortPrice(minor: string | number, currency: string): string {
+  const units = Number(minor) / 100
+  if (currency === 'INR') return inr.format(units)
+  if (currency === 'USD') return usd.format(units)
+  return `${units.toFixed(2)} ${currency}`
+}
 
 /** "₹1,300", or "$29.99 (≈₹2,827)" for a dollar price. */
 export function formatPrice(minor: string | number, currency: string, usdToInr: number): string {

@@ -47,6 +47,8 @@ const (
 	// GamingServiceGetGameInsightsProcedure is the fully-qualified name of the GamingService's
 	// GetGameInsights RPC.
 	GamingServiceGetGameInsightsProcedure = "/trove.v1.gaming.GamingService/GetGameInsights"
+	// GamingServiceListDealsProcedure is the fully-qualified name of the GamingService's ListDeals RPC.
+	GamingServiceListDealsProcedure = "/trove.v1.gaming.GamingService/ListDeals"
 	// GamingServiceGetPushConfigProcedure is the fully-qualified name of the GamingService's
 	// GetPushConfig RPC.
 	GamingServiceGetPushConfigProcedure = "/trove.v1.gaming.GamingService/GetPushConfig"
@@ -68,6 +70,7 @@ type GamingServiceClient interface {
 	RefreshGame(context.Context, *connect.Request[gaming.RefreshGameRequest]) (*connect.Response[gaming.RefreshGameResponse], error)
 	SetPsnLink(context.Context, *connect.Request[gaming.SetPsnLinkRequest]) (*connect.Response[gaming.SetPsnLinkResponse], error)
 	GetGameInsights(context.Context, *connect.Request[gaming.GetGameInsightsRequest]) (*connect.Response[gaming.GetGameInsightsResponse], error)
+	ListDeals(context.Context, *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error)
 	GetPushConfig(context.Context, *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error)
 	SubscribePush(context.Context, *connect.Request[gaming.SubscribePushRequest]) (*connect.Response[gaming.SubscribePushResponse], error)
 	UnsubscribePush(context.Context, *connect.Request[gaming.UnsubscribePushRequest]) (*connect.Response[gaming.UnsubscribePushResponse], error)
@@ -115,6 +118,12 @@ func NewGamingServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(gamingServiceMethods.ByName("GetGameInsights")),
 			connect.WithClientOptions(opts...),
 		),
+		listDeals: connect.NewClient[gaming.ListDealsRequest, gaming.ListDealsResponse](
+			httpClient,
+			baseURL+GamingServiceListDealsProcedure,
+			connect.WithSchema(gamingServiceMethods.ByName("ListDeals")),
+			connect.WithClientOptions(opts...),
+		),
 		getPushConfig: connect.NewClient[gaming.GetPushConfigRequest, gaming.GetPushConfigResponse](
 			httpClient,
 			baseURL+GamingServiceGetPushConfigProcedure,
@@ -149,6 +158,7 @@ type gamingServiceClient struct {
 	refreshGame     *connect.Client[gaming.RefreshGameRequest, gaming.RefreshGameResponse]
 	setPsnLink      *connect.Client[gaming.SetPsnLinkRequest, gaming.SetPsnLinkResponse]
 	getGameInsights *connect.Client[gaming.GetGameInsightsRequest, gaming.GetGameInsightsResponse]
+	listDeals       *connect.Client[gaming.ListDealsRequest, gaming.ListDealsResponse]
 	getPushConfig   *connect.Client[gaming.GetPushConfigRequest, gaming.GetPushConfigResponse]
 	subscribePush   *connect.Client[gaming.SubscribePushRequest, gaming.SubscribePushResponse]
 	unsubscribePush *connect.Client[gaming.UnsubscribePushRequest, gaming.UnsubscribePushResponse]
@@ -180,6 +190,11 @@ func (c *gamingServiceClient) GetGameInsights(ctx context.Context, req *connect.
 	return c.getGameInsights.CallUnary(ctx, req)
 }
 
+// ListDeals calls trove.v1.gaming.GamingService.ListDeals.
+func (c *gamingServiceClient) ListDeals(ctx context.Context, req *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error) {
+	return c.listDeals.CallUnary(ctx, req)
+}
+
 // GetPushConfig calls trove.v1.gaming.GamingService.GetPushConfig.
 func (c *gamingServiceClient) GetPushConfig(ctx context.Context, req *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error) {
 	return c.getPushConfig.CallUnary(ctx, req)
@@ -207,6 +222,7 @@ type GamingServiceHandler interface {
 	RefreshGame(context.Context, *connect.Request[gaming.RefreshGameRequest]) (*connect.Response[gaming.RefreshGameResponse], error)
 	SetPsnLink(context.Context, *connect.Request[gaming.SetPsnLinkRequest]) (*connect.Response[gaming.SetPsnLinkResponse], error)
 	GetGameInsights(context.Context, *connect.Request[gaming.GetGameInsightsRequest]) (*connect.Response[gaming.GetGameInsightsResponse], error)
+	ListDeals(context.Context, *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error)
 	GetPushConfig(context.Context, *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error)
 	SubscribePush(context.Context, *connect.Request[gaming.SubscribePushRequest]) (*connect.Response[gaming.SubscribePushResponse], error)
 	UnsubscribePush(context.Context, *connect.Request[gaming.UnsubscribePushRequest]) (*connect.Response[gaming.UnsubscribePushResponse], error)
@@ -250,6 +266,12 @@ func NewGamingServiceHandler(svc GamingServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(gamingServiceMethods.ByName("GetGameInsights")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gamingServiceListDealsHandler := connect.NewUnaryHandler(
+		GamingServiceListDealsProcedure,
+		svc.ListDeals,
+		connect.WithSchema(gamingServiceMethods.ByName("ListDeals")),
+		connect.WithHandlerOptions(opts...),
+	)
 	gamingServiceGetPushConfigHandler := connect.NewUnaryHandler(
 		GamingServiceGetPushConfigProcedure,
 		svc.GetPushConfig,
@@ -286,6 +308,8 @@ func NewGamingServiceHandler(svc GamingServiceHandler, opts ...connect.HandlerOp
 			gamingServiceSetPsnLinkHandler.ServeHTTP(w, r)
 		case GamingServiceGetGameInsightsProcedure:
 			gamingServiceGetGameInsightsHandler.ServeHTTP(w, r)
+		case GamingServiceListDealsProcedure:
+			gamingServiceListDealsHandler.ServeHTTP(w, r)
 		case GamingServiceGetPushConfigProcedure:
 			gamingServiceGetPushConfigHandler.ServeHTTP(w, r)
 		case GamingServiceSubscribePushProcedure:
@@ -321,6 +345,10 @@ func (UnimplementedGamingServiceHandler) SetPsnLink(context.Context, *connect.Re
 
 func (UnimplementedGamingServiceHandler) GetGameInsights(context.Context, *connect.Request[gaming.GetGameInsightsRequest]) (*connect.Response[gaming.GetGameInsightsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trove.v1.gaming.GamingService.GetGameInsights is not implemented"))
+}
+
+func (UnimplementedGamingServiceHandler) ListDeals(context.Context, *connect.Request[gaming.ListDealsRequest]) (*connect.Response[gaming.ListDealsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trove.v1.gaming.GamingService.ListDeals is not implemented"))
 }
 
 func (UnimplementedGamingServiceHandler) GetPushConfig(context.Context, *connect.Request[gaming.GetPushConfigRequest]) (*connect.Response[gaming.GetPushConfigResponse], error) {
