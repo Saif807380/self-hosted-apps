@@ -47,17 +47,20 @@ interface SalePush {
   tag?: string
 }
 
+// Chrome supports renotify, but TypeScript's lib no longer lists it.
+type ShowOptions = NotificationOptions & { renotify?: boolean }
+
 self.addEventListener('push', event => {
   const data = parsePush(event.data)
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon || '/icon-192.png',
-      badge: '/icon-192.png',
-      tag: data.tag, // a newer alert for the same game replaces the older one
-      data: { url: data.url },
-    }),
-  )
+  const options: ShowOptions = {
+    body: data.body,
+    icon: data.icon || '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag, // a newer alert for the same game replaces the older one
+    renotify: Boolean(data.tag), // ...and still alerts, rather than swapping silently
+    data: { url: data.url },
+  }
+  event.waitUntil(self.registration.showNotification(data.title, options))
 })
 
 function parsePush(data: PushMessageData | null): SalePush {
