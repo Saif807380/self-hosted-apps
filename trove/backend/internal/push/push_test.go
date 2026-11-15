@@ -75,7 +75,7 @@ func TestSend(t *testing.T) {
 		t.Errorf("deleted = %v, want the 410 subscription", store.deleted)
 	}
 	r := svc.requests[0]
-	if r.Header.Get("TTL") != "86400" || r.Header.Get("Topic") != "abc" || !strings.HasPrefix(r.Header.Get("Authorization"), "vapid ") {
+	if r.Header.Get("TTL") != "86400" || r.Header.Get("Topic") != "abc" || r.Header.Get("Urgency") != "high" || !strings.HasPrefix(r.Header.Get("Authorization"), "vapid ") {
 		t.Errorf("headers = %v", r.Header)
 	}
 	if r.Header.Get("Content-Encoding") != "aes128gcm" {

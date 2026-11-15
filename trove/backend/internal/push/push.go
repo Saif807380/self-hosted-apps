@@ -97,8 +97,10 @@ func (s *Sender) deliver(ctx context.Context, payload []byte, sub dao.PushSubscr
 			VAPIDPrivateKey: s.PrivateKey,
 			TTL:             ttlSeconds,
 			RecordSize:      recordSize,
-			Urgency:         webpush.UrgencyNormal,
-			Topic:           tag, // the push service also collapses undelivered ones
+			// Every push shows a notification, which is what high urgency is
+			// for; at normal, an idle Android phone holds it until Chrome wakes.
+			Urgency: webpush.UrgencyHigh,
+			Topic:   tag, // the push service also collapses undelivered ones
 		})
 	if err != nil {
 		s.Log.Warn("push failed", "endpoint", host(sub.Endpoint), "err", err)
